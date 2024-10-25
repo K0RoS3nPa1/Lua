@@ -1,6 +1,4 @@
-local WhitelistedUsers = {
-
-}
+local WhitelistedUsers = loadstring(game:HttpGet(""))()
 
 function isWhitelisted(user)
     for i, v in ipairs(WhitelistedUsers) do
@@ -14,7 +12,7 @@ end
 if isWhitelisted(game.Players.LocalPlayer.UserId) then
    game.Players.LocalPlayer:Kick("\nYour are not whitelisted from script Owner!!!")
     gui = game.CoreGui.RobloxPromptGui.promptOverlay:WaitForChild("ErrorPrompt")  
-    gui.TitleFrame.ErrorTitle.Text = "Koro Hub..." 
+    gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..." 
  
 else 
 
