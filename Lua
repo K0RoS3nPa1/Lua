@@ -1,4 +1,4 @@
-local WhitelistedUsers = loadstring(game:HttpGet(""))()
+local WhitelistedUsers = loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Liste"))()
 
 function isWhitelisted(user)
     for i, v in ipairs(WhitelistedUsers) do
