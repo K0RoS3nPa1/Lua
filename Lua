@@ -16,5 +16,5 @@ if isWhitelisted(game.Players.LocalPlayer.UserId) then
  
 else 
 
-loadstring(game:HttpGet(""))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua1"))()
 end
