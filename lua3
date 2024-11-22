@@ -1,33 +1,6 @@
-local RunService = gameGetService(RunService)
-local players = gameGetService(Players)
-local plr = players.LocalPlayer
-local AntiFlingFunction = nil
-
-AntiFlingFunction = RunService.SteppedConnect(function()
-	for i,p in pairs(playersGetPlayers()) do
-		task.spawn(function()
-			if p ~= plr and p.Character then
-				for i,v in pairs(p.CharacterGetChildren()) do
-					pcall(function()
-						if vIsA(BasePart) then
-							v.CanCollide = false
-							v.Velocity = Vector3.new(0,0,0)
-							v.RotVelocity = Vector3.new(0,0,0)
-							v.CustomPhysicalProperties = PhysicalProperties.new(0,0,0,0,0)
-							v.Massless = true
-						elseif vIsA(Accessory) then
-							v.Handle.CanCollide = false
-							v.Handle.Velocity = Vector3.new(0,0,0)
-							v.RotVelocity = Vector3.new(0,0,0)
-							v.CustomPhysicalProperties = PhysicalProperties.new(0,0,0,0,0)
-							v.Massless = true
-						end
-					end)
-				end
-			end
-		end)
-	end
-end)
-
-repeat task.wait() until _G.AntiFlingToggled == false
-AntiFlingFunctionDisconnect()
+return {
+1240663944,
+5789531497,
+1069867348,
+2879608210,
+}
