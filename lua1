@@ -12,10 +12,7 @@ M.newButton("Autofarm", "It's working for alts!", function()
    loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2'))()
 end)
 
-M.newToggle("Anti Fling", "", false, function(li)
-_G.AntiFlingToggled = li
-https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua3
-    end)
+
 
 M.newToggle("Anti sit", "", false, function(sit)
   	    local RunService = game:GetService("RunService")
