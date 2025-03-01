@@ -9,13 +9,13 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 end
 
 local movespeed = 50
-local settings = {refill_at=50, refill_end=97, deliver_at=1, stay_in_kitchen=true, doCashier=false, doBoxer=false, doCook=false, doSupplier=false, doDelivery=false}
-
+local settings = {refill_at=50, refill_end=97, deliver_at=1, stay_in_kitchen=false}
+local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 if readfile then
 	pcall(function()
 		local new = game:GetService("HttpService"):JSONDecode(readfile("Factory.txt"))
 		--corruption?
-		local doOverwrite=true
+		local doOverwrite=false
 		for k,v in pairs(new) do
 			if settings[k]==nil then
 				doOverwrite=true
@@ -927,3 +927,4 @@ while gui.Parent do
 		end
 	end
 end
+
