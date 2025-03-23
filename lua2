@@ -8,6 +8,7 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 	return
 end
 
+local Gravity_at = 210
 local movespeed = 5.3
 local settings = {refill_at=50, refill_end=97, deliver_at=1, stay_in_kitchen=true}
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
@@ -521,7 +522,7 @@ local function smoothTP2(cf)
 	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
-	workspace.Gravity = 196
+	workspace.Gravity = Gravity_at
 	for i=0,diff.Magnitude,movespeed do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
