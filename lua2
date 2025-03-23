@@ -8,9 +8,9 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 	return
 end
 
-local Gravity_at = 210
-local movespeed = 5.3
-local settings = {refill_at=50, refill_end=97, deliver_at=1, stay_in_kitchen=true}
+local Gravitysettings = 210
+local movespeed = movespeed_at
+local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 if readfile then
 	pcall(function()
@@ -111,7 +111,7 @@ cashierSlider=Create("Frame",cashierBtn,{Name="slider", Size=UDim2.new(0.5,-4,1,
 kitchen=Create("Frame",settings_1,{Name="kitchen", LayoutOrder=9, BackgroundTransparency=1, Size=UDim2.new(0,100,0,100), BackgroundColor3=Color3.new(1,1,1)})
 Label_2=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Deliver At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
 	BackgroundTransparency=1, TextColor3=Color3.new(1,1,1), TextScaled=true, BackgroundColor3=Color3.new(1,1,1)})
-deliverAtBox=Create("TextBox",kitchen,{Name="deliverAtBox", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.deliver_at), TextSize=50, TextColor3=Color3.new(), 
+deliverAtBox=Create("TextBox",kitchen,{Name="Movespeed", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.movespeed_at), TextSize=50, TextColor3=Color3.new(), 
 	Font="Code", Position=UDim2.new(0.62,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 refillEnd=Create("Frame",settings_1,{Name="refillEnd", LayoutOrder=8, BackgroundTransparency=1, Size=UDim2.new(0,100,0,100), BackgroundColor3=Color3.new(1,1,1)})
 refillEndBox=Create("TextBox",refillEnd,{Name="refillEndBox", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.refill_end), TextSize=50, TextColor3=Color3.new(), 
@@ -522,7 +522,7 @@ local function smoothTP2(cf)
 	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
-	workspace.Gravity = Gravity_at
+	workspace.Gravity = Gravitysettings
 	for i=0,diff.Magnitude,movespeed do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
