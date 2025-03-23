@@ -336,7 +336,7 @@ local function FindFirstCustomer()
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
 			if dialog:sub(-8)=="instead." then
-				dialog = dialog:sub(-30)
+				dialog = dialog:sub(-8)
 			end
 			if dialog:find("pepperoni",1,true) then
 				order = "PepperoniPizza"
