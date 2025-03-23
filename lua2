@@ -521,7 +521,7 @@ local function smoothTP2(cf)
 	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
-	workspace.Gravity = 0
+	workspace.Gravity = 196
 	for i=0,diff.Magnitude,movespeed do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
