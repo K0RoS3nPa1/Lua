@@ -523,7 +523,7 @@ local function smoothTP2(cf)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
 	workspace.Gravity = Gravitysettings
-	for i=0,diff.Magnitude,movespeed_at do
+	for i=0,diff.Magnitude,settings.movespeed_at do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
 		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
