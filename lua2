@@ -329,12 +329,10 @@ for name in pairs(supplyCounts) do
 end
 
 local function FindFirstCustomer()
-local walkspeed = 50
 
-workspace.Customers:FindFirstChild('Humanoid').WalkSpeed = walkspeed
-	local children = workspace.Customers:GetChildren()
+	local children = workspace.Customers:GetChildren() and workspace.Customers:FindFirstChild('Humanoid').WalkSpeed = 30
 	for i=1,#children do
-		local c = children[i]
+		local c = children[i] 
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<300 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
