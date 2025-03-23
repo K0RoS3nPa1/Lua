@@ -440,7 +440,7 @@ local function FindDoughAndWithout(str)
 		local d = children[i]
 		if d.Anchored==false and #d:GetChildren()>9 then
 			if d.IsBurned.Value or d.HasBugs.Value or d.Cold.Value or (d.BrickColor.Name=="Bright orange" and ffc(d,"XBillboard")) then
-				if trash==nil and d.Position.Y > 0 and ((d.Position*Vector3.new(1,0,1))-Vector3.new(47.90, 0, 72.49)).Magnitude > 1 then
+				if trash==nil and d.Position.Y > 0 and ((d.Position*Vector3.new(1,0,1))-Vector3.new(47.90, 0, 72.49)).Magnitude > 10 then
 					trash=d
 				end
 			elseif p==nil and d.BrickColor.Name=="Bright orange" then
@@ -463,7 +463,7 @@ end
 local function getOvenNear(pos)
 	local children = workspace.Ovens:GetChildren()
 	for i=1,#children do
-		if ffc(children[i],"Bottom") and (children[i].Bottom.Position-pos).magnitude < 1.5 then
+		if ffc(children[i],"Bottom") and (children[i].Bottom.Position-pos).magnitude < 10 then
 			return children[i]
 		end
 	end
