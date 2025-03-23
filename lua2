@@ -93,7 +93,7 @@ Create = function(class,parent,props)
 end
 gui=Create("ScreenGui",game.CoreGui,{Name="Farm", ZIndexBehavior="Sibling"})
 
-main=Create("Frame",gui,{Name="main", Draggable=true, Active=true, Size=UDim2.new(0,400,0,200), Position=UDim2.new(0.335,0,0.02,0), BackgroundColor3=Color3.new(0.098,0.098,0.098)})
+main=Create("Frame",gui,{Name="main", Draggable=true, Active=true, Size=UDim2.new(0,400,0,150), Position=UDim2.new(0.335,0,0.02,0), BackgroundColor3=Color3.new(0.098,0.098,0.098)})
 
 topbar=Create("Frame",main,{Name="topbar", Size=UDim2.new(1,0,0.15,0), BackgroundColor3=Color3.new(0.255,0.255,0.255)})
 
@@ -127,18 +127,18 @@ Label_1=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0),
 	BackgroundTransparency=1, TextColor3=Color3.new(1,1,1), TextScaled=true, BackgroundColor3=Color3.new(1,1,1)})
 
 deliverAtBox=Create("TextBox",kitchen,{Name="deliverAtBox", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.deliver_at), TextSize=50, TextColor3=Color3.new(), 
-	Font="Code", Position=UDim2.new(0.42,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
+	Font="Code", Position=UDim2.new(0.82,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 
-Label_2=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.4,0,1,0), Text="Movespeed At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
+Label_2=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Movespeed At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
 	BackgroundTransparency=1, TextColor3=Color3.new(1,1,1), TextScaled=true, BackgroundColor3=Color3.new(1,1,1)})
 
 MovespeedBox=Create("TextBox",kitchen,{Name="Movespeed", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.movespeed_at), TextSize=50, TextColor3=Color3.new(), 
-	Font="Code", Position=UDim2.new(0.42,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
+	Font="Code", Position=UDim2.new(0.82,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 
 refillEnd=Create("Frame",settings_1,{Name="refillEnd", LayoutOrder=8, BackgroundTransparency=1, Size=UDim2.new(0,100,0,100), BackgroundColor3=Color3.new(1,1,1)})
 
 refillEndBox=Create("TextBox",refillEnd,{Name="refillEndBox", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.refill_end), TextSize=50, TextColor3=Color3.new(), 
-	Font="Code", Position=UDim2.new(0.42,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
+	Font="Code", Position=UDim2.new(0.82,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 
 Label_3=Create("TextLabel",refillEnd,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Refill End:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
 	BackgroundTransparency=1, TextColor3=Color3.new(1,1,1), TextScaled=true, BackgroundColor3=Color3.new(1,1,1)})
