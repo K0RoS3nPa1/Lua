@@ -265,7 +265,7 @@ MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
 end)
 MovespeedBox.FocusLost:Connect(function()
 	if tonumber(MovespeedBox.Text) then
-		settings.movespeed_at=tonumber(MovepeedBox.Text)
+		settings.movespeed_at=tonumber(MovespeedBox.Text)
 	end
 	MovespeedBox.Text=tostring(settings.movespeed_at)
 end)
