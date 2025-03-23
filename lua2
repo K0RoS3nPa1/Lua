@@ -109,9 +109,9 @@ Label=Create("TextLabel",cashier,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), T
 cashierBtn=Create("ImageButton",cashier,{Name="cashierBtn", ImageTransparency=1, BorderSizePixel=0, Size=UDim2.new(0.38,0,1,0), BackgroundColor3=Color3.new(0.392,0.392,0.392)})
 cashierSlider=Create("Frame",cashierBtn,{Name="slider", Size=UDim2.new(0.5,-4,1,-4), Position=UDim2.new(doCashier and 0.5 or 0,2,0,2), BorderSizePixel=0, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 kitchen=Create("Frame",settings_1,{Name="kitchen", LayoutOrder=9, BackgroundTransparency=1, Size=UDim2.new(0,100,0,100), BackgroundColor3=Color3.new(1,1,1)})
-Label_2=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Deliver At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
+Label_2=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Movespeed At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
 	BackgroundTransparency=1, TextColor3=Color3.new(1,1,1), TextScaled=true, BackgroundColor3=Color3.new(1,1,1)})
-deliverAtBox=Create("TextBox",kitchen,{Name="Movespeed", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.movespeed_at), TextSize=50, TextColor3=Color3.new(), 
+MovespeedBox=Create("TextBox",kitchen,{Name="Movespeed", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.movespeed_at), TextSize=50, TextColor3=Color3.new(), 
 	Font="Code", Position=UDim2.new(0.62,0,0,0), TextScaled=true, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 refillEnd=Create("Frame",settings_1,{Name="refillEnd", LayoutOrder=8, BackgroundTransparency=1, Size=UDim2.new(0,100,0,100), BackgroundColor3=Color3.new(1,1,1)})
 refillEndBox=Create("TextBox",refillEnd,{Name="refillEndBox", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.refill_end), TextSize=50, TextColor3=Color3.new(), 
@@ -256,18 +256,18 @@ refillEndBox.FocusLost:Connect(function()
 	end
 	refillEndBox.Text=tostring(settings.refill_end)
 end)
-local oldDeliverAt=deliverAtBox.Text
-deliverAtBox:GetPropertyChangedSignal("Text"):Connect(function()
-	if #deliverAtBox.Text>2 or deliverAtBox.Text:match("%D") then
-		deliverAtBox.Text = oldDeliverAt
+local oldMovespeedAt=MovespeedBox.Text
+MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
+	if #MovespeedBox.Text>2 or MovespeedBox.Text:match("%D") then
+		MovespeedBox.Text = oldMovespeedAt
 	end
-	oldDeliverAt = deliverAtBox.Text
+	oldMovespeedAt = MovespeedBox.Text
 end)
-deliverAtBox.FocusLost:Connect(function()
-	if tonumber(deliverAtBox.Text) then
-		settings.deliver_at=tonumber(deliverAtBox.Text)
+MovespeedBox.FocusLost:Connect(function()
+	if tonumber(MovespeedBox.Text) then
+		settings.movespeed_at=tonumber(MovepeedBox.Text)
 	end
-	deliverAtBox.Text=tostring(settings.deliver_at)
+	MovespeedBox.Text=tostring(settings.movespeed_at)
 end)
 closeBtn.MouseButton1Click:Connect(function()
     gui:Destroy()
