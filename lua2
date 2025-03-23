@@ -9,7 +9,7 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 end
 
 local Gravitysettings = 210
-local movespeed = movespeed_at
+
 local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 if readfile then
@@ -523,7 +523,7 @@ local function smoothTP2(cf)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
 	workspace.Gravity = Gravitysettings
-	for i=0,diff.Magnitude,movespeed do
+	for i=0,diff.Magnitude,movespeed_at do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
 		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
