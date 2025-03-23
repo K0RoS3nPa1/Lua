@@ -329,6 +329,9 @@ for name in pairs(supplyCounts) do
 end
 
 local function FindFirstCustomer()
+local walkspeed = 50
+
+workspace.Customers:FindFirstChild('Humanoid').WalkSpeed = walkspeed
 	local children = workspace.Customers:GetChildren()
 	for i=1,#children do
 		local c = children[i]
