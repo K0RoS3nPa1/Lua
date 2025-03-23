@@ -109,7 +109,7 @@ Label=Create("TextLabel",cashier,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), T
 cashierBtn=Create("ImageButton",cashier,{Name="cashierBtn", ImageTransparency=1, BorderSizePixel=0, Size=UDim2.new(0.38,0,1,0), BackgroundColor3=Color3.new(0.392,0.392,0.392)})
 cashierSlider=Create("Frame",cashierBtn,{Name="slider", Size=UDim2.new(0.5,-4,1,-4), Position=UDim2.new(doCashier and 0.5 or 0,2,0,2), BorderSizePixel=0, BackgroundColor3=Color3.new(0.784,0.784,0.784)})
 kitchen=Create("Frame",settings_1,{Name="kitchen", LayoutOrder=9, BackgroundTransparency=1, Size=UDim2.new(0,100,0,100), BackgroundColor3=Color3.new(1,1,1)})
-Label_1=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Movespeed At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
+Label_1=Create("TextLabel",kitchen,{TextWrapped=true, Size=UDim2.new(0.6,0,1,0), Text="Famspeed At:", TextSize=14, TextXAlignment="Right", Font="SourceSans", 
 	BackgroundTransparency=1, TextColor3=Color3.new(1,1,1), TextScaled=true, BackgroundColor3=Color3.new(1,1,1)})
 
 MovespeedBox=Create("TextBox",kitchen,{Name="Movespeed", TextWrapped=true, Size=UDim2.new(0.25,0,1,0), Text=tostring(settings.movespeed_at), TextSize=50, TextColor3=Color3.new(), 
@@ -842,7 +842,7 @@ while gui.Parent do
 		if refill then
 			local oldcf = root.CFrame
 			local waiting = false
-			local waitingTick = 2.8
+			local waitingTick = 1.8
 			local lastBox
 			while doSupplier do
 				--check if refill is done otherwise hit buttons
@@ -877,9 +877,9 @@ while gui.Parent do
 						fulfilled=false
 					end
 				end
-				wait(0.4)
+				wait(0.3)
 				if yy == 1.2 and realc < 3 then
-				    wait(0.9)
+				    wait(0.5)
 				end
 				end
 				if fulfilled or not (doSupplier) then
@@ -902,13 +902,13 @@ while gui.Parent do
 								wait()
 							end
 						end
-						wait(0.3)
+						wait(0.2)
 					end
 				end
 				if not waiting then
 					--move boxes
 					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
-					wait(0.3)
+					wait(0.2)
 					lastBox=nil
 					local j=0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
