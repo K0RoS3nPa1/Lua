@@ -335,7 +335,7 @@ local function FindFirstCustomer()
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<150 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^20)^.50<.100)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
-			if dialog:sub(-8)=="instead." then
+			if dialog:sub(-30)=="instead." then
 				dialog = dialog:sub(-30)
 			end
 			if dialog:find("pepperoni",1,true) then
