@@ -330,7 +330,7 @@ end
 
 local function FindFirstCustomer()
 
-	local children = workspace.Customers:GetChildren() and workspace.Customers:GetChildren('Humanoid').WalkSpeed = 30
+	local children = workspace.Customers:GetChildren() and workspace.Customers:GetChildren('Humanoid').WalkSpeed = 50
 	for i=1,#children do
 		local c = children[i] 
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<300 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
