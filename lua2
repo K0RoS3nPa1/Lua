@@ -325,15 +325,12 @@ end
 
 local function FindFirstCustomer()
 	local children = workspace.Customers:GetChildren()
-	local PhysicsService = game:GetService("PhysicsService")
 
--- NPC in die "NPCGroup" setzen
 
 
 	for i=1,#children do
 		local c = children[i]
-		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.100) and 
-		PhysicsService:SetPartCollisionGroup(c) ) then
+		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.100) and (game.Workspace.c.CanCollide = false) ) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
 			if dialog:sub(-8)=="instead." then
