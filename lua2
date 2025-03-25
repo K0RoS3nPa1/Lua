@@ -329,11 +329,7 @@ for name in pairs(supplyCounts) do
 end
 
 local function FindFirstCustomer()
-	local PhysicsService = game:GetService("PhysicsService")
 
-	-- NPC in die "NPCGroup" setzen
-	local npc = game.Workspace.NPC
-	PhysicsService:SetPartCollisionGroup(npc, "Customers")
 	local children = workspace.Customers:GetChildren()
 	for i=1,#children do
 		local c = children[i] 
