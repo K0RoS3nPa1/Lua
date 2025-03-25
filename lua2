@@ -333,7 +333,7 @@ local function FindFirstCustomer()
 	local children = workspace.Customers:GetChildren()
 	for i=1,#children do
 		local c = children[i] 
-		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<300 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.50<.1000)) then
+		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<200 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.200)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
 			if dialog:sub(-30)=="instead." then
