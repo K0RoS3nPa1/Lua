@@ -397,7 +397,7 @@ local cookingDict = {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
 local cookPtick=0
 local cookDtick=0
 local cookWarned=true
-local boxerWarned=true
+local boxerWarned=false
 local function getOrders()
 	local orders={}
 	local tempCookingDict = {}
