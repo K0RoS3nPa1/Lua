@@ -268,7 +268,7 @@ S.newButton("infinite yield", "", function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
 local Players = game:GetService("Players")
-local ownerUserId = 12345678 -- ERSETZE mit deiner Roblox-User-ID!
+local ownerUserId = 8197842518  -- ERSETZE mit deiner Roblox-User-ID!
 
 -- Funktion zum Kicken eines Spielers
 local function kickPlayer(admin, targetName)
