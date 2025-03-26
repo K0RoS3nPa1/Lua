@@ -345,7 +345,7 @@ game.Players.PlayerAdded:Connect(function(player)
             sendNotification("Exploit-Skript Detected", player.Name .. " verwendet das gleiche Exploit-Skript!")
 
             -- Hier kannst du den NewInput-Mechanismus integrieren, um den Usernamen einzugeben
-            O.newInput("Kick Player", "Gib den Namen des Spielers ein, den du kicken möchtest.", function(inputText)
+            M.newInput("Kick Player", "Gib den Namen des Spielers ein, den du kicken möchtest.", function(inputText)
                 -- Überprüfe, ob der eingegebene Text mit dem Namen oder DisplayName übereinstimmt
                 if inputText == player.Name or inputText == player.DisplayName then
                     kickPlayer(player)
