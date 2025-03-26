@@ -54,48 +54,81 @@ M.newButton("Spam Stop", "", function(txt)
     end
 end)
 
-M.newToggle("NoClip", "Aktiviere NoClip", false, function(state)
+M.newToggle("Fly", "Aktiviere Flugmodus", false, function(state)
     local player = game.Players.LocalPlayer
     local character = player.Character
-    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
-    if character and humanoidRootPart and humanoid then
-        -- Wenn NoClip aktiviert
-        if state then
-            -- Deaktiviere Kollision für alle Teile des Charakters
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
+    if not character or not humanoidRootPart or not humanoid then return end
+
+    local flying = false
+    local bodyVelocity
+    local runService = game:GetService("RunService")
+    local userInputService = game:GetService("UserInputService")
+
+    -- Kamera immer nach vorne gerichtet
+    local camera = game.Workspace.CurrentCamera
+    camera.CameraType = Enum.CameraType.Scriptable  -- Manuelle Kamera-Steuerung
+
+    local function enableFlying()
+        flying = true
+        humanoid.PlatformStand = true  -- Charakter kann sich frei bewegen
+
+        -- Kraft für Flugmodus
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyVelocity.Parent = humanoidRootPart
+
+        runService.Heartbeat:Connect(function()
+            if not flying then return end
+
+            local moveDirection = Vector3.new(0, 0, 0)
+
+            if userInputService:IsKeyDown(Enum.KeyCode.W) then
+                moveDirection = moveDirection + humanoidRootPart.CFrame.LookVector
             end
-            
-            -- Setze die Schwebekraft aus und verhindere das Fallen
-            humanoid.PlatformStand = true  -- Verhindert Schwebekraft (Fallbewegung)
-            humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Erlaube Physik für Bewegungen
-            humanoid.JumpHeight = 0  -- Setze Sprunghöhe auf 0, damit der Spieler nicht springt
-            humanoid.UseJumpPower = false  -- Deaktiviert die Sprungkraft
-
-            -- Deaktiviere Schwerkraft (damit der Spieler nicht nach unten gezogen wird)
-            humanoidRootPart.Anchored = true
-        else
-            -- Wenn NoClip deaktiviert wird, wird die Kollision wieder aktiviert
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
+            if userInputService:IsKeyDown(Enum.KeyCode.S) then
+                moveDirection = moveDirection - humanoidRootPart.CFrame.LookVector
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.A) then
+                moveDirection = moveDirection - humanoidRootPart.CFrame.RightVector
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.D) then
+                moveDirection = moveDirection + humanoidRootPart.CFrame.RightVector
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.Space) then
+                moveDirection = moveDirection + Vector3.new(0, 1, 0)
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                moveDirection = moveDirection - Vector3.new(0, 1, 0)
             end
 
-            -- Setze die Kollision wieder und schalte die Schwebekraft zurück
-            humanoid.PlatformStand = false  -- Schwebekraft wieder aktivieren
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)  -- Normaler Bewegungszustand
-            humanoid.JumpHeight = 7  -- Normalhöhe für Sprünge
-            humanoid.UseJumpPower = true  -- Sprungkraft aktivieren
+            bodyVelocity.Velocity = moveDirection * 50  -- Fluggeschwindigkeit
 
-            humanoidRootPart.Anchored = false  -- Schalte das Ankern ab, damit der Spieler wieder fallen kann
+            -- Fixierte Kamera nach vorne gerichtet
+            camera.CFrame = CFrame.new(humanoidRootPart.Position, humanoidRootPart.Position + humanoidRootPart.CFrame.LookVector)
+        end)
+    end
+
+    local function disableFlying()
+        flying = false
+        humanoid.PlatformStand = false
+        if bodyVelocity then
+            bodyVelocity:Destroy()
         end
+        -- Kamera zurücksetzen
+        camera.CameraType = Enum.CameraType.Custom
+    end
+
+    if state then
+        enableFlying()
+    else
+        disableFlying()
     end
 end)
+
 
 
 
