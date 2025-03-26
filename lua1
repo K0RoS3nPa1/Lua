@@ -4,7 +4,12 @@ local window = DrRayLibrary:Load("Pizza Hub", "rbxassetid://89063524023843")
 local M = DrRayLibrary.newTab("Main", "rbxassetid://2795572800")
 local T = DrRayLibrary.newTab("Teleport's", "rbxassetid://6723742952")
 local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
-local PlayerId = game.Players.LocalPlayer.UserId
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local ownerUserId = 8197842518  -- Replace with your actual Roblox User ID!
+if player.UserId == ownerUserId then
+    local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
+end
 
 
 --Main--
@@ -327,7 +332,7 @@ end
 game.ReplicatedStorage.ExploitNotification:FireServer(player)
 
 --[Owner Only Features]
-if player.UserId == ownerUserId then
+
     local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
     O.newInput("Kick User", "Enter the name of the player you want to kick.", function(input)
         -- Kick the player based on their name
@@ -368,4 +373,4 @@ end
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(CFrame)
     end)
 
-end
+
