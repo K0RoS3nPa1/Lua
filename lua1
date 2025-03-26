@@ -53,6 +53,7 @@ M.newButton("Spam Stop", "", function(txt)
     end
     end
 end)
+
 M.newToggle("NoClip", "Aktiviere NoClip", false, function(state)
     local player = game.Players.LocalPlayer
     local character = player.Character
