@@ -61,14 +61,23 @@ M.newToggle("NoClip", "Aktiviere NoClip", false, function(state)
 
         -- NoClip aktivieren/deaktivieren
         if state then
-            humanoid.PlatformStand = true  -- Deaktiviert die Gravitation und Physik
-            character.HumanoidRootPart.CanCollide = false  -- Deaktiviert Kollision mit Objekten
+            humanoid.PlatformStand = true  -- Deaktiviert die Schwebefunktion und Gravitation
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false  -- Deaktiviert die Kollision für alle Teile des Charakters
+                end
+            end
         else
-            humanoid.PlatformStand = false  -- Aktiviert wieder normale Gravitation und Physik
-            character.HumanoidRootPart.CanCollide = true  -- Aktiviert Kollision mit Objekten
+            humanoid.PlatformStand = false  -- Aktiviert wieder normale Physik
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true  -- Aktiviert Kollisionen wieder
+                end
+            end
         end
     end
 end)
+
 
 
 M.newToggle("Spam sounds", "", false, function(ab)
