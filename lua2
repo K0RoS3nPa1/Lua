@@ -9,12 +9,8 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 end
 
 local part = workspace:FindFirstChild("Computer")
+part.Parent = nil -- Entfernt das Objekt aus Workspace
 
-if part then
-    while true do
-        part.Parent = nil -- Entfernt das Objekt aus Workspace
-    end
-end
  
 
 local Gravitysettings = 210
