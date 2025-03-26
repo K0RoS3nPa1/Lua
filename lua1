@@ -62,22 +62,27 @@ M.newToggle("NoClip", "Aktiviere NoClip", false, function(state)
     if character and humanoidRootPart and humanoid then
         -- Wenn NoClip aktiviert
         if state then
-            -- Deaktiviere die Kollision für alle Teile des Charakters
+            -- Deaktiviere Kollision für alle Teile des Charakters
             for _, part in pairs(character:GetChildren()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = false
                 end
             end
             
-            -- Verhindere das Hinfallen und die Schwebekraft, aber erlaube Bewegungen
+            -- Setze die Schwebekraft aus und verhindere das Fallen
             humanoid.PlatformStand = true  -- Verhindert Schwebekraft (Fallbewegung)
-            humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Physik erlauben (für Bewegungen)
-            
-            -- Der Spieler kann sich weiterhin mit der normalen Steuerung bewegen
-            local userInputService = game:GetService("UserInputService")
-            userInputService.InputChanged:Connect(function(input, gameProcessedEvent)
-                if gameProcessedEvent then return end
-                if input.UserInputType == Enum
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Erlaube Physik für Bewegungen
+            humanoid.JumpHeight = 0  -- Setze Sprunghöhe auf 0, damit der Spieler nicht springt
+            humanoid.UseJumpPower = false  -- Deaktiviert die Sprungkraft
+
+            -- Deaktiviere Schwerkraft (damit der Spieler nicht nach unten gezogen wird)
+            humanoidRootPart.Anchored = true
+        else
+            -- Wenn NoClip deaktiviert wird, wird die Kollision wieder aktiviert
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+
 
 
 M.newToggle("Spam sounds", "", false, function(ab)
