@@ -54,7 +54,7 @@ M.newButton("Spam Stop", "", function(txt)
     end
 end)
 
-M.newToggle("Fly", "Aktiviere Flugmodus", false, function(state)
+M.newToggle("Fly", "Aktiviere Exploit Fly", false, function(state)
     local player = game.Players.LocalPlayer
     local character = player.Character
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
@@ -63,29 +63,34 @@ M.newToggle("Fly", "Aktiviere Flugmodus", false, function(state)
     if not character or not humanoidRootPart or not humanoid then return end
 
     local flying = false
-    local bodyVelocity
+    local bodyVelocity, bodyGyro
     local runService = game:GetService("RunService")
     local userInputService = game:GetService("UserInputService")
 
-    -- Kamera immer nach vorne gerichtet
-    local camera = game.Workspace.CurrentCamera
-    camera.CameraType = Enum.CameraType.Scriptable  -- Manuelle Kamera-Steuerung
-
     local function enableFlying()
         flying = true
-        humanoid.PlatformStand = true  -- Charakter kann sich frei bewegen
+        humanoid.PlatformStand = true  -- Deaktiviert Animationen für mehr Kontrolle
 
-        -- Kraft für Flugmodus
+        -- Stabilisierende Drehung
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.P = 9e4
+        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.CFrame = humanoidRootPart.CFrame
+        bodyGyro.Parent = humanoidRootPart
+
+        -- Bewegungskraft
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
         bodyVelocity.Parent = humanoidRootPart
 
+        -- Flug-Loop
         runService.Heartbeat:Connect(function()
             if not flying then return end
 
             local moveDirection = Vector3.new(0, 0, 0)
 
+            -- PC Steuerung
             if userInputService:IsKeyDown(Enum.KeyCode.W) then
                 moveDirection = moveDirection + humanoidRootPart.CFrame.LookVector
             end
@@ -105,21 +110,20 @@ M.newToggle("Fly", "Aktiviere Flugmodus", false, function(state)
                 moveDirection = moveDirection - Vector3.new(0, 1, 0)
             end
 
-            bodyVelocity.Velocity = moveDirection * 50  -- Fluggeschwindigkeit
+            -- Mobile Steuerung (Joystick)
+            local moveVector = userInputService:GetMovementVector()
+            moveDirection = moveDirection + humanoidRootPart.CFrame:VectorToWorldSpace(Vector3.new(moveVector.X, 0, -moveVector.Y))
 
-            -- Fixierte Kamera nach vorne gerichtet
-            camera.CFrame = CFrame.new(humanoidRootPart.Position, humanoidRootPart.Position + humanoidRootPart.CFrame.LookVector)
+            bodyVelocity.Velocity = moveDirection * 50  -- Geschwindigkeit
+            bodyGyro.CFrame = humanoidRootPart.CFrame
         end)
     end
 
     local function disableFlying()
         flying = false
         humanoid.PlatformStand = false
-        if bodyVelocity then
-            bodyVelocity:Destroy()
-        end
-        -- Kamera zurücksetzen
-        camera.CameraType = Enum.CameraType.Custom
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
     end
 
     if state then
