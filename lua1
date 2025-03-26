@@ -62,33 +62,35 @@ M.newToggle("Fly", "Aktiviere Exploit Fly", false, function(state)
 
     if not character or not humanoidRootPart or not humanoid then return end
 
-    local flying = false
-    local bodyVelocity, bodyGyro
     local runService = game:GetService("RunService")
     local userInputService = game:GetService("UserInputService")
 
+    local flying = false
+    local bodyVelocity, bodyGyro
+    local flightConnection  -- Speichert die Verbindung, damit sie getrennt werden kann
+
     local function enableFlying()
         flying = true
-        humanoid.PlatformStand = true  -- Deaktiviert Animationen für mehr Kontrolle
+        humanoid.PlatformStand = true  -- Deaktiviert das normale Laufen
 
-        -- Stabilisierende Drehung
+        -- Rotation stabilisieren
         bodyGyro = Instance.new("BodyGyro")
         bodyGyro.P = 9e4
         bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
         bodyGyro.CFrame = humanoidRootPart.CFrame
         bodyGyro.Parent = humanoidRootPart
 
-        -- Bewegungskraft
+        -- Bewegung steuern
         bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.Velocity = Vector3.zero
         bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
         bodyVelocity.Parent = humanoidRootPart
 
         -- Flug-Loop
-        runService.Heartbeat:Connect(function()
+        flightConnection = runService.RenderStepped:Connect(function()
             if not flying then return end
 
-            local moveDirection = Vector3.new(0, 0, 0)
+            local moveDirection = Vector3.zero
 
             -- PC Steuerung
             if userInputService:IsKeyDown(Enum.KeyCode.W) then
@@ -114,7 +116,8 @@ M.newToggle("Fly", "Aktiviere Exploit Fly", false, function(state)
             local moveVector = userInputService:GetMovementVector()
             moveDirection = moveDirection + humanoidRootPart.CFrame:VectorToWorldSpace(Vector3.new(moveVector.X, 0, -moveVector.Y))
 
-            bodyVelocity.Velocity = moveDirection * 50  -- Geschwindigkeit
+            -- Geschwindigkeit setzen
+            bodyVelocity.Velocity = moveDirection.Unit * 50  -- 50 = Geschwindigkeit
             bodyGyro.CFrame = humanoidRootPart.CFrame
         end)
     end
@@ -122,6 +125,7 @@ M.newToggle("Fly", "Aktiviere Exploit Fly", false, function(state)
     local function disableFlying()
         flying = false
         humanoid.PlatformStand = false
+        if flightConnection then flightConnection:Disconnect() end
         if bodyVelocity then bodyVelocity:Destroy() end
         if bodyGyro then bodyGyro:Destroy() end
     end
@@ -132,7 +136,6 @@ M.newToggle("Fly", "Aktiviere Exploit Fly", false, function(state)
         disableFlying()
     end
 end)
-
 
 
 
