@@ -53,6 +53,43 @@ M.newButton("Spam Stop", "", function(txt)
     end
     end
 end)
+-- Noclip Script mit Toggle Funktion
+M.newToggle("Noclip", "Aktiviert/Deaktiviert Noclip-Modus", false, function(state)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    -- Funktion zum Aktivieren/Deaktivieren von Noclip
+    local function setNoclip(state)
+        if state then
+            -- Setze den Charakter in den Noclip-Modus (durch Kollisionen hindurch fliegen)
+            humanoid.PlatformStand = true
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+            
+            -- Entferne die Kollisionen mit Wänden, etc.
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        else
+            -- Setze den Charakter zurück auf normalen Zustand
+            humanoid.PlatformStand = false
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            
+            -- Stelle die Kollisionen wieder her
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+
+    -- Setze den Noclip-Modus basierend auf dem Status des Toggles
+    setNoclip(state)
+end)
+
 
 M.newToggle("Spam sounds", "", false, function(ab)
     getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
