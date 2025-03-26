@@ -270,12 +270,11 @@ end)
 local Players = game:GetService("Players")
 local ownerUserId = 8197842518  -- ERSETZE mit deiner Roblox-User-ID!
 
+local remote = Instance.new("RemoteEvent")
+remote.Name = "ExploitNotification"
+remote.Parent = game.ReplicatedStorage
 
-
--- Hier fügst du eine eindeutige Identifikation in deinem Exploit-Skript hinzu, z.B. ein spezielles Flag.
-local exploitFlag = "ExploitScriptDetected"
-
--- Funktion, um Spieler zu identifizieren, die das gleiche Exploit-Skript verwenden
+-- Funktion zum Kicken eines Exploit-Users
 local function kickExploitUser(admin, targetName)
     -- Prüfen, ob der Spieler der Owner ist
     if admin.UserId ~= ownerUserId then
@@ -287,9 +286,7 @@ local function kickExploitUser(admin, targetName)
 
     -- Durch alle Spieler gehen, um den Zielspieler zu finden
     for _, p in pairs(Players:GetPlayers()) do
-        -- Überprüfen, ob der Spieler das Exploit-Skript verwendet
-        if p:FindFirstChild(exploitFlag) then
-            -- Spieler gefunden, der das Exploit-Skript verwendet
+        if p:FindFirstChild("ExploitScriptDetected") then
             if string.lower(p.Name) == string.lower(targetName) or string.lower(p.DisplayName) == string.lower(targetName) then
                 targetPlayer = p
                 break
@@ -306,16 +303,35 @@ local function kickExploitUser(admin, targetName)
     end
 end
 
--- Input-Feld verbinden, das den Namen des Spielers entgegennimmt
 
 
--- Setze das Exploit-Skript-Flag für den Spieler, wenn sie das Exploit-Skript verwenden
-game.Players.LocalPlayer[exploitFlag] = true
+-- Event Listener für Benachrichtigung, wenn ein Exploit-Skript geöffnet wird
+remote.OnServerEvent:Connect(function(player)
+    -- Hier kannst du eine Nachricht an den Admin senden, wenn jemand das Exploit-Skript öffnet
+    game:GetService("Players"):GetPlayerByUserId(ownerUserId):SendNotification(player.Name .. " hat das Exploit-Skript geöffnet!")
+end)
 
+-- Client-Skript (Client-Side)
+local player = game.Players.LocalPlayer
+
+-- Wenn der Spieler das Exploit-Skript ausführt, setze das Flag und sende eine Nachricht an den Server
+if not player:FindFirstChild("ExploitScriptDetected") then
+    local exploitFlag = Instance.new("BoolValue")
+    exploitFlag.Name = "ExploitScriptDetected"
+    exploitFlag.Parent = player
+end
+
+-- Sende eine Nachricht an den Server, dass das Exploit-Skript geöffnet wurde
+game.ReplicatedStorage.ExploitNotification:FireServer(player)
 --[Owner]
 
 if PlayerId == 8197842518 then
     local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
+-- Input-Feld verbinden
+O.newInput("Kick User", "Gib den Namen des Spielers ein, den du kicken willst.", function(H)
+    kickPlayer(H.Player, H.Text)
+end)
+
 
     O.newButton("become manager", "", function()
         spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/incognitototo/sda/main/dwa.lua",true)))
@@ -323,10 +339,6 @@ if PlayerId == 8197842518 then
 
 
 
--- Input-Feld verbinden
-M.newInput("Kick User", "Gib den Namen des Spielers ein, den du kicken willst.", function(H)
-    kickPlayer(H.Player, H.Text)
-end)
 
     
 
