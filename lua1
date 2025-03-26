@@ -56,29 +56,42 @@ end)
 M.newToggle("NoClip", "Aktiviere NoClip", false, function(state)
     local player = game.Players.LocalPlayer
     local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
 
-        -- NoClip aktivieren/deaktivieren
+    if character and humanoidRootPart and humanoid then
+        -- Wenn NoClip aktiviert
         if state then
-            humanoid.PlatformStand = true  -- Deaktiviert die Schwebefunktion und Gravitation
+            humanoid.PlatformStand = true -- Verhindert den Einfluss der Schwebekraft
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Verhindert Physik von der Welt
+            
+            -- Kollision für alle Teile des Charakters deaktivieren
             for _, part in pairs(character:GetChildren()) do
                 if part:IsA("BasePart") then
-                    part.CanCollide = false  -- Deaktiviert die Kollision für alle Teile des Charakters
+                    part.CanCollide = false
                 end
             end
+            
+            -- Um sicherzustellen, dass der Spieler sich weiterhin mit der Maus bewegen kann
+            game:GetService("UserInputService").InputChanged:Connect(function(input, gameProcessedEvent)
+                if gameProcessedEvent then return end
+                if input.UserInputType == Enum.UserInputType.MouseMovement then
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(input.Delta.X * 0.1, 0, input.Delta.Y * 0.1)
+                end
+            end)
         else
-            humanoid.PlatformStand = false  -- Aktiviert wieder normale Physik
+            humanoid.PlatformStand = false  -- Wiederherstellen des normalen Zustands
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)  -- Normaler Bewegungszustand
+
+            -- Kollisionen wieder aktivieren
             for _, part in pairs(character:GetChildren()) do
                 if part:IsA("BasePart") then
-                    part.CanCollide = true  -- Aktiviert Kollisionen wieder
+                    part.CanCollide = true
                 end
             end
         end
     end
 end)
-
-
 
 M.newToggle("Spam sounds", "", false, function(ab)
     getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
