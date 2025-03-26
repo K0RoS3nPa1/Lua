@@ -270,7 +270,7 @@ end)
 
 --[Owner]
 
-if PlayerId == loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4'))() then
+if PlayerId == loadstring(game:HttpGet(('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4'),true))() then
     local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
     O.newButton("become manager", "", function()
