@@ -270,6 +270,8 @@ end)
 local Players = game:GetService("Players")
 local ownerUserId = 8197842518  -- ERSETZE mit deiner Roblox-User-ID!
 
+
+
 -- Funktion zum Kicken eines Spielers
 local function kickPlayer(admin, targetName)
     -- Prüfen, ob der Spieler der Owner ist
@@ -280,9 +282,9 @@ local function kickPlayer(admin, targetName)
 
     local targetPlayer = nil
 
-    -- Suche den Spieler nach Name (Ignoriert Groß-/Kleinschreibung)
+    -- Suche nach Spielern anhand von Username oder Display Name (Ignoriert Groß-/Kleinschreibung)
     for _, p in ipairs(Players:GetPlayers()) do
-        if string.lower(p.Name) == string.lower(targetName) then
+        if string.lower(p.Name) == string.lower(targetName) or string.lower(p.DisplayName) == string.lower(targetName) then
             targetPlayer = p
             break
         end
@@ -291,11 +293,15 @@ local function kickPlayer(admin, targetName)
     -- Spieler gefunden?
     if targetPlayer then
         targetPlayer:Kick("🚫 Du wurdest vom Server entfernt!")
-        admin:SendNotification("✅ " .. targetName .. " wurde gekickt.", 3)
+        admin:SendNotification("✅ " .. targetPlayer.Name .. " wurde gekickt.", 3)
     else
         admin:SendNotification("❌ Spieler nicht gefunden!", 3)
     end
 end
+
+-- Input-Feld verbinden
+
+
 --[Owner]
 
 if PlayerId == 8197842518 then
