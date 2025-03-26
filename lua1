@@ -4,12 +4,7 @@ local window = DrRayLibrary:Load("Pizza Hub", "rbxassetid://89063524023843")
 local M = DrRayLibrary.newTab("Main", "rbxassetid://2795572800")
 local T = DrRayLibrary.newTab("Teleport's", "rbxassetid://6723742952")
 local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local ownerUserId = 8197842518  -- Replace with your actual Roblox User ID!
-if player.UserId == ownerUserId then
-    local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
-end
+local PlayerId = game.Players.LocalPlayer.UserId
 
 
 --Main--
@@ -59,6 +54,10 @@ M.newButton("Spam Stop", "", function(txt)
     end
 end)
 
+M.newToggle("Spam sounds", "", false, function(ab)
+    getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
+end)
+
 local replicatedStorage = game:GetService("ReplicatedStorage") -- Sicherer Speicher für die Modelle
 local model1 = game.Workspace:FindFirstChild("KrustyKrab") -- Modell 1 finden
 local model2 = game.Workspace:FindFirstChild("Teleport to Party Island")  -- Modell 2 finden
@@ -77,10 +76,6 @@ M.newToggle("Anti Teleports", "", false, function(state)
         if model1 then model1.Parent = game.Workspace end
         if model2 then model2.Parent = game.Workspace end
     end
-end)
-
-M.newToggle("Spam sounds", "", false, function(ab)
-    getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
 end)
 
 M.newToggle("Anti-Oven Fire", "", false, function(y)
@@ -272,79 +267,15 @@ end)
 S.newButton("infinite yield", "", function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
-local Players = game:GetService("Players")
-local ownerUserId = 8197842518  -- Replace with your actual Roblox User ID!
 
--- Create a RemoteEvent in ReplicatedStorage for communication
-local remote = Instance.new("RemoteEvent")
-remote.Name = "ExploitNotification"
-remote.Parent = game.ReplicatedStorage
+--[Owner]
 
--- Function to send notification when an exploit script is opened
-local function notifyAdmin(admin, targetName)
-    -- Check if the admin is the owner
-    if admin.UserId ~= ownerUserId then
-        admin:SendNotification("❌ You don't have permission!", 3)
-        return
-    end
+if PlayerId == 8197842518 then
+    local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
-    local targetPlayer = nil
-
-    -- Search for the player that triggered the exploit
-    for _, p in pairs(Players:GetPlayers()) do
-        if p:FindFirstChild("ExploitScriptDetected") then
-            if string.lower(p.Name) == string.lower(targetName) or string.lower(p.DisplayName) == string.lower(targetName) then
-                targetPlayer = p
-                break
-            end
-        end
-    end
-
-    -- If the player is found, kick them and notify the admin
-    if targetPlayer then
-        targetPlayer:Kick("🚫 You were kicked for using the exploit script.")
-        admin:SendNotification("✅ " .. targetPlayer.Name .. " was kicked for using the exploit script.", 3)
-    else
-        admin:SendNotification("❌ Player not found or not using the exploit script.", 3)
-    end
-end
-
--- Event listener for when the exploit script is opened
-remote.OnServerEvent:Connect(function(player)
-    -- Notify the admin when a player opens the exploit script
-    local adminPlayer = game:GetService("Players"):GetPlayerByUserId(ownerUserId)
-    if adminPlayer then
-        -- Send a message to the admin that the exploit script was opened
-        adminPlayer:SendNotification(player.Name .. " has opened the exploit script!")
-    end
-end)
-
--- Client-Side Script to detect when a player opens the exploit script
-local player = game.Players.LocalPlayer
--- Create a BoolValue to mark the player as having opened the exploit script
-if not player:FindFirstChild("ExploitScriptDetected") then
-    local exploitFlag = Instance.new("BoolValue")
-    exploitFlag.Name = "ExploitScriptDetected"
-    exploitFlag.Parent = player
-end
-
--- Send a notification to the server that the exploit script has been opened
-game.ReplicatedStorage.ExploitNotification:FireServer(player)
-
---[Owner Only Features]
-
-
-    O.newInput("Kick User", "Enter the name of the player you want to kick.", function(input)
-        -- Kick the player based on their name
-        local targetName = input.Text
-        notifyAdmin(player, targetName)
+    O.newButton("become manager", "", function()
+        spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/incognitototo/sda/main/dwa.lua",true)))
     end)
-
-    O.newButton("Become Manager", "", function()
-        spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/incognitototo/sda/main/dwa.lua", true)))
-    end)
-end
-
     
 
     O.newButton("Pizza place", "kick, Tolling version", function()
@@ -373,4 +304,4 @@ end
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(CFrame)
     end)
 
-
+end
