@@ -53,7 +53,7 @@ M.newButton("Spam Stop", "", function(txt)
     end
     end
 end)
--- Noclip Script mit Toggle Funktion für Wände
+-- Noclip Toggle Script
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
@@ -65,47 +65,58 @@ local noclipEnabled = false
 -- Funktion zum Aktivieren/Deaktivieren von Noclip
 local function setNoclip(state)
     noclipEnabled = state
-    
+
     if noclipEnabled then
         -- Setze den Charakter in den Noclip-Modus
-        humanoid.PlatformStand = true
-        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-        
+        humanoid.PlatformStand = true  -- Deaktiviert bestimmte Bewegungsarten (wie das Umfallen)
+
         -- Entferne die Kollision für alle Teile des Charakters
         for _, part in pairs(character:GetChildren()) do
             if part:IsA("BasePart") then
                 part.CanCollide = false
             end
         end
-        
-        -- Schalte die Schwerkraft ab
-        humanoid.UseJumpPower = true
-        humanoid.JumpHeight = 0
-        humanoid.Gravity = 0
+
+        -- Mache den Charakter weiterhin normal bewegbar
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        humanoid.PlatformStand = true
     else
         -- Setze den Charakter zurück in den normalen Zustand
         humanoid.PlatformStand = false
         humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-        
+
         -- Stelle die Kollisionen wieder her
         for _, part in pairs(character:GetChildren()) do
             if part:IsA("BasePart") then
                 part.CanCollide = true
             end
         end
-        
-        -- Schalte die Schwerkraft und den Sprung zurück
-        humanoid.UseJumpPower = false
-        humanoid.JumpHeight = 50
-        humanoid.Gravity = 196.2
     end
 end
 
--- Toggle-Funktion für Noclip
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Text = "Noclip Toggle"
-ToggleButton.Size = U
+-- Noclip Toggle mit M.newToggle
+M.newToggle("Noclip", "Aktiviere Noclip-Modus", false, function(state)
+    setNoclip(state)
+end)
 
+-- Funktion zur Bewegung des Spielers im Noclip-Modus
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if noclipEnabled and not gameProcessed then
+        local moveDirection = Vector3.zero
+        
+        -- Mausbewegung für Noclip verwenden
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            local camera = workspace.CurrentCamera
+            local cameraLookAt = camera.CFrame.LookVector
+            moveDirection = cameraLookAt
+        end
+        
+        -- Bewege den Charakter basierend auf Mausbewegungen
+        if moveDirection.Magnitude > 0 then
+            character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.new(moveDirection * 0.5))
+        end
+    end
+end)
 
 M.newToggle("Spam sounds", "", false, function(ab)
     getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
