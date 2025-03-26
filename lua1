@@ -82,6 +82,19 @@ M.newToggle("NoClip", "Aktiviere NoClip", false, function(state)
             for _, part in pairs(character:GetChildren()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = true
+                end
+            end
+
+            -- Setze die Kollision wieder und schalte die Schwebekraft zurück
+            humanoid.PlatformStand = false  -- Schwebekraft wieder aktivieren
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)  -- Normaler Bewegungszustand
+            humanoid.JumpHeight = 7  -- Normalhöhe für Sprünge
+            humanoid.UseJumpPower = true  -- Sprungkraft aktivieren
+
+            humanoidRootPart.Anchored = false  -- Schalte das Ankern ab, damit der Spieler wieder fallen kann
+        end
+    end
+end)
 
 
 
