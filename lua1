@@ -73,7 +73,7 @@ M.newToggle("Fly", "Aktiviere Fly Exploit", false, function(state)
         if flying then return end
         flying = true
         humanoid.PlatformStand = true  -- Verhindert Fallen
-        
+
         -- Physikobjekte hinzufügen
         local bv = Instance.new("BodyVelocity")
         bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
@@ -90,7 +90,7 @@ M.newToggle("Fly", "Aktiviere Fly Exploit", false, function(state)
             if not flying then return end
 
             local moveDir = Vector3.zero
-            
+
             -- PC Steuerung (WASD + Space/Shift)
             if userInputService:IsKeyDown(Enum.KeyCode.W) then
                 moveDir = moveDir + root.CFrame.LookVector
@@ -140,6 +140,9 @@ M.newToggle("Fly", "Aktiviere Fly Exploit", false, function(state)
                 obj:Destroy()
             end
         end
+
+        -- Setzt die Bewegung zurück, damit der Spieler sich wieder normal bewegt
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
     end
 
     if state then
