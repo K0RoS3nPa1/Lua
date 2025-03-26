@@ -53,42 +53,58 @@ M.newButton("Spam Stop", "", function(txt)
     end
     end
 end)
--- Noclip Script mit Toggle Funktion
-M.newToggle("Noclip", "Aktiviert/Deaktiviert Noclip-Modus", false, function(state)
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    local humanoid = character:WaitForChild("Humanoid")
+-- Noclip Script mit Toggle Funktion für Wände
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local userInputService = game:GetService("UserInputService")
+
+-- Noclip-Status
+local noclipEnabled = false
+
+-- Funktion zum Aktivieren/Deaktivieren von Noclip
+local function setNoclip(state)
+    noclipEnabled = state
     
-    -- Funktion zum Aktivieren/Deaktivieren von Noclip
-    local function setNoclip(state)
-        if state then
-            -- Setze den Charakter in den Noclip-Modus (durch Kollisionen hindurch fliegen)
-            humanoid.PlatformStand = true
-            humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-            
-            -- Entferne die Kollisionen mit Wänden, etc.
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        else
-            -- Setze den Charakter zurück auf normalen Zustand
-            humanoid.PlatformStand = false
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-            
-            -- Stelle die Kollisionen wieder her
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
+    if noclipEnabled then
+        -- Setze den Charakter in den Noclip-Modus
+        humanoid.PlatformStand = true
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        
+        -- Entferne die Kollision für alle Teile des Charakters
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
             end
         end
+        
+        -- Schalte die Schwerkraft ab
+        humanoid.UseJumpPower = true
+        humanoid.JumpHeight = 0
+        humanoid.Gravity = 0
+    else
+        -- Setze den Charakter zurück in den normalen Zustand
+        humanoid.PlatformStand = false
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        
+        -- Stelle die Kollisionen wieder her
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        
+        -- Schalte die Schwerkraft und den Sprung zurück
+        humanoid.UseJumpPower = false
+        humanoid.JumpHeight = 50
+        humanoid.Gravity = 196.2
     end
+end
 
-    -- Setze den Noclip-Modus basierend auf dem Status des Toggles
-    setNoclip(state)
-end)
+-- Toggle-Funktion für Noclip
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Text = "Noclip Toggle"
+ToggleButton.Size = U
 
 
 M.newToggle("Spam sounds", "", false, function(ab)
