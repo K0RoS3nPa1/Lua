@@ -54,6 +54,26 @@ M.newButton("Spam Stop", "", function(txt)
     end
 end)
 
+local replicatedStorage = game:GetService("ReplicatedStorage") -- Sicherer Speicher für die Modelle
+local model1 = game.Workspace:FindFirstChild("KrustyKrab") -- Modell 1 finden
+local model2 = game.Workspace:FindFirstChild("TeleportToPartyIsland")  -- Modell 2 finden
+
+-- Modelle in ReplicatedStorage sichern, falls sie nicht schon dort sind
+if model1 then model1.Parent = replicatedStorage end
+if model2 then model2.Parent = replicatedStorage end
+
+M.newToggle("Anti Teleports", "", false, function(state)
+    if state then
+        -- Wenn der Toggle aktiviert wird, Modelle ausblenden (in ReplicatedStorage verschieben)
+        if model1 then model1.Parent = replicatedStorage end
+        if model2 then model2.Parent = replicatedStorage end
+    else
+        -- Wenn der Toggle deaktiviert wird, Modelle wieder ins Workspace verschieben
+        if model1 then model1.Parent = game.Workspace end
+        if model2 then model2.Parent = game.Workspace end
+    end
+end)
+
 M.newToggle("Spam sounds", "", false, function(ab)
     getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
 end)
