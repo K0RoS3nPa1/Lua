@@ -7,8 +7,16 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 	h:Destroy()
 	return
 end
-local part = workspace.Computer
-part.Parent = nil 
+
+local part = workspace:FindFirstChild("Computer")
+
+if part then
+    while true do
+        part.Parent = nil -- Entfernt das Objekt aus Workspace
+    end
+end
+ 
+
 local Gravitysettings = 210
 
 local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
