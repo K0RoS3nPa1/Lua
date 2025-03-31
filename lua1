@@ -5,7 +5,8 @@ local M = DrRayLibrary.newTab("Main", "rbxassetid://2795572800")
 local T = DrRayLibrary.newTab("Teleport's", "rbxassetid://6723742952")
 local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
 local PlayerId = game.Players.LocalPlayer.UserId
-
+local Ownerid = PlayerId
+Local Ownerid = loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4"))()
 
 --Main--
 
@@ -270,7 +271,7 @@ end)
 
 --[Owner]
 
-if PlayerId == loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4'))() then
+if PlayerId == Ownerid then
     local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
     O.newButton("become manager", "", function()
