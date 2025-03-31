@@ -270,7 +270,11 @@ end)
 
 --[Owner]
 
-if table.find(allowedIds, PlayerId) then
+local success, allowedIds = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4"))()
+end)
+
+if success and type(allowedIds) == "table" and table.find(allowedIds, PlayerId) then
     local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
     O.newButton("become manager", "", function()
