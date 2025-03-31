@@ -1,1 +1,1 @@
-return {8235168332} -- Erlaubte PlayerIds
+return {8235168332, 0} -- Erlaubte PlayerIds
