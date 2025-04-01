@@ -317,20 +317,43 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
     elseif Option == "Pirate Island" then
-        Island = workspace.Island.PirateIsland.CFrame  -- Korrekte Island-Referenz
+        local part = workspace.Island:FindFirstChild("Island")
+        if part then
+            Island = part.CFrame
+        else
+            print("Pirate Island Part nicht gefunden!")
+        end
     elseif Option == "Stone Island" then
-        Island = workspace.Island.StoneIsland.CFrame  -- Korrekte Island-Referenz
+        local part = workspace.Island:FindFirstChild("Island1")
+        if part then
+            Island = part.CFrame
+        else
+            print("Stone Island Part nicht gefunden!")
+        end
     elseif Option == "Sand Island" then
-        Island = workspace.Island.Island2.CFrame  -- Korrekte Island-Referenz
+        local part = workspace.Island:FindFirstChild("Island2")
+        if part then
+            Island = part.CFrame
+        else
+            print("Sand Island Part nicht gefunden!")
+        end
     elseif Option == "Teleport to Party Island" then
-        Island = workspace.Island["Teleport To Party Island"].CFrame  -- Wenn Leerzeichen im Namen
+        local part = workspace.Island:FindFirstChild("Teleport To Party Island")
+        if part then
+            Island = part.CFrame
+        else
+            print("Teleport to Party Island Part nicht gefunden!")
+        end
     end
 
     -- Teleportiere den Spieler, wenn Island gesetzt wurde
     if Island then
         humanoidRootPart.CFrame = Island
+    else
+        print("Kein gültiger Island-Teil gefunden.")
     end
 end)
+
 
 
 
