@@ -1,1 +1,4 @@
-return {8235168332, 0} -- Erlaubte PlayerIds
+return {
+    8235168332,  -- Ersetze mit echten Roblox PlayerIds
+}
+
