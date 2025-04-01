@@ -310,10 +310,11 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    Island = game:GetService("ReplicatedStorage").Island:FindFirstChild("Island")
 
     local Island
 
-    -- Setze die richtige Position basierend auf der Auswahl
+    -- Überprüfe, ob der Part existiert, bevor du versuchst, darauf zuzugreifen
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
     elseif Option == "Pirate Island" then
@@ -350,9 +351,10 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
     if Island then
         humanoidRootPart.CFrame = Island
     else
-        print("Kein gültiger Island-Teil gefunden.")
+        print("Kein gültiger Part gefunden. Teleport fehlgeschlagen.")
     end
 end)
+
 
 
 
