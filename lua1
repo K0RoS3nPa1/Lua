@@ -303,6 +303,18 @@ T.newDropdown("Teleport to houses", "", {"None","Home","A1","A2","A3","B1","B2",
     end
 end)
 
+function teleportToPart(part)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    
+    -- Teleportiere den Spieler zum CFrame des Parts
+    humanoidRootPart.CFrame = part.CFrame
+    print("Erfolgreich zu Part '" .. part.Name .. "' teleportiert!")
+end
+
+-- Definiere den Part, zu dem teleportiert werden soll (im Ordner 'TeleportFolder')
+local partToTeleportTo = workspace.LODReigons:WaitForChild("Island")  -- Hier den Ordner und den Namen des Parts anpassen!
 
 T.newDropdown("Teleport to islands", "", {"None","Island 1","Island 2","Island 3", "Teleport to Party Island"}, function(Option)
     -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
@@ -318,27 +330,7 @@ T.newDropdown("Teleport to islands", "", {"None","Island 1","Island 2","Island 3
          elseif Option == "Island 2" then
             humanoidRootPart.CFrame = CFrame.new(-1647, 21, -1214)
          elseif Option == "Island 3" then
-            -- Funktion, um den Spieler zu einem bestimmten Part zu teleportieren
-function teleportToPart(part)
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    
-    -- Teleportiere den Spieler zum CFrame des Parts
-    humanoidRootPart.CFrame = part.CFrame
-    print("Erfolgreich zu Part '" .. part.Name .. "' teleportiert!")
-end
-
--- Definiere den Part, zu dem teleportiert werden soll (im Ordner 'TeleportFolder')
-local partToTeleportTo = workspace.LODReigons:WaitForChild("Island")  -- Hier den Ordner und den Namen des Parts anpassen!
-
--- Wenn der Part vorhanden ist, teleportiere den Spieler zu diesem Part
-if partToTeleportTo then
-    teleportToPart(partToTeleportTo)
-else
-    print("Part nicht gefunden!")
-end
-
+            teleportToPart(partToTeleportTo)
          elseif Option == "Teleport to Party Island" then
             humanoidRootPart.CFrame = CFrame.new(88, 1, -315)
          end
