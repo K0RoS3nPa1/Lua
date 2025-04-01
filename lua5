@@ -1,12 +1,7 @@
- local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
 
-    O.newButton("become manager", "", function()
-        spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/incognitototo/sda/main/dwa.lua",true)))
-    end)
-
-    O.newButton("Pizza place", "kick, Tolling version", function()
-        loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
-    end)
+local window = DrRayLibrary:Load("Pizza Hub", "rbxassetid://89063524023843")
+local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
     O.newButton("Remotespy", "", function()
         local owner = "Upbolt"
