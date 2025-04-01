@@ -306,7 +306,7 @@ end)
 
 
 
-T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Island 2", "Teleport to Party Island"}, function(Option)
+T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island"}, function(Option)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
