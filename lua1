@@ -60,7 +60,7 @@ end)
 
 local replicatedStorage = game:GetService("ReplicatedStorage") -- Sicherer Speicher für die Modelle
 local model1 = game.Workspace:FindFirstChild("KrustyKrab") -- Modell 1 finden
-local model2 = game.Workspace:FindFirstChild("TeleportToPartyIsland")  -- Modell 2 finden
+local model2 = game.Workspace:FindFirstChild("Teleport To Party Island")  -- Modell 2 finden
 
 -- Modelle in ReplicatedStorage sichern, falls sie nicht schon dort sind
 if model1 then model1.Parent = replicatedStorage end
