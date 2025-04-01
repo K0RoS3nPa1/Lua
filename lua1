@@ -277,13 +277,6 @@ end)
 S.newButton("Autofarm", "pls use alts!", function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2'))()
 end)
- 
-    S.newButton("Eclipse Hub", "", function()
-        getgenv().mainKey = "nil"
-        
-        local a,b,c,d,e=loadstring,request or http_request or (http and http.request) or (syn and syn.request),assert,tostring,"https\58//api.eclipsehub.xyz/auth";c(a and b,"Executor not Supported")a(b({Url=e.."\?\107e\121\61"..d(mainKey),Headers={["User-Agent"]="Eclipse"}}).Body)()
-        
-        end)
 
 
 S.newButton("infinite yield", "", function()
@@ -329,4 +322,5 @@ if table.find(allowedIds, PlayerId) then
     end)
 else
     print("❌ Kein Zugriff auf Erweiterungen!")
+end
 end
