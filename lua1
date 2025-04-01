@@ -205,9 +205,9 @@ function teleportToPlayer(targetName)
     local player = game.Players.LocalPlayer
     local targetPlayer = nil
 
-    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden
+    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden (unvollständig)
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p.Name:lower() == targetName:lower() or p.DisplayName:lower() == targetName:lower() then
+        if p.Name:lower():sub(1, #targetName) == targetName:lower() or p.DisplayName:lower():sub(1, #targetName) == targetName:lower() then
             targetPlayer = p
             break
         end
@@ -233,6 +233,7 @@ T.newInput("Teleport to Player", "", function(tp)
     -- Wenn der Benutzer den Namen eingibt, teleportiere zu diesem Spieler
     teleportToPlayer(tp)
 end)
+
 
 
 
