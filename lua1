@@ -4,8 +4,6 @@ local window = DrRayLibrary:Load("Pizza Hub", "rbxassetid://89063524023843")
 local M = DrRayLibrary.newTab("Main", "rbxassetid://2795572800")
 local T = DrRayLibrary.newTab("Teleport's", "rbxassetid://6723742952")
 local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
-local PlayerId = game.Players.LocalPlayer.UserId
-local allowedIds = loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4"))()
 
 --Main--
 
