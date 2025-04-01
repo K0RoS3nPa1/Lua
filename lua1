@@ -6,28 +6,6 @@ local T = DrRayLibrary.newTab("Teleport's", "rbxassetid://6723742952")
 local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
 local PlayerId = game.Players.LocalPlayer.UserId
 
--- Erlaubte PlayerIds abrufen
-local success, response = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4")
-
-if not success then
-    print("❌ Fehler: Konnte die Datei nicht abrufen!")
-    return
-end
-
-print("Datei-Inhalt:", response)  -- Debugging: Ausgabe der geladenen Datei
-
--- Loadstring und Fehlerprüfung
-local success, allowedIds = pcall(loadstring, response)
-if not success then
-    print("❌ Fehler: Loadstring konnte nicht ausgeführt werden!")
-    return
-end
-
--- Sicherstellen, dass die Antwort eine Tabelle ist
-if type(allowedIds) ~= "table" then
-    print("❌ Fehler: Die Antwort von Loadstring ist keine Tabelle!")
-    return
-end
 
 --Main--
 
@@ -286,8 +264,8 @@ end)
 --[Owner]
 
 -- Falls der Spieler auf der Whitelist steht, aktiviere Erweiterungen
-if table.find(allowedIds, PlayerId) then
-    print("✅ Erweiterungen aktiviert!")
+if PlayerId ==  loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4'))() then
+
 
  local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
@@ -320,7 +298,4 @@ if table.find(allowedIds, PlayerId) then
     O.newInput("Pose Test", "Print CFrame", function(CFrame)
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(CFrame)
     end)
-else
-    print("❌ Kein Zugriff auf Erweiterungen!")
-end
 end
