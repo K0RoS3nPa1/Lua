@@ -205,10 +205,7 @@ function teleportToPlayer(targetName)
     local player = game.Players.LocalPlayer
     local targetPlayer = nil
 
-    -- Debug-Ausgabe, um den eingegebenen Zielnamen zu überprüfen
-    print("Zielname: " .. targetName)
-
-    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden (teilweise Übereinstimmung)
+    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden (teilweise Übereinstimmung und Groß-/Kleinschreibung ignorieren)
     for _, p in pairs(game.Players:GetPlayers()) do
         -- Überprüfen der Übereinstimmung des Benutzernamens oder Display-Namens
         if string.find(p.Name:lower(), targetName:lower()) or string.find(p.DisplayName:lower(), targetName:lower()) then
@@ -234,8 +231,8 @@ function teleportToPlayer(targetName)
 end
 
 -- Beispiel für die Verwendung eines TextBox-Inputs (z.B. aus einem GUI-Element):
-T.newInput("Teleport to okayer", "Gib den Spielernamen oder Display-Namen ein", function(tp)
-    -- Wenn der Benutzer den Namen eingibt, teleportiere zu diesem Spieler
+T.newInput("Teleport to Player", "Gib den Spielernamen oder Display-Namen ein", function(tp)
+    -- Wenn der Benutzer den Teilstring eingibt, teleportiere zu diesem Spieler
     teleportToPlayer(tp)
 end)
 
