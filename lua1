@@ -63,20 +63,53 @@ local model1 = game.Workspace:FindFirstChild("KrustyKrab") -- Modell 1 finden
 local model2 = game.Workspace:FindFirstChild("Teleport To Party Island")  -- Modell 2 finden
 
 -- Modelle in ReplicatedStorage sichern, falls sie nicht schon dort sind
-if model1 then model1.Parent = replicatedStorage end
-if model2 then model2.Parent = replicatedStorage end
+if model1 then
+    print("KrustyKrab gefunden und wird zu ReplicatedStorage verschoben.")
+    model1.Parent = replicatedStorage
+else
+    print("KrustyKrab wurde nicht im Workspace gefunden!")
+end
 
+if model2 then
+    print("Teleport To Party Island gefunden und wird zu ReplicatedStorage verschoben.")
+    model2.Parent = replicatedStorage
+else
+    print("Teleport To Party Island wurde nicht im Workspace gefunden!")
+end
+
+-- Toggle für Anti-Teleport
 M.newToggle("Anti Teleports", "", false, function(state)
     if state then
         -- Wenn der Toggle aktiviert wird, Modelle ausblenden (in ReplicatedStorage verschieben)
-        if model1 then model1.Parent = replicatedStorage end
-        if model2 then model2.Parent = replicatedStorage end
+        if model1 then
+            print("KrustyKrab wird zu ReplicatedStorage verschoben.")
+            model1.Parent = replicatedStorage
+        else
+            print("KrustyKrab existiert nicht!")
+        end
+        if model2 then
+            print("Teleport To Party Island wird zu ReplicatedStorage verschoben.")
+            model2.Parent = replicatedStorage
+        else
+            print("Teleport To Party Island existiert nicht!")
+        end
     else
         -- Wenn der Toggle deaktiviert wird, Modelle wieder ins Workspace verschieben
-        if model1 then model1.Parent = game.Workspace end
-        if model2 then model2.Parent = game.Workspace end
+        if model1 then
+            print("KrustyKrab wird ins Workspace verschoben.")
+            model1.Parent = game.Workspace
+        else
+            print("KrustyKrab existiert nicht!")
+        end
+        if model2 then
+            print("Teleport To Party Island wird ins Workspace verschoben.")
+            model2.Parent = game.Workspace
+        else
+            print("Teleport To Party Island existiert nicht!")
+        end
     end
 end)
+
 
 M.newToggle("Anti-Oven Fire", "", false, function(y)
     getgenv().heee=y;while true do wait(.40)if getgenv().heee then pcall(function()for j,k in pairs(game.Players:GetPlayers())do local g={[1]=k.Character.UpperTorso}workspace.GameService.ExtinguishFire:FireServer(unpack(g))for j,k in pairs(game.Workspace.AllDough:GetChildren())do local g={[1]=k}workspace.GameService.ExtinguishFire:FireServer(unpack(g))end end end)end end
@@ -314,7 +347,7 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
 
     local Island
 
-    local offset = Vector3.new(0, 10, 0) 
+    local offset = Vector3.new(0, 10, 0) -- Der Offset, um den Spieler etwas höher zu teleportieren
 
     -- Überprüfen, ob das Modell existiert und Teleportiere den Spieler zu seinem Mittelpunkt
     if Option == "None" then
@@ -323,7 +356,7 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
         local model = workspace:FindFirstChild("Island")  -- Überprüfen, ob das Modell existiert
         if model then
             local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
-            Island = CFrame.new(modelPositio + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
+            Island = CFrame.new(modelPosition + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
         else
             print("Pirate Island nicht gefunden!")
         end
@@ -331,7 +364,7 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
         local model = workspace:FindFirstChild("Island1")  -- Überprüfen, ob das Modell existiert
         if model then
             local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
-            Island = CFrame.new(modelPosition)  -- Setzt die Position auf den Mittelpunkt des Modells
+            Island = CFrame.new(modelPosition + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
         else
             print("Stone Island nicht gefunden!")
         end
@@ -339,12 +372,13 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
         local model = workspace:FindFirstChild("Island2")  -- Überprüfen, ob das Modell existiert
         if model then
             local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
-            Island = CFrame.new(modelPosition)  -- Setzt die Position auf den Mittelpunkt des Modells
+            Island = CFrame.new(modelPosition + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
         else
             print("Sand Island nicht gefunden!")
         end
     elseif Option == "Teleport to Party Island" then
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(88, 1, -315)
+        -- Direktes Teleportieren zu den angegebenen Koordinaten
+        humanoidRootPart.CFrame = CFrame.new(88, 1, -315)
     end
 
     -- Teleportiere den Spieler, wenn Island gesetzt wurde
