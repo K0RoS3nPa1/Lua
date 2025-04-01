@@ -229,7 +229,7 @@ function teleportToPlayer(targetName)
 end
 
 -- Beispiel für die Verwendung eines TextBox-Inputs (z.B. aus einem GUI-Element):
-T.newInput("Teleport to okayer", "Gib den Spielernamen oder Display-Namen ein", function(tp)
+T.newInput("Teleport to Player", "", function(tp)
     -- Wenn der Benutzer den Namen eingibt, teleportiere zu diesem Spieler
     teleportToPlayer(tp)
 end)
@@ -306,7 +306,7 @@ end)
 
 
 
-T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island"}, function(Option)
+T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Island 2", "Teleport to Party Island"}, function(Option)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -317,42 +317,41 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
     elseif Option == "Pirate Island" then
-        local part = workspace:FindFirstChild("Island")  -- Direkt im Workspace
-        if part then
-            Island = part.CFrame
+        local model = workspace:FindFirstChild("Island")  -- Überprüfen, ob das Modell existiert
+        if model and model.PrimaryPart then
+            Island = model.PrimaryPart.CFrame
         else
-            print("Pirate Island Part nicht gefunden!")
+            print("Pirate Island Modell oder PrimaryPart nicht gefunden!")
         end
     elseif Option == "Stone Island" then
-        local part = workspace:FindFirstChild("Island1")  -- Direkt im Workspace
-        if part then
-            Island = part.CFrame
+        local model = workspace:FindFirstChild("Island1")  -- Überprüfen, ob das Modell existiert
+        if model and model.PrimaryPart then
+            Island = model.PrimaryPart.CFrame
         else
-            print("Stone Island Part nicht gefunden!")
+            print("Stone Island Modell oder PrimaryPart nicht gefunden!")
         end
-    elseif Option == "Sand Island" then
-        local part = workspace:FindFirstChild("Island2")  -- Direkt im Workspace
-        if part then
-            Island = part.CFrame
+    elseif Option == "Island 2" then
+        local model = workspace:FindFirstChild("Island2")  -- Überprüfen, ob das Modell existiert
+        if model and model.PrimaryPart then
+            Island = model.PrimaryPart.CFrame
         else
-            print("Sand Island Part nicht gefunden!")
+            print("Island 2 Modell oder PrimaryPart nicht gefunden!")
         end
     elseif Option == "Teleport to Party Island" then
-        local part = workspace:FindFirstChild("Teleport To Party Island")  -- Direkt im Workspace
-        if part then
-            Island = part.CFrame
+        local model = workspace:FindFirstChild("Teleport To Party Island")  -- Überprüfen, ob das Modell existiert
+        if model and model.PrimaryPart then
+            Island = model.PrimaryPart.CFrame
         else
-            print("Teleport to Party Island Part nicht gefunden!")
+            print("Teleport to Party Island Modell oder PrimaryPart nicht gefunden!")
         end
     end
 
     -- Teleportiere den Spieler, wenn Island gesetzt wurde
     if Island then
         humanoidRootPart.CFrame = Island
-    else
-        print("Kein gültiger Part gefunden. Teleport fehlgeschlagen.")
     end
 end)
+
 
 
 
