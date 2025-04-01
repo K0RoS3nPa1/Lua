@@ -199,14 +199,32 @@ end)
 
 
 --[Teleports]--
-T.newButton("Home", "", function()
-    local args = {
-        [1] = "TeleportHome"
-    }
-    game:GetService("ReplicatedStorage").PlayerChannel:FireServer(unpack(args))
+
+T.newDropdown("Teleport To Area", "", {"None","Spawn","Manager","Cashier","Cook","Boxer","Delivery","Supplier"}, function(Option)
+    -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    -- Option ist jetzt eine einfache Zeichenkette, keine Tabelle mehr
+    if Option == "None" then
+        -- Nichts tun, wenn "None" ausgewählt wird
+        elseif Option == "Spawn" then
+            humanoidRootPart.CFrame = CFrame.new(49, 3, 198)
+        elseif Option == "Manager" then
+            humanoidRootPart.CFrame = CFrame.new(37, 4, 3)
+         elseif Option == "Cashier" then
+            humanoidRootPart.CFrame = CFrame.new(48, 4, 80)
+         elseif Option == "Cook" then
+            humanoidRootPart.CFrame = CFrame.new(42, 4, 61)
+        elseif Option == "Boxer" then
+            humanoidRootPart.CFrame = CFrame.new(55, 4, 31)
+        elseif Option == "Delivery" then
+            humanoidRootPart.CFrame = CFrame.new(64, 4, -17)
+        elseif Option == "Supplier" then
+            humanoidRootPart.CFrame = CFrame.new(8, 13, -1020)
+    end
 end)
-
-
 
 T.newDropdown("Teleport To Houses", "", {"None","A1","A2","A3","B1","B2","B3","B4","B5","B6","C1","C2","C3"}, function(Option)
     -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
@@ -217,6 +235,11 @@ T.newDropdown("Teleport To Houses", "", {"None","A1","A2","A3","B1","B2","B3","B
     -- Option ist jetzt eine einfache Zeichenkette, keine Tabelle mehr
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
+    elseif Option == "Home" then
+        local args = {
+            [1] = "TeleportHome"
+        }
+        game:GetService("ReplicatedStorage").PlayerChannel:FireServer(unpack(args))
     elseif Option == "A1" then
         humanoidRootPart.CFrame = CFrame.new(190, 3, -474)
     elseif Option == "A2" then
@@ -245,52 +268,26 @@ T.newDropdown("Teleport To Houses", "", {"None","A1","A2","A3","B1","B2","B3","B
 end)
 
 
+T.newDropdown("Teleport To Islands", "", {"None","Island 1","Island 2","Island 3", "Teleport to Party Island"}, function(Option)
+    -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-
-
-T.newButton("Teleport to Party Island", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(88, 1, -315)
+    -- Option ist jetzt eine einfache Zeichenkette, keine Tabelle mehr
+    if Option == "None" then
+        -- Nichts tun, wenn "None" ausgewählt wird
+        elseif Option == "Island 1" then
+            humanoidRootPart.CFrame = CFrame.new(1515, 0, 1373)
+         elseif Option == "Island 2" then
+            humanoidRootPart.CFrame = CFrame.new(-1647, 21, -1214)
+         elseif Option == "Island 3" then
+            humanoidRootPart.CFrame = CFrame.new(944, 1, 673)
+         elseif Option == "Teleport to Party Island" then
+            humanoidRootPart.CFrame = CFrame.new(88, 1, -315)
+         end
 end)
 
-T.newButton("Starter Zone", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(49, 3, 198)
-end)
-
-T.newButton("Cashier Area", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(48, 4, 80)
-end)
-
-T.newButton("Cook Area", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(42, 4, 61)
-end)
-
-T.newButton("Manager Area", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(37, 4, 3)
-end)
-
-T.newButton("Boxer Area", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(55, 4, 31)
-end)
-
-T.newButton("Supplier Area", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(8, 13, -1020)
-end)
-
-T.newButton("Delivery Area", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(64, 4, -17)
-end)
-
-T.newButton("Island 1", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(1515, 0, 1373)
-end)
-
-T.newButton("Island 2", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1647, 21, -1214)
-end)
-
-T.newButton("Island 3", "", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-944, 1, 673)
-end)
 
 --[Scripts]--
 
