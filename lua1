@@ -306,14 +306,14 @@ end)
 
 
 
-T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Island 2", "Teleport to Party Island"}, function(Option)
+T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island"}, function(Option)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
     local Island
 
-    -- Setze die richtige Position basierend auf der Auswahl
+    -- Überprüfen und teleportieren
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
     elseif Option == "Pirate Island" then
@@ -330,12 +330,12 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
         else
             print("Stone Island Modell oder PrimaryPart nicht gefunden!")
         end
-    elseif Option == "Island 2" then
+    elseif Option == "Sand Island" then
         local model = workspace:FindFirstChild("Island2")  -- Überprüfen, ob das Modell existiert
         if model and model.PrimaryPart then
             Island = model.PrimaryPart.CFrame
         else
-            print("Island 2 Modell oder PrimaryPart nicht gefunden!")
+            print("Sand island Modell oder PrimaryPart nicht gefunden!")
         end
     elseif Option == "Teleport to Party Island" then
         local model = workspace:FindFirstChild("Teleport To Party Island")  -- Überprüfen, ob das Modell existiert
@@ -349,8 +349,11 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
     -- Teleportiere den Spieler, wenn Island gesetzt wurde
     if Island then
         humanoidRootPart.CFrame = Island
+    else
+        print("Keine gültige Zielposition gefunden.")
     end
 end)
+
 
 
 
