@@ -217,29 +217,29 @@ T.newDropdown("Teleport To Houses", "", {"None","A1","A2","A3","B1","B2","B3","B
       
       if Option[1] == "None" then
          
-      elseif Option[1] == "A1" then
+      elseif Option[2] == "A1" then
             humanoidRootPart.CFrame = CFrame.new(190, 3, -474)
-      elseif Option[1] == "A2" then
+      elseif Option[3] == "A2" then
          humanoidRootPart.CFrame = CFrame.new(188, 3, -652)
-      elseif Option[1] == "A3" then
+      elseif Option[4] == "A3" then
          humanoidRootPart.CFrame = CFrame.new(187, 3, -823)
-      elseif Option[1] == "B1" then
+      elseif Option[5] == "B1" then
          humanoidRootPart.CFrame = CFrame.new(-21, 3, -432)
-      elseif Option[1] == "B2" then
+      elseif Option[6] == "B2" then
          humanoidRootPart.CFrame = CFrame.new(24, 3, -481)
-      elseif Option[1] == "B3" then
+      elseif Option[7] == "B3" then
          humanoidRootPart.CFrame = CFrame.new(-20, 3, -612)
-      elseif Option[1] == "B4" then
+      elseif Option[8] == "B4" then
          humanoidRootPart.CFrame = CFrame.new(24, 3, -663)
-      elseif Option[1] == "B5" then
+      elseif Option[9] == "B5" then
          humanoidRootPart.CFrame = CFrame.new(-20, 3, -800)
-      elseif Option[1] == "B6" then
+      elseif Option[10] == "B6" then
          humanoidRootPart.CFrame = CFrame.new(23, 3, -836)
-      elseif Option[1] == "C1" then
+      elseif Option[11] == "C1" then
          humanoidRootPart.CFrame = CFrame.new(-184, 3, -444)
-      elseif Option[1] == "C2" then
+      elseif Option[12] == "C2" then
          humanoidRootPart.CFrame = CFrame.new(-186, 3, -612)
-      elseif Option[1] == "C3" then
+      elseif Option[13] == "C3" then
          humanoidRootPart.CFrame = CFrame.new(-185, 3, -792)
       end
   
