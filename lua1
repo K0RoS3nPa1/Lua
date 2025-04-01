@@ -7,7 +7,7 @@ local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
 local PlayerId = game.Players.LocalPlayer.UserId
 
 -- Erlaubte PlayerIds abrufen
-local success, response = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/DEIN_USERNAME/DEIN_REPO/main/whitelist.lua")
+local success, response = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4")
 
 if not success then
     print("❌ Fehler: Konnte die Datei nicht abrufen!")
