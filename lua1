@@ -303,38 +303,35 @@ T.newDropdown("Teleport to houses", "", {"None","Home","A1","A2","A3","B1","B2",
     end
 end)
 
-function teleportToPart(part)
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    
-    -- Teleportiere den Spieler zum CFrame des Parts
-    humanoidRootPart.CFrame = part.CFrame
-    print("Erfolgreich zu Part '" .. part.Name .. "' teleportiert!")
-end
 
--- Definiere den Part, zu dem teleportiert werden soll (im Ordner 'TeleportFolder')
-local partToTeleportTo = workspace.LODReigons:WaitForChild("Island")  -- Hier den Ordner und den Namen des Parts anpassen!
 
-T.newDropdown("Teleport to islands", "", {"None","Island 1","Island 2","Island 3", "Teleport to Party Island"}, function(Option)
-    -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
+
+T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Island 2", "Teleport to Party Island"}, function(Option)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-    -- Option ist jetzt eine einfache Zeichenkette, keine Tabelle mehr
+    local Island
+
+    -- Setze die richtige Position basierend auf der Auswahl
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
-        elseif Option == "Island 1" then
-            humanoidRootPart.CFrame = CFrame.new(1515, 0, 1373)
-         elseif Option == "Island 2" then
-            humanoidRootPart.CFrame = CFrame.new(-1647, 21, -1214)
-         elseif Option == "Island 3" then
-            teleportToPart(partToTeleportTo)
-         elseif Option == "Teleport to Party Island" then
-            humanoidRootPart.CFrame = CFrame.new(88, 1, -315)
-         end
+    elseif Option == "Pirate Island" then
+        Island = workspace.Island.PirateIsland.CFrame  -- Korrekte Island-Referenz
+    elseif Option == "Stone Island" then
+        Island = workspace.Island.StoneIsland.CFrame  -- Korrekte Island-Referenz
+    elseif Option == "Sand Island" then
+        Island = workspace.Island.Island2.CFrame  -- Korrekte Island-Referenz
+    elseif Option == "Teleport to Party Island" then
+        Island = workspace.Island["Teleport To Party Island"].CFrame  -- Wenn Leerzeichen im Namen
+    end
+
+    -- Teleportiere den Spieler, wenn Island gesetzt wurde
+    if Island then
+        humanoidRootPart.CFrame = Island
+    end
 end)
+
 
 
 --[Scripts]--
