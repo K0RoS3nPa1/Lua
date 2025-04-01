@@ -200,14 +200,14 @@ end)
 
 --[Teleports]--
 
--- Funktion, um den Spieler anhand des Benutzernamens oder Display-Namens zu teleportieren
+-- Funktion, um den Spieler anhand eines Teils des Benutzernamens oder Display-Namens zu teleportieren
 function teleportToPlayer(targetName)
     local player = game.Players.LocalPlayer
     local targetPlayer = nil
 
-    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden
+    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden (teilweise Übereinstimmung)
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p.Name:lower() == targetName:lower() or p.DisplayName:lower() == targetName:lower() then
+        if string.find(p.Name:lower(), targetName:lower()) or string.find(p.DisplayName:lower(), targetName:lower()) then
             targetPlayer = p
             break
         end
@@ -224,7 +224,7 @@ function teleportToPlayer(targetName)
         playerHumanoidRootPart.CFrame = humanoidRootPart.CFrame
         print("Erfolgreich zu " .. targetPlayer.Name .. " teleportiert!")
     else
-        print("Spieler mit dem Namen " .. targetName .. " wurde nicht gefunden!")
+        print("Kein Spieler gefunden, der '" .. targetName .. "' enthält!")
     end
 end
 
