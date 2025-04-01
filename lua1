@@ -313,6 +313,8 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
 
     local Island
 
+    local offset = Vector3.new(0, 10, 0) 
+
     -- Überprüfen, ob das Modell existiert und Teleportiere den Spieler zu seinem Mittelpunkt
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
@@ -320,7 +322,7 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
         local model = workspace:FindFirstChild("Island")  -- Überprüfen, ob das Modell existiert
         if model then
             local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
-            Island = CFrame.new(modelPosition)  -- Setzt die Position auf den Mittelpunkt des Modells
+            Island = CFrame.new(modelPositio + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
         else
             print("Pirate Island nicht gefunden!")
         end
@@ -341,13 +343,7 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
             print("Sand Island nicht gefunden!")
         end
     elseif Option == "Teleport to Party Island" then
-        local model = workspace:FindFirstChild("Teleport To Party Island")  -- Überprüfen, ob das Modell existiert
-        if model then
-            local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
-            Island = CFrame.new(modelPosition)  -- Setzt die Position auf den Mittelpunkt des Modells
-        else
-            print("Teleport to Party Island nicht gefunden!")
-        end
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(88, 1, -315)
     end
 
     -- Teleportiere den Spieler, wenn Island gesetzt wurde
