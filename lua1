@@ -206,6 +206,49 @@ T.newButton("Home", "", function()
     game:GetService("ReplicatedStorage").PlayerChannel:FireServer(unpack(args))
 end)
 
+
+
+T.newDropdown("Teleport To Houses", "", {"None","A1","A2","A3","B1","B2","B3","B4","B5","B6","C1","C2","C3"}, function(Option)
+       -- The function that takes place when the selected option is changed
+      -- The variable (Option) is a table of strings for the current selected options
+      local player = game.Players.LocalPlayer
+      local character = player.Character or player.CharacterAdded:Wait()
+      local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+      
+      if Option[1] == "None" then
+         
+      elseif Option[1] == "A1" then
+            humanoidRootPart.CFrame = CFrame.new(190, 3, -474)
+      elseif Option[1] == "A2" then
+         humanoidRootPart.CFrame = CFrame.new(188, 3, -652)
+      elseif Option[1] == "A3" then
+         humanoidRootPart.CFrame = CFrame.new(187, 3, -823)
+      elseif Option[1] == "B1" then
+         humanoidRootPart.CFrame = CFrame.new(-21, 3, -432)
+      elseif Option[1] == "B2" then
+         humanoidRootPart.CFrame = CFrame.new(24, 3, -481)
+      elseif Option[1] == "B3" then
+         humanoidRootPart.CFrame = CFrame.new(-20, 3, -612)
+      elseif Option[1] == "B4" then
+         humanoidRootPart.CFrame = CFrame.new(24, 3, -663)
+      elseif Option[1] == "B5" then
+         humanoidRootPart.CFrame = CFrame.new(-20, 3, -800)
+      elseif Option[1] == "B6" then
+         humanoidRootPart.CFrame = CFrame.new(23, 3, -836)
+      elseif Option[1] == "C1" then
+         humanoidRootPart.CFrame = CFrame.new(-184, 3, -444)
+      elseif Option[1] == "C2" then
+         humanoidRootPart.CFrame = CFrame.new(-186, 3, -612)
+      elseif Option[1] == "C3" then
+         humanoidRootPart.CFrame = CFrame.new(-185, 3, -792)
+      end
+  
+
+end)
+
+
+
+
 T.newButton("Teleport to Party Island", "", function()
     game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(88, 1, -315)
 end)
@@ -256,46 +299,11 @@ S.newButton("Autofarm", "pls use alts!", function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2'))()
 end)
 
+S.newButton("Work at a pizza place", "Hussien", function()
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
+end)
 
 S.newButton("infinite yield", "", function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
 
---[Owner]
-
--- Falls der Spieler auf der Whitelist steht, aktiviere Erweiterungen
-if PlayerId ==  loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4'))() then
-
-
- local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
-
-    O.newButton("become manager", "", function()
-        spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/incognitototo/sda/main/dwa.lua",true)))
-    end)
-
-    O.newButton("Pizza place", "kick, Tolling version", function()
-        loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
-    end)
-
-    O.newButton("Remotespy", "", function()
-        local owner = "Upbolt"
-        local branch = "revision"
-        
-        local function webImport(file)
-            return loadstring(game:HttpGetAsync(("https://raw.githubusercontent.com/%s/Hydroxide/%s/%s.lua"):format(owner, branch, file)), file .. '.lua')()
-        end
-        
-        webImport("init")
-        webImport("ui/main")
-    end)
-
-    O.newButton("local Position", "", function()
-        local pl = game.Players.LocalPlayer.Character.HumanoidRootPart
-        setclipboard(tostring(pl.CFrame))
-    end)
-
-
-    O.newInput("Pose Test", "Print CFrame", function(CFrame)
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(CFrame)
-    end)
-end
