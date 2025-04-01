@@ -7,14 +7,28 @@ local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
 local PlayerId = game.Players.LocalPlayer.UserId
 
 -- Erlaubte PlayerIds abrufen
-local response = game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4")
-local success, allowedIds = pcall(loadstring, response)
+local success, response = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/DEIN_USERNAME/DEIN_REPO/main/whitelist.lua")
 
--- Falls fehlerhaft, Fallback auf leere Liste
-if not success or type(allowedIds) ~= "table" then
-    print("❌ Fehler: Konnte die ID-Liste nicht laden!")
-    allowedIds = {}
+if not success then
+    print("❌ Fehler: Konnte die Datei nicht abrufen!")
+    return
 end
+
+print("Datei-Inhalt:", response)  -- Debugging: Ausgabe der geladenen Datei
+
+-- Loadstring und Fehlerprüfung
+local success, allowedIds = pcall(loadstring, response)
+if not success then
+    print("❌ Fehler: Loadstring konnte nicht ausgeführt werden!")
+    return
+end
+
+-- Sicherstellen, dass die Antwort eine Tabelle ist
+if type(allowedIds) ~= "table" then
+    print("❌ Fehler: Die Antwort von Loadstring ist keine Tabelle!")
+    return
+end
+
 --Main--
 
 M.newInput("Chat bubble", "Prints your text for only bubble.", function(H)
