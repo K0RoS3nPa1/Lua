@@ -310,36 +310,35 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    Island = game:GetService("ReplicatedStorage").Island:FindFirstChild("Island")
 
     local Island
 
-    -- Überprüfe, ob der Part existiert, bevor du versuchst, darauf zuzugreifen
+    -- Setze die richtige Position basierend auf der Auswahl
     if Option == "None" then
         -- Nichts tun, wenn "None" ausgewählt wird
     elseif Option == "Pirate Island" then
-        local part = workspace.Island:FindFirstChild("Island")
+        local part = workspace:FindFirstChild("Island")  -- Direkt im Workspace
         if part then
             Island = part.CFrame
         else
             print("Pirate Island Part nicht gefunden!")
         end
     elseif Option == "Stone Island" then
-        local part = workspace.Island:FindFirstChild("Island1")
+        local part = workspace:FindFirstChild("Island1")  -- Direkt im Workspace
         if part then
             Island = part.CFrame
         else
             print("Stone Island Part nicht gefunden!")
         end
     elseif Option == "Sand Island" then
-        local part = workspace.Island:FindFirstChild("Island2")
+        local part = workspace:FindFirstChild("Island2")  -- Direkt im Workspace
         if part then
             Island = part.CFrame
         else
             print("Sand Island Part nicht gefunden!")
         end
     elseif Option == "Teleport to Party Island" then
-        local part = workspace.Island:FindFirstChild("Teleport To Party Island")
+        local part = workspace:FindFirstChild("Teleport To Party Island")  -- Direkt im Workspace
         if part then
             Island = part.CFrame
         else
@@ -354,6 +353,8 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
         print("Kein gültiger Part gefunden. Teleport fehlgeschlagen.")
     end
 end)
+
+
 
 
 
