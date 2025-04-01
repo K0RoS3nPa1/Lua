@@ -60,7 +60,7 @@ end)
 
 local replicatedStorage = game:GetService("ReplicatedStorage") -- Sicherer Speicher für die Modelle
 local model1 = game.Workspace:FindFirstChild("KrustyKrab") -- Modell 1 finden
-local model2 = game.Workspace:FindFirstChild("Teleport To Party Island")  -- Modell 2 finden
+local model2 = game.Workspace:FindFirstChild("Teleport to Party Island")  -- Modell 2 finden
 
 -- Modelle in ReplicatedStorage sichern, falls sie nicht schon dort sind
 if model1 then
@@ -347,7 +347,7 @@ T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island
 
     local Island
 
-    local offset = Vector3.new(0, 10, 0) -- Der Offset, um den Spieler etwas höher zu teleportieren
+    local offset = Vector3.new(0, 20, 0) -- Der Offset, um den Spieler etwas höher zu teleportieren
 
     -- Überprüfen, ob das Modell existiert und Teleportiere den Spieler zu seinem Mittelpunkt
     if Option == "None" then
