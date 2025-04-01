@@ -209,38 +209,34 @@ end)
 
 
 T.newDropdown("Teleport To Houses", "", {"None","A1","A2","A3","B1","B2","B3","B4","B5","B6","C1","C2","C3"}, function(Option)
-       -- The function that takes place when the selected option is changed
-      -- The variable (Option) is a table of strings for the current selected options
-      local player = game.Players.LocalPlayer
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
       
       if Option[1] == "None" then
          
       elseif Option[2] == "A1" then
-            humanoidRootPart.CFrame = CFrame.new(190, 3, -474)
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(190, 3, -474)
       elseif Option[3] == "A2" then
-         humanoidRootPart.CFrame = CFrame.new(188, 3, -652)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(188, 3, -652)
       elseif Option[4] == "A3" then
-         humanoidRootPart.CFrame = CFrame.new(187, 3, -823)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(187, 3, -823)
       elseif Option[5] == "B1" then
-         humanoidRootPart.CFrame = CFrame.new(-21, 3, -432)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-21, 3, -432)
       elseif Option[6] == "B2" then
-         humanoidRootPart.CFrame = CFrame.new(24, 3, -481)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(24, 3, -481)
       elseif Option[7] == "B3" then
-         humanoidRootPart.CFrame = CFrame.new(-20, 3, -612)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-20, 3, -612)
       elseif Option[8] == "B4" then
-         humanoidRootPart.CFrame = CFrame.new(24, 3, -663)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFramee = CFrame.new(24, 3, -663)
       elseif Option[9] == "B5" then
-         humanoidRootPart.CFrame = CFrame.new(-20, 3, -800)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-20, 3, -800)
       elseif Option[10] == "B6" then
-         humanoidRootPart.CFrame = CFrame.new(23, 3, -836)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(23, 3, -836)
       elseif Option[11] == "C1" then
-         humanoidRootPart.CFrame = CFrame.new(-184, 3, -444)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-184, 3, -444)
       elseif Option[12] == "C2" then
-         humanoidRootPart.CFrame = CFrame.new(-186, 3, -612)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-186, 3, -612)
       elseif Option[13] == "C3" then
-         humanoidRootPart.CFrame = CFrame.new(-185, 3, -792)
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-185, 3, -792)
       end
   
 
