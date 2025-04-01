@@ -270,20 +270,30 @@ end)
 
 local PlayerId = game.Players.LocalPlayer.UserId
 
--- Sicherstellen, dass die Datei von GitHub geladen wird
-local success, allowedIds = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4"))()
-end)
+-- Testen, ob die Datei von GitHub geladen werden kann
+local response = game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Lua4")
+print("Antwort von GitHub: ", response) -- Debug-Print
 
--- Falls der Abruf fehlschlägt oder die Datei kein korrektes `return` hat, Fallback auf leere Liste
-if not success or type(allowedIds) ~= "table" then
-    print("Fehler: Konnte die ID-Liste nicht laden! Zugriff verweigert.")
-    allowedIds = {}
+-- Testen, ob `loadstring` funktioniert
+local success, result = pcall(loadstring, response)
+print("Loadstring erfolgreich?:", success)
+print("Ergebnis von Loadstring:", result)
+
+if not success then
+    print("❌ Fehler: Loadstring fehlgeschlagen!")
+    result = {} -- Fallback auf leere Liste
 end
 
--- Überprüfen, ob die PlayerId in der Liste ist
-if table.find(allowedIds, PlayerId) then
-    print("Zugriff gewährt!")
+if type(result) ~= "table" then
+    print("❌ Fehler: Loadstring hat keine Tabelle zurückgegeben!")
+    result = {} -- Fallback auf leere Liste
+end
+
+print("Player ID:", PlayerId)
+print("Erlaubte IDs:", result)
+
+-- Check, ob die ID in der Liste ist
+if table.find(result, PlayerId) then
     local O = DrRayLibrary.newTab("Owner", "rbxassetid://2795572800")
 
     O.newButton("become manager", "", function()
