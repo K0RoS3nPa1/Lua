@@ -1,7 +1,7 @@
+-- Lade die Rayfield-Bibliothek
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-wait(1)  -- Warte einen Moment, bevor das Fenster geladen wird
-
+-- Erstelle das Hauptfenster
 local Window = Rayfield:CreateWindow({
     Name = "Pizza Hub",
     Icon = 0,
@@ -32,26 +32,24 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- Dann erst die Tabs erstellen
+-- Erstelle Tabs
 local H = Window:CreateTab("Home", nil)
 local F = Window:CreateTab("Auto Farm", nil)
 local T = Window:CreateTab("Teleports", nil)
 local S = Window:CreateTab("More Fun", nil)
 
-
-
--- Lade die gespeicherten Einstellungen, falls vorhanden (über Rayfield's Konfiguration)
+-- Lade gespeicherte Einstellungen oder setze Standardwerte
 local settings = Rayfield:LoadConfiguration({
     FolderName = "Pizza Hub",
     FileName = "settings",
     Default = {  -- Standardwerte, falls keine gespeicherten Einstellungen vorhanden sind
-        refill_at = 0,
-        refill_end = 0,
-        movespeed_at = 0
+        refill_at = 50,
+        refill_end = 97,
+        movespeed_at = 5
     }
 })
 
--- Überprüfen, ob settings geladen wurden, andernfalls Standardwerte verwenden
+-- Überprüfe, ob die Einstellungen korrekt geladen wurden
 if not settings then
     settings = {
         refill_at = 50,
@@ -72,15 +70,12 @@ local function saveSettings()
     end
 end
 
--- Wenn Einstellungen nach Änderungen gespeichert werden müssen
+-- Funktion zum Speichern bei Änderungen
 local function saveOnChange()
     saveSettings()
 end
 
-
-
-
-
+-- Sicherstellen, dass settings definiert sind
 settings.refill_at = settings.refill_at or 0
 settings.refill_end = settings.refill_end or 0
 settings.movespeed_at = settings.movespeed_at or 0
@@ -90,22 +85,27 @@ local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, 
 
 local function toggleCashier(bool)
     doCashier = bool ~= nil and bool or not doCashier
+    print("Cashier aktiviert:", doCashier)
 end
 
 local function toggleCook(bool)
     doCook = bool ~= nil and bool or not doCook
+    print("Cook aktiviert:", doCook)
 end
 
 local function toggleBoxer(bool)
     doBoxer = bool ~= nil and bool or not doBoxer
+    print("Boxer aktiviert:", doBoxer)
 end
 
 local function toggleDelivery(bool)
     doDelivery = bool ~= nil and bool or not doDelivery
+    print("Delivery aktiviert:", doDelivery)
 end
 
 local function toggleSupplier(bool)
     doSupplier = bool ~= nil and bool or not doSupplier
+    print("Supplier aktiviert:", doSupplier)
 end
 
 -- Erstellen von Toggle-Buttons
