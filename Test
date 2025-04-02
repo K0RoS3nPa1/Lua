@@ -97,12 +97,6 @@ end
 assert(network,"failed to find network")
 
 
- -- Konfigurationseinstellungen
-local ConfigurationSaving = {
-    Enabled = true,
-    FolderName = "Pizza Hub",  -- Ordnername für das Spiel
-    FileName = "Settings",     -- Dateiname für die Speicherung
-}
 
 -- Beispielsettings (werden in der UI gespeichert und geladen)
 local settings = {
