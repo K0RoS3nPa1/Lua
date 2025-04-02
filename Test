@@ -2,118 +2,50 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Pizza Hub",
-   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   Icon = 0,
    LoadingTitle = "Pizza Hub",
    LoadingSubtitle = "by Pizza Hub",
-   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+   Theme = "Default",
    DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+   DisableBuildWarnings = false,
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = "Pizza Hub", -- Create a custom folder for your hub/game
+      FolderName = "Pizza Hub",
       FileName = "settings"
    },
    Discord = {
-      Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
-      Invite = "false", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
-      RememberJoins = false -- Set this to false to make them join the discord every time they load it up
+      Enabled = true,
+      Invite = "ABCD1234",  -- Discord-Server-Code hier einfügen
+      RememberJoins = false
    },
-   KeySystem = true, -- Set this to true to use our key system
+   KeySystem = true,
    KeySettings = {
       Title = "Key",
       Subtitle = "Key System",
-      Note = "Discord: https://discord.gg/Z5YK4XvE" , -- Use this to tell the user how to get a key
-      FileName = "KeySystemPizzaHub45", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {""} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+      Note = "Discord: https://discord.gg/Z5YK4XvE",
+      FileName = "KeySystemPizzaHub45",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {""}
    }
 })
 
-local H = Window:CreateTab("Home", nil) -- Title, Image
-local F = Window:CreateTab("Auto Farm", nil) -- Title, Image
-local T = Window:CreateTab("Teleports", nil) -- Title, Image
-local S = Window:CreateTab("More Fun", nil) -- Title, Image
+local H = Window:CreateTab("Home", nil)
+local F = Window:CreateTab("Auto Farm", nil)
+local T = Window:CreateTab("Teleports", nil)
+local S = Window:CreateTab("More Fun", nil)
 
-
-
-getupvalues = getupvalues or debug.getupvalues
-setupvalue = setupvalue or debug.setupvalue
-if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getregistry)) then
-	local h = Instance.new("Hint",workspace)
-	h.Text = "Incompatible exploit."
-	wait(3)
-	h:Destroy()
-	return
-end
-
-local Gravitysettings = 210
-
-
-
-if getconnections then
-	for _,c in next,getconnections(game:GetService("ScriptContext").Error) do
-		c:Disable()
-	end
-end
-
-local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
-local RNG = Random.new()
-local network
-local character,root,humanoid
-do
-	local reg = (getreg or debug.getregistry)()
-	for i=1,#reg do
-		local f = reg[i]
-		if type(f)=="function" then
-		    for k,v in next,getupvalues(f) do
-				if typeof(v)=="Instance" then
-				    if v.Name=="CashOut" then
-						wait(0.5)
-					    setupvalue(f,k,{MouseButton1Click={wait=function()end,Wait=function()end}})
-				    elseif v.Name=="StickerName" then
-				        setupvalue(f,k,nil)
-				    end
-				end
-			end
-    		if tostring(getfenv(f).script) == "Music" then
-    		    local consts = getconstants(f)
-    		    local loc=false
-		        for ci,c in next,consts do
-		            if c == "location changed" then
-		                loc=true
-		            elseif loc and c == "SendData" then
-		                setconstant(f,ci,"ExplodeString")
-		                break
-		            end
-		        end
-    		end
-		elseif type(f)=="table" and rawget(f,"FireServer") and rawget(f,"BindEvents") then
-			network = f
-		end
-	end
-end
-assert(network,"failed to find network")
-
-
-
-
--- Beispielsettings (werden in der UI gespeichert und geladen)
 local settings = {
     refill_at = 0,
     refill_end = 0,
     movespeed_at = 0
 }
 
--- DataStoreService für das Speichern von Daten
 local DataStoreService = game:GetService("DataStoreService")
 local playerDataStore = DataStoreService:GetDataStore(ConfigurationSaving.FolderName)
 
--- Funktion zum Speichern der Einstellungen im Spiel
 local function saveSettings()
     if ConfigurationSaving.Enabled then
-        -- Speichern der Einstellungen im DataStore unter dem spezifischen Dateinamen
         local success, errorMessage = pcall(function()
             playerDataStore:SetAsync(ConfigurationSaving.FileName, settings)
         end)
@@ -126,16 +58,13 @@ local function saveSettings()
     end
 end
 
--- Funktion zum Laden der Einstellungen (normalerweise beim Start des Spiels)
 local function loadSettings()
     if ConfigurationSaving.Enabled then
-        -- Versuchen, die gespeicherten Einstellungen zu laden
         local success, loadedSettings = pcall(function()
             return playerDataStore:GetAsync(ConfigurationSaving.FileName)
         end)
 
         if success and loadedSettings then
-            -- Lade die gespeicherten Daten in die settings-Variable, ohne die Tabelle direkt zu überschreiben
             for key, value in pairs(loadedSettings) do
                 settings[key] = value
             end
@@ -148,59 +77,34 @@ local function loadSettings()
     end
 end
 
--- Lade die Einstellungen beim Start
 loadSettings()
 
--- Initialisieren der Werte mit den geladenen Daten (oder Standardwerte)
 settings.refill_at = settings.refill_at or 0
 settings.refill_end = settings.refill_end or 0
 settings.movespeed_at = settings.movespeed_at or 0
 
--- Beispiel für das Setzen von Toggles und Eingaben
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
 
--- Funktionen für die Toggles
 local function toggleCashier(bool)
-    if bool ~= nil then
-        doCashier = bool
-    else
-        doCashier = not doCashier
-    end
+    doCashier = bool ~= nil and bool or not doCashier
 end
 
 local function toggleCook(bool)
-    if bool ~= nil then
-        doCook = bool
-    else
-        doCook = not doCook
-    end
+    doCook = bool ~= nil and bool or not doCook
 end
 
 local function toggleBoxer(bool)
-    if bool ~= nil then
-        doBoxer = bool
-    else
-        doBoxer = not doBoxer
-    end
+    doBoxer = bool ~= nil and bool or not doBoxer
 end
 
 local function toggleDelivery(bool)
-    if bool ~= nil then
-        doDelivery = bool
-    else
-        doDelivery = not doDelivery
-    end
+    doDelivery = bool ~= nil and bool or not doDelivery
 end
 
 local function toggleSupplier(bool)
-    if bool ~= nil then
-        doSupplier = bool
-    else
-        doSupplier = not doSupplier
-    end
+    doSupplier = bool ~= nil and bool or not doSupplier
 end
 
--- Erstelle die Toggles
 local ToggleCashier = F:CreateToggle({
     Name = "Cashier",
     CurrentValue = false,
@@ -246,7 +150,6 @@ local ToggleSupplier = F:CreateToggle({
     end,
 })
 
--- Input für "refillAt" (Beispiel)
 local refillAtInput = F:CreateInput({
     Name = "Refill At",
     CurrentValue = tostring(settings.refill_at),
@@ -254,14 +157,14 @@ local refillAtInput = F:CreateInput({
     RemoveTextAfterFocusLost = false,
     Flag = "RefillAtInput",
     Callback = function(Text)
-        if tonumber(Text) then
-            settings.refill_at = tonumber(Text)
-            saveSettings()  -- Speichern nach der Änderung
+        local value = tonumber(Text)
+        if value then
+            settings.refill_at = value
+            saveSettings()
         end
     end,
 })
 
--- Input für "refillEnd" (Beispiel)
 local refillEndInput = F:CreateInput({
     Name = "Refill End",
     CurrentValue = tostring(settings.refill_end),
@@ -269,14 +172,14 @@ local refillEndInput = F:CreateInput({
     RemoveTextAfterFocusLost = false,
     Flag = "RefillEndInput",
     Callback = function(Text)
-        if tonumber(Text) then
-            settings.refill_end = tonumber(Text)
-            saveSettings()  -- Speichern nach der Änderung
+        local value = tonumber(Text)
+        if value then
+            settings.refill_end = value
+            saveSettings()
         end
     end,
 })
 
--- Input für "Movespeed"
 local movespeedInput = F:CreateInput({
     Name = "Movespeed",
     CurrentValue = tostring(settings.movespeed_at),
@@ -284,9 +187,10 @@ local movespeedInput = F:CreateInput({
     RemoveTextAfterFocusLost = false,
     Flag = "MovespeedInput",
     Callback = function(Text)
-        if tonumber(Text) then
-            settings.movespeed_at = tonumber(Text)
-            saveSettings()  -- Speichern nach der Änderung
+        local value = tonumber(Text)
+        if value then
+            settings.movespeed_at = value
+            saveSettings()
         end
     end,
 })
