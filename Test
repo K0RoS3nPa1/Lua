@@ -8,7 +8,7 @@ local Window = Rayfield:CreateWindow({
     LoadingTitle = "Pizza Hub",
     LoadingSubtitle = "by Pizza Hub",
     Theme = "Default",
-    DisableRayfieldPrompts = false,
+    DisableRayfieldPrompts = true,
     DisableBuildWarnings = false,
     ConfigurationSaving = {
        Enabled = true,
@@ -52,9 +52,9 @@ local settings = Rayfield:LoadConfiguration({
 -- Überprüfen, ob settings geladen wurden, andernfalls Standardwerte verwenden
 if not settings then
     settings = {
-        refill_at = 0,
-        refill_end = 0,
-        movespeed_at = 0
+        refill_at = 50,
+        refill_end = 97,
+        movespeed_at = 5
     }
 end
 
@@ -391,20 +391,32 @@ local function getHousePart(address)
     end
 end
 local function onCharacterAdded(char)
-	if not char then return end
-	character=char
-	root = character:WaitForChild("HumanoidRootPart")
-	humanoid = character:WaitForChild("Humanoid")
-	humanoid:SetStateEnabled("FallingDown",false)
+    if not char then return end
+
+    -- Sicherstellen, dass die Charakterreferenzen korrekt sind
+    local character = char
+    local root = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- Sicherstellen, dass wir den Zustand des Humanoids korrekt setzen
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
 end
+
+-- Spieler definieren, falls noch nicht geschehen
+local player = game.Players.LocalPlayer  -- Nur in LocalScripts verwenden!
+
+-- Falls der Charakter bereits existiert, direkt die Funktion aufrufen
 onCharacterAdded(player.Character or player.CharacterAdded:Wait())
+
+-- Verbindung zur CharacterAdded-Event
 player.CharacterAdded:Connect(onCharacterAdded)
+
 
 local function smoothTP2(cf)
 	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
-	workspace.Gravity = Gravitysettings
+	workspace.Gravity = 5
 	for i=0,diff.Magnitude,settings.movespeed_at do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
