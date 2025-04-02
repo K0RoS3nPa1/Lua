@@ -1,22 +1,14 @@
--- Überprüfe ob Rayfield verfügbar ist
--- Versuche, eine bekannte URL für Rayfield zu verwenden
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Lade Rayfield von der offiziellen URL
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua"))()
 
 if not Rayfield then
     error("Rayfield konnte nicht geladen werden. Überprüfe die URL.")
 end
 
-
 local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
+
 local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
-local RNG = Random.new()
-local network
-local character,root,humanoid
-local supplyCounts = {TomatoSauce=99, Cheese=99, Sausage=99, Pepperoni=99, Dough=99, Box=99, Dew=99}
-
-
 
 -- Rayfield GUI erstellen
 Rayfield:Notify({
@@ -25,37 +17,31 @@ Rayfield:Notify({
     Duration = 3
 })
 
-local Create = function(class, parent, props)
-    local new = Rayfield:CreateWindow(class, props)
-    new.Parent = parent
-    return new
-end
-
-
+-- Fenster erstellen
 local window = Rayfield:CreateWindow({
     Name = "Pizza Factory Mod",
     LoadingTitle = "Lädt...",
     LoadingSubtitle = "Bitte warten",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil, -- Kann für deinen Ordnernamen angepasst werden
+        FolderName = nil,
         FileName = "PizzaFactory"
     },
     Discord = {
         Enabled = false,
-        Invite = "", -- Discord-Invite-Link, falls gewünscht
+        Invite = ""
     },
-    KeySystem = false, -- Kein Key-System
-    KeySettings = { -- Falls du ein Key-System implementieren möchtest
-        Key = "rayfield"
-    }
+    KeySystem = false
 })
 
--- Sektionen für das GUI hinzufügen
-local sectionSettings = window:CreateTab("Settings", 4483362458)
+-- Tab erstellen
+local tabSettings = window:CreateTab("Settings", 4483362458)
+
+-- Section für die Einstellungen
+local section = tabSettings:CreateSection("Einstellungen")
 
 -- Refill Einstellungen
-sectionSettings:CreateSlider({
+section:CreateSlider({
     Name = "Refill At",
     Range = {1, 100},
     Increment = 1,
@@ -67,7 +53,7 @@ sectionSettings:CreateSlider({
     end
 })
 
-sectionSettings:CreateSlider({
+section:CreateSlider({
     Name = "Refill End",
     Range = {1, 100},
     Increment = 1,
@@ -80,7 +66,7 @@ sectionSettings:CreateSlider({
 })
 
 -- Movespeed Einstellungen
-sectionSettings:CreateSlider({
+section:CreateSlider({
     Name = "Movespeed",
     Range = {1, 50},
     Increment = 1,
@@ -92,66 +78,61 @@ sectionSettings:CreateSlider({
     end
 })
 
--- Toggle Buttons für die verschiedenen Funktionen
-sectionSettings:CreateToggle({
+-- Toggle Buttons
+section:CreateToggle({
     Name = "Cashier Aktivieren",
     CurrentValue = doCashier,
     Flag = "doCashier",
-    Callback = function(bool)
-        doCashier = bool ~= nil and bool or not doCashier
-        -- Hier kannst du den Code hinzufügen, um die Cashier-Funktion zu steuern
+    Callback = function(value)
+        doCashier = value
     end
 })
 
-sectionSettings:CreateToggle({
+section:CreateToggle({
     Name = "Cook Aktivieren",
     CurrentValue = doCook,
     Flag = "doCook",
-    Callback = function(bool)
-        doCook = bool ~= nil and bool or not doCook
-        -- Hier kannst du den Code hinzufügen, um die Cook-Funktion zu steuern
+    Callback = function(value)
+        doCook = value
     end
 })
 
-sectionSettings:CreateToggle({
+section:CreateToggle({
     Name = "Boxer Aktivieren",
     CurrentValue = doBoxer,
     Flag = "doBoxer",
-    Callback = function(bool)
-        doBoxer = bool ~= nil and bool or not doBoxer
-        -- Hier kannst du den Code hinzufügen, um die Boxer-Funktion zu steuern
+    Callback = function(value)
+        doBoxer = value
     end
 })
 
-sectionSettings:CreateToggle({
+section:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
     Flag = "doDelivery",
-    Callback = function(bool)
-        doDelivery = bool ~= nil and bool or not doDelivery
-        -- Hier kannst du den Code hinzufügen, um die Delivery-Funktion zu steuern
+    Callback = function(value)
+        doDelivery = value
     end
 })
 
-sectionSettings:CreateToggle({
+section:CreateToggle({
     Name = "Supplier Aktivieren",
     CurrentValue = doSupplier,
     Flag = "doSupplier",
     Callback = function(value)
-        doSupplier = bool ~= nil and bool or not doSupplier
-        -- Hier kannst du den Code hinzufügen, um die Supplier-Funktion zu steuern
+        doSupplier = value
     end
 })
 
-
-
--- Finalisiert die GUI und zeigt sie dem Benutzer
+-- GUI laden
 Rayfield:Notify({
     Title = "Fertig",
     Content = "Das GUI wurde erfolgreich geladen!",
     Duration = 3
 })
 
+-- Lade gespeicherte Konfigurationen
+Rayfield:LoadConfiguration()
 
 
 
