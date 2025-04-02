@@ -4,38 +4,43 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 -- Erstelle das Hauptfenster
 local Window = Rayfield:CreateWindow({
     Name = "Pizza Hub",
-    Icon = 0,
     LoadingTitle = "Pizza Hub",
     LoadingSubtitle = "by Pizza Hub",
     Theme = "Default",
     DisableRayfieldPrompts = true,
     DisableBuildWarnings = false,
     ConfigurationSaving = {
-       Enabled = true,
-       FolderName = "Pizza Hub",
-       FileName = "settings"  -- Konfigurationsdateiname
+        Enabled = true,
+        FolderName = "Pizza Hub",
+        FileName = "settings"
     },
     Discord = {
-       Enabled = true,
-       Invite = "false",
-       RememberJoins = false
+        Enabled = false
     },
-    KeySystem = false,
-    KeySettings = {
-       Title = "Key",
-       Subtitle = "Key System",
-       Note = "Discord: https://discord.gg/Z5YK4XvE",
-       FileName = "KeySystemPizzaHub45",
-       SaveKey = true,
-       GrabKeyFromSite = false,
-       Key = {""}
-    }
+    KeySystem = false
 })
 
 -- Tabs erstellen
 local F = Window:CreateTab("Auto Farm", nil)
 
--- Zustandsvariablen
+-- Einstellungen laden oder Standardwerte setzen
+local settings = {
+    refill_at = 50,
+    refill_end = 97,
+    movespeed_at = 5
+}
+
+-- Funktion zum Speichern der Einstellungen
+local function saveSettings()
+    Rayfield:SaveConfiguration({
+        FolderName = "Pizza Hub",
+        FileName = "settings",
+        Data = settings
+    })
+    print("Einstellungen gespeichert!")
+end
+
+-- Toggle-Buttons erstellen
 local toggles = {
     Cashier = false,
     Cook = false,
@@ -44,13 +49,11 @@ local toggles = {
     Supplier = false
 }
 
--- Funktion zum Umschalten
 local function toggleFunction(job, state)
     toggles[job] = state
-    print(job .. " Toggle: ", state)  -- Debugging
+    print(job .. " Toggle: ", state)
 end
 
--- Toggle-Buttons erstellen
 local ToggleCashier = F:CreateToggle({
     Name = "Cashier",
     CurrentValue = toggles.Cashier,
@@ -95,6 +98,68 @@ local ToggleSupplier = F:CreateToggle({
         toggleFunction("Supplier", Value)
     end
 })
+
+-- Input-Felder erstellen
+local refillAtInput = F:CreateInput({
+    Name = "Refill At",
+    CurrentValue = tostring(settings.refill_at),
+    PlaceholderText = "Enter refill at value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "RefillAtInput",
+    Callback = function(Text)
+        local value = tonumber(Text)
+        if value and value <= 99 then
+            settings.refill_at = value
+            saveSettings()
+        else
+            print("Ungültige Eingabe für refill_at")
+        end
+    end,
+})
+
+local refillEndInput = F:CreateInput({
+    Name = "Refill End",
+    CurrentValue = tostring(settings.refill_end),
+    PlaceholderText = "Enter refill end value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "RefillEndInput",
+    Callback = function(Text)
+        local value = tonumber(Text)
+        if value and value <= 99 then
+            settings.refill_end = value
+            saveSettings()
+        else
+            print("Ungültige Eingabe für refill_end")
+        end
+    end,
+})
+
+local movespeedInput = F:CreateInput({
+    Name = "Movespeed",
+    CurrentValue = tostring(settings.movespeed_at),
+    PlaceholderText = "Enter movespeed value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "MovespeedInput",
+    Callback = function(Text)
+        local value = tonumber(Text)
+        if value and value <= 99 then
+            settings.movespeed_at = value
+            saveSettings()
+        else
+            print("Ungültige Eingabe für movespeed")
+        end
+    end,
+})
+
+-- Button für Neustart
+local RestartButton = F:CreateButton({
+    Name = "Restart Script",
+    Callback = function()
+        print("Script wird neugestartet...")
+        loadstring(game:HttpGet('https://your-script-url.com'))()
+    end
+})
+
 
 
 local player = game:GetService("Players").LocalPlayer
