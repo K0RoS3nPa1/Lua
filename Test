@@ -1,35 +1,38 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+wait(1)  -- Warte einen Moment, bevor das Fenster geladen wird
+
 local Window = Rayfield:CreateWindow({
-   Name = "Pizza Hub",
-   Icon = 0,
-   LoadingTitle = "Pizza Hub",
-   LoadingSubtitle = "by Pizza Hub",
-   Theme = "Default",
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false,
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "Pizza Hub",
-      FileName = "settings"
-   },
-   Discord = {
-      Enabled = true,
-      Invite = "ABCD1234",  -- Discord-Server-Code hier einfügen
-      RememberJoins = false
-   },
-   KeySystem = true,
-   KeySettings = {
-      Title = "Key",
-      Subtitle = "Key System",
-      Note = "Discord: https://discord.gg/Z5YK4XvE",
-      FileName = "KeySystemPizzaHub45",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      Key = {""}
-   }
+    Name = "Pizza Hub",
+    Icon = 0,
+    LoadingTitle = "Pizza Hub",
+    LoadingSubtitle = "by Pizza Hub",
+    Theme = "Default",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+    ConfigurationSaving = {
+       Enabled = true,
+       FolderName = "Pizza Hub",
+       FileName = "settings"
+    },
+    Discord = {
+       Enabled = true,
+       Invite = "false",
+       RememberJoins = false
+    },
+    KeySystem = false,
+    KeySettings = {
+       Title = "Key",
+       Subtitle = "Key System",
+       Note = "Discord: https://discord.gg/Z5YK4XvE",
+       FileName = "KeySystemPizzaHub45",
+       SaveKey = true,
+       GrabKeyFromSite = false,
+       Key = {""}
+    }
 })
 
+-- Dann erst die Tabs erstellen
 local H = Window:CreateTab("Home", nil)
 local F = Window:CreateTab("Auto Farm", nil)
 local T = Window:CreateTab("Teleports", nil)
