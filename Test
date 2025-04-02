@@ -603,25 +603,7 @@ local function tryCook()
 	end
 end
 wait(1)
---//main loop
-local isRunning = true  -- Eine Variable, die steuert, ob der Loop weiterlaufen soll
 
-while isRunning do
-    wait(1.1)
-    humanoid.Sit = false
-    
-    -- Zufallsgenerierung
-    if RNG:NextInteger(1, 20) == 1 then
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
-        wait()
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
-    end
-
-    -- Beispiel: Stoppe den Loop, wenn der Charakter stirbt oder das Spiel verlassen wird
-    if humanoid.Health <= 0 then
-        isRunning = false
-    end
-end
 
 	for zz=1,6 do
 		local c,order = FindFirstCustomer()
