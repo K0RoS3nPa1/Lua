@@ -32,21 +32,6 @@ local Window = Rayfield:CreateWindow({
 
 local F = Window:CreateTab("Auto Farm", nil)
 
-local settings = {
-    refill_at = 50,
-    refill_end = 97,
-    movespeed_at = 5
-}
-
-local function saveSettings()
-    Rayfield:SaveConfiguration({
-        FolderName = "Pizza Hub",
-        FileName = "settings",
-        Data = settings
-    })
-    print("Einstellungen gespeichert!")
-end
-
 -- Globale Variablen für die Toggles
 local doCashier = false
 local doCook = false
@@ -76,7 +61,7 @@ local function toggleSupplier(bool)
 end
 
 -- Erstellen der Toggle-Schalter für jede Funktion
-local cashierToggle = F:CreateToggle({
+local cashierToggle = Window:CreateToggle({
     Name = "Cashier Aktivieren",
     CurrentValue = doCashier,
     Callback = function(value)
@@ -84,7 +69,7 @@ local cashierToggle = F:CreateToggle({
     end
 })
 
-local cookToggle = F:CreateToggle({
+local cookToggle = Window:CreateToggle({
     Name = "Cook Aktivieren",
     CurrentValue = doCook,
     Callback = function(value)
@@ -92,7 +77,7 @@ local cookToggle = F:CreateToggle({
     end
 })
 
-local boxerToggle = F:CreateToggle({
+local boxerToggle = Window:CreateToggle({
     Name = "Boxer Aktivieren",
     CurrentValue = doBoxer,
     Callback = function(value)
@@ -100,7 +85,7 @@ local boxerToggle = F:CreateToggle({
     end
 })
 
-local deliveryToggle = F:CreateToggle({
+local deliveryToggle = Window:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
     Callback = function(value)
@@ -108,7 +93,7 @@ local deliveryToggle = F:CreateToggle({
     end
 })
 
-local supplierToggle = F:CreateToggle({
+local supplierToggle = Window:CreateToggle({
     Name = "Supplier Aktivieren",
     CurrentValue = doSupplier,
     Callback = function(value)
@@ -116,36 +101,6 @@ local supplierToggle = F:CreateToggle({
     end
 })
 
--- Eingabefelder (TextBox)
-local refillAtBox = F:CreateInput({
-    Name = "Refill bei",
-    PlaceholderText = "Gib den Wert ein",
-    Text = tostring(settings.refill_at),
-    Callback = function(value)
-        settings.refill_at = tonumber(value) or settings.refill_at
-    end
-})
-
-local refillEndBox = F:CreateInput({
-    Name = "Refill Ende",
-    PlaceholderText = "Gib den Wert ein",
-    Text = tostring(settings.refill_end),
-    Callback = function(value)
-        settings.refill_end = tonumber(value) or settings.refill_end
-    end
-})
-
-local movespeedBox = F:CreateInput({
-    Name = "Movespeed At",
-    PlaceholderText = "Gib den Wert ein",
-    Text = tostring(settings.movespeed_at),
-    Callback = function(value)
-        settings.movespeed_at = tonumber(value) or settings.movespeed_at
-    end
-})
-
--- Optional: Speichern der Einstellungen
-saveSettings()
 
 
 
