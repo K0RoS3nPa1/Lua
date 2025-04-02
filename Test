@@ -77,11 +77,6 @@ local function saveOnChange()
     saveSettings()
 end
 
-if getconnections then
-    for _, c in next, getconnections(game:GetService("ScriptContext").Error) do
-        c:Disable()
-    end
-end
 
 
 
@@ -205,6 +200,13 @@ local movespeedInput = F:CreateInput({
     end,
 })
 
+if getconnections then
+    for _, c in next, getconnections(game:GetService("ScriptContext").Error) do
+        c:Disable()
+    end
+end
+
+
 local player = game:GetService("Players").LocalPlayer
 local ffc = game.FindFirstChild
 local RNG = Random.new()
@@ -232,6 +234,7 @@ do
 end
 
 assert(network, "failed to find network")
+
 --//subroutines
 local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
 for name in pairs(supplyCounts) do
