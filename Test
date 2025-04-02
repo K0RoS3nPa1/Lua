@@ -42,11 +42,11 @@ end
 
 -- Toggle-Buttons erstellen
 local toggles = {
-    Cashier = false,
-    Cook = false,
-    Boxer = false,
-    Delivery = false,
-    Supplier = false
+    doCashier = false,
+    doCook = false,
+    doBoxer = false,
+    doDelivery = false,
+    doSupplier = false
 }
 
 local function toggleFunction(job, state)
