@@ -144,28 +144,28 @@ Rayfield:Notify({
 
 
 
-
 for name in pairs(supplyCounts) do
-    local counterName = name == "Dew" and "CounterMountainDew" or "Counter" .. name
-    local counterModel = workspace:FindFirstChild("SupplyCounters") 
-        and workspace.SupplyCounters:FindFirstChild("Model")
-        and workspace.SupplyCounters.Model:FindFirstChild(counterName)
+    local success, result = pcall(function()
+        local counterName = name == "Dew" and "CounterMountainDew" or "Counter" .. name
+        local counterModel = workspace:FindFirstChild("SupplyCounters")
+            and workspace.SupplyCounters:FindFirstChild("Model")
+            and workspace.SupplyCounters.Model:FindFirstChild(counterName)
 
-    if counterModel and counterModel:FindFirstChild("a") and counterModel.a:FindFirstChild("SG") and counterModel.a.SG:FindFirstChild("Counter") then
-        local lbl = counterModel.a.SG.Counter
+        if counterModel and counterModel:FindFirstChild("a") and counterModel.a:FindFirstChild("SG") and counterModel.a.SG:FindFirstChild("Counter") then
+            local lbl = counterModel.a.SG.Counter
+            supplyCounts[name] = tonumber(lbl.Text) or 0  
 
-        -- Setze Standardwert falls nil
-        supplyCounts[name] = tonumber(lbl.Text) or 0  
+            lbl:GetPropertyChangedSignal("Text"):Connect(function()
+                supplyCounts[name] = tonumber(lbl.Text) or 0
+            end)
+        end
+    end)
 
-        -- Beobachte Änderungen im Text
-        lbl:GetPropertyChangedSignal("Text"):Connect(function()
-            supplyCounts[name] = tonumber(lbl.Text) or 0
-            print("Updated", name, "to", supplyCounts[name]) -- Debugging
-        end)
-    else
-        warn("Fehlendes SupplyCounter für: " .. name)
+    if not success then
+        print("[ERROR] SupplyCounter nicht gefunden oder fehlerhaft:", name, result)
     end
 end
+
 
 
 -- Deine anderen Funktionen wie `FindFirstCustomer`, `FindBoxes` und weitere bleiben unverändert
