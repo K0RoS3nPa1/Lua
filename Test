@@ -1,35 +1,38 @@
-local success, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
 
-if not success then
-    warn("Fehler beim Laden von Rayfield! Stelle sicher, dass die URL erreichbar ist.")
-    return
-end
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Pizza Hub",
-    Icon = 0,
-    LoadingTitle = "Pizza Hub",
-    LoadingSubtitle = "by Pizza Hub",
-    Theme = "Default",
-    DisableRayfieldPrompts = false,
-    DisableBuildWarnings = false,
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "Pizza Hub",
-        FileName = "settings"
-    },
-    Discord = {
-        Enabled = false 
-    },
-    KeySystem = false
+   Name = "Pizza Hub",
+   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "Pizza Hub",
+   LoadingSubtitle = "by Pizza hub",
+   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Pizza Hub"
+   },
+   Discord = {
+      Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "false", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+      RememberJoins = false -- Set this to false to make them join the discord every time they load it up
+   },
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "Key",
+      Subtitle = "Key System",
+      Note = "Discord: https://discord.gg/Z5YK4XvE" , -- Use this to tell the user how to get a key
+      FileName = "KeySystemPizzaHub45", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"PizzaHub2"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
 })
 
--- Tabs erstellen
 local F = Window:CreateTab("Auto Farm", nil)
 
--- Einstellungen
 local settings = {
     refill_at = 50,
     refill_end = 97,
@@ -45,13 +48,12 @@ local function saveSettings()
     print("Einstellungen gespeichert!")
 end
 
--- Toggle Buttons
 local toggles = {
-    Cashier = false,
-    Cook = false,
-    Boxer = false,
-    Delivery = false,
-    Supplier = false
+    doCashier = false,
+    doCook = false,
+    doBoxer = false,
+    doDelivery = false,
+    doSupplier = false
 }
 
 local function toggleFunction(job, state)
@@ -59,52 +61,75 @@ local function toggleFunction(job, state)
     print(job .. " Toggle: ", state)
 end
 
-for job, state in pairs(toggles) do
-    F:CreateToggle({
-        Name = job,
-        CurrentValue = state,
-        Flag = "Toggle" .. job,
-        Callback = function(Value)
-            toggleFunction(job, Value)
+local ToggleCashier = F:CreateToggle({
+    Name = "Cashier",
+    CurrentValue = toggles.doCashier,
+    Flag = "ToggleCashier",
+    Callback = function(Value)
+        toggleFunction("doCashier", Value)
+    end
+})
+
+local ToggleCook = F:CreateToggle({
+    Name = "Cook",
+    CurrentValue = toggles.doCook,
+    Flag = "ToggleCook",
+    Callback = function(Value)
+        toggleFunction("doCook", Value)
+    end
+})
+
+local ToggleBoxer = F:CreateToggle({
+    Name = "Boxer",
+    CurrentValue = toggles.doBoxer,
+    Flag = "ToggleBoxer",
+    Callback = function(Value)
+        toggleFunction("doBoxer", Value)
+    end
+})
+
+local ToggleDelivery = F:CreateToggle({
+    Name = "Delivery",
+    CurrentValue = toggles.doDelivery,
+    Flag = "ToggleDelivery",
+    Callback = function(Value)
+        toggleFunction("doDelivery", Value)
+    end
+})
+
+local ToggleSupplier = F:CreateToggle({
+    Name = "Supplier",
+    CurrentValue = toggles.doSupplier,
+    Flag = "ToggleSupplier",
+    Callback = function(Value)
+        toggleFunction("doSupplier", Value)
+    end
+})
+
+local refillAtInput = F:CreateInput({
+    Name = "Refill At",
+    CurrentValue = tostring(settings.refill_at),
+    PlaceholderText = "Enter refill at value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "RefillAtInput",
+    Callback = function(Text)
+        local value = tonumber(Text)
+        if value and value <= 99 then
+            settings.refill_at = value
+            saveSettings()
+        else
+            print("Ungültige Eingabe für refill_at")
         end
-    })
-end
+    end
+})
 
--- Input-Felder
-local inputs = {
-    {Name = "Refill At", Key = "refill_at"},
-    {Name = "Refill End", Key = "refill_end"},
-    {Name = "Movespeed", Key = "movespeed_at"}
-}
-
-for _, input in pairs(inputs) do
-    F:CreateInput({
-        Name = input.Name,
-        CurrentValue = tostring(settings[input.Key]),
-        PlaceholderText = "Enter " .. input.Name .. " value",
-        RemoveTextAfterFocusLost = false,
-        Flag = input.Key .. "Input",
-        Callback = function(Text)
-            local value = tonumber(Text)
-            if value and value <= 99 then
-                settings[input.Key] = value
-                saveSettings()
-            else
-                print("Ungültige Eingabe für " .. input.Key)
-            end
-        end,
-    })
-end
-
--- Restart Button
-F:CreateButton({
+local RestartButton = F:CreateButton({
     Name = "Restart Script",
     Callback = function()
         print("Script wird neugestartet...")
         loadstring(game:HttpGet('https://your-script-url.com'))()
     end
 })
-
 
 
 local player = game:GetService("Players").LocalPlayer
@@ -485,7 +510,7 @@ local function tryCook()
 	end
 end
 wait(1)
-while Rayfield.Parent do
+while Window.Parent do
 	wait(1.1)
 	humanoid.Sit = false
 	if RNG:NextInteger(1, 20) == 1 then
