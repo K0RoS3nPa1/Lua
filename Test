@@ -83,33 +83,7 @@ if getconnections then
     end
 end
 
-local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
-local RNG = Random.new()
-local network
-local character, root, humanoid
 
--- Statt debug.getregistry und getupvalues verwenden wir eine sichere Methode
-do
-    local reg = {}
-    -- Durchsuchen von Objekten nach Funktionen
-    for _, f in ipairs(getgc()) do
-        if type(f) == "function" then
-            -- Wir können durch die Funktionen iterieren und den Code analysieren
-            -- Ohne debug.getupvalues oder debug.setupvalue
-            if tostring(f) == "CashOut" then
-                wait(0.2)
-                -- Beispiel für das Modifizieren von Funktionen ohne debug
-                f.MouseButton1Click = function() end
-                f.Wait = function() end
-            end
-        elseif type(f) == "table" and rawget(f, "FireServer") and rawget(f, "BindEvents") then
-            network = f
-        end
-    end
-end
-
-assert(network, "failed to find network")
 
 
 settings.refill_at = settings.refill_at or 0
@@ -231,7 +205,33 @@ local movespeedInput = F:CreateInput({
     end,
 })
 
+local player = game:GetService("Players").LocalPlayer
+local ffc = game.FindFirstChild
+local RNG = Random.new()
+local network
+local character, root, humanoid
 
+-- Statt debug.getregistry und getupvalues verwenden wir eine sichere Methode
+do
+    local reg = {}
+    -- Durchsuchen von Objekten nach Funktionen
+    for _, f in ipairs(getgc()) do
+        if type(f) == "function" then
+            -- Wir können durch die Funktionen iterieren und den Code analysieren
+            -- Ohne debug.getupvalues oder debug.setupvalue
+            if tostring(f) == "CashOut" then
+                wait(0.2)
+                -- Beispiel für das Modifizieren von Funktionen ohne debug
+                f.MouseButton1Click = function() end
+                f.Wait = function() end
+            end
+        elseif type(f) == "table" and rawget(f, "FireServer") and rawget(f, "BindEvents") then
+            network = f
+        end
+    end
+end
+
+assert(network, "failed to find network")
 --//subroutines
 local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
 for name in pairs(supplyCounts) do
