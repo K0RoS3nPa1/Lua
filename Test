@@ -203,17 +203,29 @@ local movespeedInput = F:CreateInput({
 
 
 local supplyCounts = {TomatoSauce=99, Cheese=99, Sausage=99, Pepperoni=99, Dough=99, Box=99, Dew=99}
+
 for name in pairs(supplyCounts) do
-    local lbl = workspace.SupplyCounters.Model[name=="Dew" and "CounterMountainDew" or "Counter"..name].a.SG.Counter
-    supplyCounts[name] = tonumber(lbl.Text) or 0  -- Sicherstellen, dass es keine nil Werte gibt
-    lbl.Changed:Connect(function()
+    -- Berechne den Zählernamen
+    local counterName = name == "Dew" and "CounterMountainDew" or "Counter" .. name
+    local counter = workspace.SupplyCounters.Model:FindFirstChild(counterName)
+
+    -- Überprüfen, ob der Zähler existiert und darauf zugreifen
+    if counter and counter.a and counter.a.SG and counter.a.SG.Counter then
+        local lbl = counter.a.SG.Counter
         supplyCounts[name] = tonumber(lbl.Text) or 0  -- Sicherstellen, dass es keine nil Werte gibt
-    end)
+
+        -- Event-Listener für Textänderungen
+        lbl.Changed:Connect(function()
+            supplyCounts[name] = tonumber(lbl.Text) or 0  -- Sicherstellen, dass es keine nil Werte gibt
+        end)
+    else
+        warn("Zähler für " .. name .. " wurde nicht gefunden!")
+    end
 end
 
 local function FindFirstCustomer()
     local children = workspace.Customers:GetChildren()
-    for i=1, #children do
+    for i = 1, #children do
         local c = children[i] 
         if ffc(c, "Head") and ffc(c, "Humanoid") and c.Head.CFrame.Z < 102 and ffc(c.Head, "Dialog") and ffc(c.Head.Dialog, "Correct") then
             local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
@@ -231,6 +243,7 @@ local function FindFirstCustomer()
         end
     end
 end
+
 
 local boxPtick = 0
 local boxDtick = 0
@@ -674,7 +687,7 @@ local function tryCook()
     end
 end
 
-task.wait(1)
+wait(1)
 
 
 for zz=1,6 do
