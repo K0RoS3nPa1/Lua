@@ -97,7 +97,11 @@ local ToggleSupplier = F:CreateToggle({
 })
 
 
-
+local player = game:GetService("Players").LocalPlayer
+local ffc = game.FindFirstChild
+local RNG = Random.new()
+local network
+local character,root,humanoid
 
 -- Supply Counts
 local supplyCounts = {TomatoSauce=99, Cheese=99, Sausage=99, Pepperoni=99, Dough=99, Box=99, Dew=99}
