@@ -411,43 +411,70 @@ onCharacterAdded(player.Character or player.CharacterAdded:Wait())
 -- Verbindung zur CharacterAdded-Event
 player.CharacterAdded:Connect(onCharacterAdded)
 
+-- Sicherstellen, dass settings definiert ist
+local settings = settings or { movespeed_at = 1 }
+
+-- Sicherstellen, dass root und humanoid global oder als Argumente verfügbar sind
+local root, humanoid
 
 local function smoothTP2(cf)
-	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
-	local diff = cf.p - root.Position
-	local oldg = workspace.Gravity
-	workspace.Gravity = 5
-	for i=0,diff.Magnitude,settings.movespeed_at do
-		humanoid.Sit=false
-		root.CFrame = cf0 + diff.Unit * i
-		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
-		wait()
-	end
-	root.CFrame = cf
-	workspace.Gravity = oldg
+    if not root or not humanoid then
+        warn("root oder humanoid ist nicht definiert!")
+        return
+    end
+
+    local cf0 = (cf - cf.p) + root.Position + Vector3.new(0, 0, 0)
+    local diff = cf.p - root.Position
+    local oldg = workspace.Gravity
+    workspace.Gravity = 5
+
+    for i = 0, diff.Magnitude, settings.movespeed_at do
+        humanoid.Sit = false
+        root.CFrame = cf0 + diff.Unit * i
+        root.Velocity, root.RotVelocity = Vector3.new(), Vector3.new()
+        task.wait()  -- Verwende task.wait() anstelle von wait()
+    end
+
+    root.CFrame = cf
+    workspace.Gravity = oldg
 end
+
 local function smoothTP(cf)
-    if (cf.p-root.Position).Magnitude > 97 then
+    if (cf.p - root.Position).Magnitude > 97 then
         local btns = workspace.JobButtons:GetChildren()
+
+        -- Sicherstellen, dass der Spieler eine Hausmarkierung hat
         if player:FindFirstChild("House") and player.House.Value then
-            btns[#btns+1] = player.House.Value:FindFirstChild("Marker") 
+            btns[#btns + 1] = player.House.Value:FindFirstChild("Marker")
         end
-        table.sort(btns,function(a,b) return (a.Position-cf.p).Magnitude < (b.Position-cf.p).Magnitude end)
-        if (btns[1].Position-cf.p).Magnitude < (cf.p-root.Position).Magnitude then
+
+        table.sort(btns, function(a, b)
+            return (a.Position - cf.p).Magnitude < (b.Position - cf.p).Magnitude
+        end)
+
+        if (btns[1].Position - cf.p).Magnitude < (cf.p - root.Position).Magnitude then
             game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
-            wait(0.9)
-            if (cf.p-root.Position).Magnitude < 9 then
+            task.wait(0.9)
+            if (cf.p - root.Position).Magnitude < 9 then
                 return
             end
         end
     end
     smoothTP2(cf)
 end
-for _,o in ipairs(workspace.Ovens:GetChildren()) do
-	if ffc(o,"Bottom") then
-		o.Bottom.CanTouch = false
-	end
+
+-- Sicherstellen, dass `ffc` definiert ist, falls es eine benutzerdefinierte Funktion ist
+local function ffc(object, partName)
+    return object:FindFirstChild(partName) ~= nil
 end
+
+-- Überprüfen, ob "Bottom" existiert, bevor wir auf CanTouch zugreifen
+for _, o in ipairs(workspace.Ovens:GetChildren()) do
+    if ffc(o, "Bottom") then
+        o.Bottom.CanTouch = false
+    end
+end
+
 local function tryCook()
 	for zz=1,38 do
 		local order = getOrders()[1]
