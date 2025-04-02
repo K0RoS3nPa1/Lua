@@ -34,8 +34,6 @@ local Window = Rayfield:CreateWindow({
 local F = Window:CreateTab("Auto Farm", nil)
 
 
-
-
 -- Globale Variablen für die Toggles
 local doCashier = false
 local doCook = false
@@ -65,7 +63,7 @@ local function toggleSupplier(bool)
 end
 
 -- Erstellen der Toggle-Schalter für jede Funktion
-local cashierToggle = window:CreateToggle({
+local cashierToggle = F:CreateToggle({
     Name = "Cashier Aktivieren",
     CurrentValue = doCashier,
     Callback = function(value)
@@ -73,7 +71,7 @@ local cashierToggle = window:CreateToggle({
     end
 })
 
-local cookToggle = window:CreateToggle({
+local cookToggle = F:CreateToggle({
     Name = "Cook Aktivieren",
     CurrentValue = doCook,
     Callback = function(value)
@@ -81,7 +79,7 @@ local cookToggle = window:CreateToggle({
     end
 })
 
-local boxerToggle = window:CreateToggle({
+local boxerToggle = F:CreateToggle({
     Name = "Boxer Aktivieren",
     CurrentValue = doBoxer,
     Callback = function(value)
@@ -89,7 +87,7 @@ local boxerToggle = window:CreateToggle({
     end
 })
 
-local deliveryToggle = window:CreateToggle({
+local deliveryToggle = F:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
     Callback = function(value)
@@ -97,7 +95,7 @@ local deliveryToggle = window:CreateToggle({
     end
 })
 
-local supplierToggle = window:CreateToggle({
+local supplierToggle = F:CreateToggle({
     Name = "Supplier Aktivieren",
     CurrentValue = doSupplier,
     Callback = function(value)
@@ -106,7 +104,7 @@ local supplierToggle = window:CreateToggle({
 })
 
 -- Eingabefelder (TextBox)
-local refillAtBox = window:CreateImput({
+local refillAtBox = F:CreateImput({
     Name = "Refill bei",
     PlaceholderText = "Gib den Wert ein",
     Text = tostring(settings.refill_at),
@@ -115,7 +113,7 @@ local refillAtBox = window:CreateImput({
     end
 })
 
-local refillEndBox = window:CreateImput({
+local refillEndBox = F:CreateImput({
     Name = "Refill Ende",
     PlaceholderText = "Gib den Wert ein",
     Text = tostring(settings.refill_end),
@@ -124,7 +122,7 @@ local refillEndBox = window:CreateImput({
     end
 })
 
-local movespeedBox = window:CreateImput({
+local movespeedBox = F:CreateImput({
     Name = "Movespeed At",
     PlaceholderText = "Gib den Wert ein",
     Text = tostring(settings.movespeed_at),
