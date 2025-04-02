@@ -1,46 +1,41 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not success then
+    warn("Fehler beim Laden von Rayfield! Stelle sicher, dass die URL erreichbar ist.")
+    return
+end
 
 local Window = Rayfield:CreateWindow({
-   Name = "Pizza Hub",
-   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-   LoadingTitle = "Pizza Hub",
-   LoadingSubtitle = "by Pizza Hub",
-   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "Pizza Hub", -- Create a custom folder for your hub/game
-      FileName = "settings"
-   },
-   Discord = {
-      Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
-      Invite = "false", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
-      RememberJoins = false -- Set this to false to make them join the discord every time they load it up
-   },
-   KeySystem = false, -- Set this to true to use our key system
-   KeySettings = {
-      Title = "Key",
-      Subtitle = "Key System",
-      Note = "Discord: https://discord.gg/Z5YK4XvE" , -- Use this to tell the user how to get a key
-      FileName = "KeySystemPizzaHub45", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"PizzaHub2"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-   }
+    Name = "Pizza Hub",
+    Icon = 0,
+    LoadingTitle = "Pizza Hub",
+    LoadingSubtitle = "by Pizza Hub",
+    Theme = "Default",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "Pizza Hub",
+        FileName = "settings"
+    },
+    Discord = {
+        Enabled = false 
+    },
+    KeySystem = false
 })
 
 -- Tabs erstellen
 local F = Window:CreateTab("Auto Farm", nil)
 
--- Einstellungen laden oder Standardwerte setzen
+-- Einstellungen
 local settings = {
     refill_at = 50,
     refill_end = 97,
     movespeed_at = 5
 }
 
--- Funktion zum Speichern der Einstellungen
 local function saveSettings()
     Rayfield:SaveConfiguration({
         FolderName = "Pizza Hub",
@@ -50,13 +45,13 @@ local function saveSettings()
     print("Einstellungen gespeichert!")
 end
 
--- Toggle-Buttons erstellen
+-- Toggle Buttons
 local toggles = {
-    doCashier = false,
-    doCook = false,
-    doBoxer = false,
-    doDelivery = false,
-    doSupplier = false
+    Cashier = false,
+    Cook = false,
+    Boxer = false,
+    Delivery = false,
+    Supplier = false
 }
 
 local function toggleFunction(job, state)
@@ -64,105 +59,45 @@ local function toggleFunction(job, state)
     print(job .. " Toggle: ", state)
 end
 
-local ToggleCashier = F:CreateToggle({
-    Name = "Cashier",
-    CurrentValue = toggles.Cashier,
-    Flag = "ToggleCashier",
-    Callback = function(Value)
-        toggleFunction("Cashier", Value)
-    end
-})
-
-local ToggleCook = F:CreateToggle({
-    Name = "Cook",
-    CurrentValue = toggles.Cook,
-    Flag = "ToggleCook",
-    Callback = function(Value)
-        toggleFunction("Cook", Value)
-    end
-})
-
-local ToggleBoxer = F:CreateToggle({
-    Name = "Boxer",
-    CurrentValue = toggles.Boxer,
-    Flag = "ToggleBoxer",
-    Callback = function(Value)
-        toggleFunction("Boxer", Value)
-    end
-})
-
-local ToggleDelivery = F:CreateToggle({
-    Name = "Delivery",
-    CurrentValue = toggles.Delivery,
-    Flag = "ToggleDelivery",
-    Callback = function(Value)
-        toggleFunction("Delivery", Value)
-    end
-})
-
-local ToggleSupplier = F:CreateToggle({
-    Name = "Supplier",
-    CurrentValue = toggles.Supplier,
-    Flag = "ToggleSupplier",
-    Callback = function(Value)
-        toggleFunction("Supplier", Value)
-    end
-})
-
--- Input-Felder erstellen
-local refillAtInput = F:CreateInput({
-    Name = "Refill At",
-    CurrentValue = tostring(settings.refill_at),
-    PlaceholderText = "Enter refill at value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "RefillAtInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value and value <= 99 then
-            settings.refill_at = value
-            saveSettings()
-        else
-            print("Ungültige Eingabe für refill_at")
+for job, state in pairs(toggles) do
+    F:CreateToggle({
+        Name = job,
+        CurrentValue = state,
+        Flag = "Toggle" .. job,
+        Callback = function(Value)
+            toggleFunction(job, Value)
         end
-    end,
-})
+    })
+end
 
-local refillEndInput = F:CreateInput({
-    Name = "Refill End",
-    CurrentValue = tostring(settings.refill_end),
-    PlaceholderText = "Enter refill end value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "RefillEndInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value and value <= 99 then
-            settings.refill_end = value
-            saveSettings()
-        else
-            print("Ungültige Eingabe für refill_end")
-        end
-    end,
-})
+-- Input-Felder
+local inputs = {
+    {Name = "Refill At", Key = "refill_at"},
+    {Name = "Refill End", Key = "refill_end"},
+    {Name = "Movespeed", Key = "movespeed_at"}
+}
 
-local movespeedInput = F:CreateInput({
-    Name = "Movespeed",
-    CurrentValue = tostring(settings.movespeed_at),
-    PlaceholderText = "Enter movespeed value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "MovespeedInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value and value <= 99 then
-            settings.movespeed_at = value
-            saveSettings()
-        else
-            print("Ungültige Eingabe für movespeed")
-        end
-    end,
-})
+for _, input in pairs(inputs) do
+    F:CreateInput({
+        Name = input.Name,
+        CurrentValue = tostring(settings[input.Key]),
+        PlaceholderText = "Enter " .. input.Name .. " value",
+        RemoveTextAfterFocusLost = false,
+        Flag = input.Key .. "Input",
+        Callback = function(Text)
+            local value = tonumber(Text)
+            if value and value <= 99 then
+                settings[input.Key] = value
+                saveSettings()
+            else
+                print("Ungültige Eingabe für " .. input.Key)
+            end
+        end,
+    })
+end
 
--- Button für Neustart
-local RestartButton = F:CreateButton({
+-- Restart Button
+F:CreateButton({
     Name = "Restart Script",
     Callback = function()
         print("Script wird neugestartet...")
