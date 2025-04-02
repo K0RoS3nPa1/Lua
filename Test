@@ -1,30 +1,37 @@
--- Lade Rayfield von der offiziellen URL
-local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua"))()
+-- Lade Rayfield von der richtigen Quelle
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 if not Rayfield then
     error("Rayfield konnte nicht geladen werden. Überprüfe die URL.")
 end
 
-local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
+local settings = {
+    refill_at = 50,
+    refill_end = 97,
+    movespeed_at = 5,
+    deliver_at = 5,
+    stay_in_kitchen = true
+}
+
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
 
 local player = game:GetService("Players").LocalPlayer
 
--- Rayfield GUI erstellen
+-- GUI Info-Anzeige
 Rayfield:Notify({
     Title = "Info",
     Content = "GUI wird geladen...",
     Duration = 3
 })
 
--- Fenster erstellen
+-- Erstelle das Hauptfenster für Rayfield
 local window = Rayfield:CreateWindow({
     Name = "Pizza Factory Mod",
     LoadingTitle = "Lädt...",
     LoadingSubtitle = "Bitte warten",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil,
+        FolderName = "PizzaFactorySettings",
         FileName = "PizzaFactory"
     },
     Discord = {
@@ -34,14 +41,11 @@ local window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- Tab erstellen
-local tabSettings = window:CreateTab("Settings", 4483362458)
-
--- Section für die Einstellungen
-local section = tabSettings:CreateSection("Einstellungen")
+-- Erstelle ein Tab für die Einstellungen
+local sectionSettings = window:CreateTab("Settings", 4483362458)
 
 -- Refill Einstellungen
-section:CreateSlider({
+sectionSettings:CreateSlider({
     Name = "Refill At",
     Range = {1, 100},
     Increment = 1,
@@ -53,7 +57,7 @@ section:CreateSlider({
     end
 })
 
-section:CreateSlider({
+sectionSettings:CreateSlider({
     Name = "Refill End",
     Range = {1, 100},
     Increment = 1,
@@ -66,7 +70,7 @@ section:CreateSlider({
 })
 
 -- Movespeed Einstellungen
-section:CreateSlider({
+sectionSettings:CreateSlider({
     Name = "Movespeed",
     Range = {1, 50},
     Increment = 1,
@@ -78,61 +82,62 @@ section:CreateSlider({
     end
 })
 
--- Toggle Buttons
-section:CreateToggle({
+-- Toggle Buttons für verschiedene Funktionen
+sectionSettings:CreateToggle({
     Name = "Cashier Aktivieren",
     CurrentValue = doCashier,
     Flag = "doCashier",
-    Callback = function(value)
-        doCashier = value
+    Callback = function(bool)
+        doCashier = bool
     end
 })
 
-section:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Cook Aktivieren",
     CurrentValue = doCook,
     Flag = "doCook",
-    Callback = function(value)
-        doCook = value
+    Callback = function(bool)
+        doCook = bool
     end
 })
 
-section:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Boxer Aktivieren",
     CurrentValue = doBoxer,
     Flag = "doBoxer",
-    Callback = function(value)
-        doBoxer = value
+    Callback = function(bool)
+        doBoxer = bool
     end
 })
 
-section:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
     Flag = "doDelivery",
-    Callback = function(value)
-        doDelivery = value
+    Callback = function(bool)
+        doDelivery = bool
     end
 })
 
-section:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Supplier Aktivieren",
     CurrentValue = doSupplier,
     Flag = "doSupplier",
-    Callback = function(value)
-        doSupplier = value
+    Callback = function(bool)
+        doSupplier = bool
     end
 })
 
--- GUI laden
+-- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
+
+
+-- Info-Anzeige beim Schließen
 Rayfield:Notify({
-    Title = "Fertig",
-    Content = "Das GUI wurde erfolgreich geladen!",
+    Title = "Beendet",
+    Content = "Das GUI wurde geschlossen.",
     Duration = 3
 })
 
--- Lade gespeicherte Konfigurationen
-Rayfield:LoadConfiguration()
 
 
 
@@ -593,9 +598,9 @@ local function tryCook()
 		end
 	end
 end
-wait(1)
-while Rayfield.Parent do
-	wait(1.1)
+
+while Rayfield.Enabled do
+	
 	humanoid.Sit = false
 	if RNG:NextInteger(1, 20) == 1 then
 		game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
@@ -615,7 +620,7 @@ while Rayfield.Parent do
 			end
 			if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
 			network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
-			wait(0)
+			wait(0.4)
 		else
 			break
 		end
