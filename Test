@@ -1,45 +1,10 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Überprüfe ob Rayfield verfügbar ist
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/sirRaiRay/Rayfield/main/source.lua'))()
+local player = game:GetService("Players").LocalPlayer
+local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
+local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
 
-local Window = Rayfield:CreateWindow({
-   Name = "Pizza Hub",
-   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-   LoadingTitle = "Pizza Hub",
-   LoadingSubtitle = "by Pizza hub",
-   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Pizza Hub"
-   },
-   Discord = {
-      Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
-      Invite = "false", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
-      RememberJoins = false -- Set this to false to make them join the discord every time they load it up
-   },
-   KeySystem = false, -- Set this to true to use our key system
-   KeySettings = {
-      Title = "Key",
-      Subtitle = "Key System",
-      Note = "Discord: https://discord.gg/Z5YK4XvE", -- Use this to tell the user how to get a key
-      FileName = "KeySystemPizzaHub45", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"PizzaHub2"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-   }
-})
-
-local F = Window:CreateTab("Auto Farm", nil)
-
--- Globale Variablen für die Toggles
-local doCashier = false
-local doCook = false
-local doBoxer = false
-local doDelivery = false
-local doSupplier = false
-
--- Toggle Funktionen
+-- Funktionen zum Umschalten
 local function toggleCashier(bool)
     doCashier = bool ~= nil and bool or not doCashier
 end
@@ -60,48 +25,147 @@ local function toggleSupplier(bool)
     doSupplier = bool ~= nil and bool or not doSupplier
 end
 
--- Erstellen der Toggle-Schalter für jede Funktion
-local cashierToggle = F:CreateToggle({
+-- Rayfield GUI erstellen
+Rayfield:Notify({
+    Title = "Info",
+    Content = "GUI wird geladen...",
+    Duration = 3
+})
+
+local window = Rayfield:CreateWindow({
+    Name = "Pizza Factory Mod",
+    LoadingTitle = "Lädt...",
+    LoadingSubtitle = "Bitte warten",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Kann für deinen Ordnernamen angepasst werden
+        FileName = "PizzaFactory"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "", -- Discord-Invite-Link, falls gewünscht
+    },
+    KeySystem = false, -- Kein Key-System
+    KeySettings = { -- Falls du ein Key-System implementieren möchtest
+        Key = "rayfield"
+    }
+})
+
+-- Sektionen für das GUI hinzufügen
+local sectionSettings = window:CreateTab("Settings", 4483362458)
+
+-- Refill Einstellungen
+sectionSettings:CreateSlider({
+    Name = "Refill At",
+    Range = {1, 100},
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_at,
+    Flag = "refill_at",
+    Callback = function(value)
+        settings.refill_at = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Refill End",
+    Range = {1, 100},
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_end,
+    Flag = "refill_end",
+    Callback = function(value)
+        settings.refill_end = value
+    end
+})
+
+-- Movespeed Einstellungen
+sectionSettings:CreateSlider({
+    Name = "Movespeed",
+    Range = {1, 50},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = settings.movespeed_at,
+    Flag = "movespeed_at",
+    Callback = function(value)
+        settings.movespeed_at = value
+    end
+})
+
+-- Toggle Buttons für die verschiedenen Funktionen
+sectionSettings:CreateToggle({
     Name = "Cashier Aktivieren",
     CurrentValue = doCashier,
+    Flag = "doCashier",
     Callback = function(value)
         toggleCashier(value)
+        -- Hier kannst du den Code hinzufügen, um die Cashier-Funktion zu steuern
     end
 })
 
-local cookToggle = F:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Cook Aktivieren",
     CurrentValue = doCook,
+    Flag = "doCook",
     Callback = function(value)
         toggleCook(value)
+        -- Hier kannst du den Code hinzufügen, um die Cook-Funktion zu steuern
     end
 })
 
-local boxerToggle = F:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Boxer Aktivieren",
     CurrentValue = doBoxer,
+    Flag = "doBoxer",
     Callback = function(value)
         toggleBoxer(value)
+        -- Hier kannst du den Code hinzufügen, um die Boxer-Funktion zu steuern
     end
 })
 
-local deliveryToggle = F:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
+    Flag = "doDelivery",
     Callback = function(value)
         toggleDelivery(value)
+        -- Hier kannst du den Code hinzufügen, um die Delivery-Funktion zu steuern
     end
 })
 
-local supplierToggle = F:CreateToggle({
+sectionSettings:CreateToggle({
     Name = "Supplier Aktivieren",
     CurrentValue = doSupplier,
+    Flag = "doSupplier",
     Callback = function(value)
         toggleSupplier(value)
+        -- Hier kannst du den Code hinzufügen, um die Supplier-Funktion zu steuern
     end
 })
 
+-- Erstelle eine weitere Tab für andere Features, falls gewünscht
+local sectionFeatures = window:CreateTab("Features", 4483362458)
 
+sectionFeatures:CreateButton({
+    Name = "Activate Feature 1",
+    Callback = function()
+        -- Hier kannst du den Code für Feature 1 hinzufügen
+    end
+})
+
+sectionFeatures:CreateButton({
+    Name = "Activate Feature 2",
+    Callback = function()
+        -- Hier kannst du den Code für Feature 2 hinzufügen
+    end
+})
+
+-- Finalisiert die GUI und zeigt sie dem Benutzer
+Rayfield:Notify({
+    Title = "Fertig",
+    Content = "Das GUI wurde erfolgreich geladen!",
+    Duration = 3
+})
 
 
 
