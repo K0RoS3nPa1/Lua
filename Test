@@ -598,14 +598,6 @@ local function tryCook()
 end
 wait(1)
 --//main loop
-while gui.Parent do
-	wait(1.1)
-	humanoid.Sit=false
-	if RNG:NextInteger(1,20)==1 then
-        game:GetService("VirtualInputManager"):SendKeyEvent(true,"Z",false,game)
-        wait()
-        game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
-	end
 	for zz=1,6 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
