@@ -32,196 +32,70 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- Erstelle Tabs
-local H = Window:CreateTab("Home", nil)
+-- Tabs erstellen
 local F = Window:CreateTab("Auto Farm", nil)
-local T = Window:CreateTab("Teleports", nil)
-local S = Window:CreateTab("More Fun", nil)
-
--- Lade gespeicherte Einstellungen oder setze Standardwerte
-local settings = Rayfield:LoadConfiguration({
-    FolderName = "Pizza Hub",
-    FileName = "settings",
-    Default = {  -- Standardwerte, falls keine gespeicherten Einstellungen vorhanden sind
-        refill_at = 50,
-        refill_end = 97,
-        movespeed_at = 5
-    }
-})
-
--- Überprüfe, ob die Einstellungen korrekt geladen wurden
-if not settings then
-    settings = {
-        refill_at = 50,
-        refill_end = 97,
-        movespeed_at = 5
-    }
-end
-
--- Speichern der Konfiguration
-local function saveSettings()
-    if Rayfield.ConfigurationSaving.Enabled then
-        Rayfield:SaveConfiguration({
-            FolderName = "Pizza Hub",
-            FileName = "settings",
-            Data = settings  -- Speichert die aktuellen Einstellungen
-        })
-        print("Einstellungen gespeichert!")
-    end
-end
-
--- Funktion zum Speichern bei Änderungen
-local function saveOnChange()
-    saveSettings()
-end
-
--- Sicherstellen, dass settings definiert sind
-settings.refill_at = settings.refill_at or 0
-settings.refill_end = settings.refill_end or 0
-settings.movespeed_at = settings.movespeed_at or 0
-
--- Beispiel für Toggles und deren Verarbeitung
-local doCashier, doCook, doBoxer, doDelivery, doSupplier = false, false, false, false, false
-local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
-local RNG = Random.new()
-local network
-local character,root,humanoid
 
 -- Zustandsvariablen
-local doCashier, doCook, doBoxer, doDelivery, doSupplier = false, false, false, false, false
+local toggles = {
+    Cashier = false,
+    Cook = false,
+    Boxer = false,
+    Delivery = false,
+    Supplier = false
+}
 
--- Toggle-Funktionen
-local function toggleCashier(bool)
-    if bool ~= nil then
-        doCashier = bool
-    else
-        doCashier = not doCashier
-    end
+-- Funktion zum Umschalten
+local function toggleFunction(job, state)
+    toggles[job] = state
+    print(job .. " Toggle: ", state)  -- Debugging
 end
 
-local function toggleCook(bool)
-    if bool ~= nil then
-        doCook = bool
-    else
-        doCook = not doCook
-    end
-end
-
-local function toggleBoxer(bool)
-    if bool ~= nil then
-        doBoxer = bool
-    else
-        doBoxer = not doBoxer
-    end
-end
-
-local function toggleDelivery(bool)
-    if bool ~= nil then
-        doDelivery = bool
-    else
-        doDelivery = not doDelivery
-    end
-end
-
-local function toggleSupplier(bool)
-    if bool ~= nil then
-        doSupplier = bool
-    else
-        doSupplier = not doSupplier
-    end
-end
--- Erstellen von Toggle-Buttons
+-- Toggle-Buttons erstellen
 local ToggleCashier = F:CreateToggle({
     Name = "Cashier",
-    CurrentValue = false,
+    CurrentValue = toggles.Cashier,
     Flag = "ToggleCashier",
     Callback = function(Value)
-        toggleCashier(Value)
-    end,
+        toggleFunction("Cashier", Value)
+    end
 })
 
 local ToggleCook = F:CreateToggle({
     Name = "Cook",
-    CurrentValue = false,
+    CurrentValue = toggles.Cook,
     Flag = "ToggleCook",
     Callback = function(Value)
-        toggleCook(Value)
-    end,
+        toggleFunction("Cook", Value)
+    end
 })
 
 local ToggleBoxer = F:CreateToggle({
     Name = "Boxer",
-    CurrentValue = false,
+    CurrentValue = toggles.Boxer,
     Flag = "ToggleBoxer",
     Callback = function(Value)
-        toggleBoxer(Value)
-    end,
+        toggleFunction("Boxer", Value)
+    end
 })
 
 local ToggleDelivery = F:CreateToggle({
     Name = "Delivery",
-    CurrentValue = false,
+    CurrentValue = toggles.Delivery,
     Flag = "ToggleDelivery",
     Callback = function(Value)
-        toggleDelivery(Value)
-    end,
+        toggleFunction("Delivery", Value)
+    end
 })
 
 local ToggleSupplier = F:CreateToggle({
     Name = "Supplier",
-    CurrentValue = false,
+    CurrentValue = toggles.Supplier,
     Flag = "ToggleSupplier",
     Callback = function(Value)
-        toggleSupplier(Value)
-    end,
+        toggleFunction("Supplier", Value)
+    end
 })
 
--- Eingabefelder für Einstellungen
-local refillAtInput = F:CreateInput({
-    Name = "Refill At",
-    CurrentValue = tostring(settings.refill_at),
-    PlaceholderText = "Enter refill at value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "RefillAtInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value then
-            settings.refill_at = value
-            saveOnChange()
-        end
-    end,
-})
-
-local refillEndInput = F:CreateInput({
-    Name = "Refill End",
-    CurrentValue = tostring(settings.refill_end),
-    PlaceholderText = "Enter refill end value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "RefillEndInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value then
-            settings.refill_end = value
-            saveOnChange()
-        end
-    end,
-})
-
-local movespeedInput = F:CreateInput({
-    Name = "Movespeed",
-    CurrentValue = tostring(settings.movespeed_at),
-    PlaceholderText = "Enter movespeed value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "MovespeedInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value then
-            settings.movespeed_at = value
-            saveOnChange()
-        end
-    end,
-})
 
 
 
