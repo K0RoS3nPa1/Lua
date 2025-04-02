@@ -133,8 +133,7 @@ local movespeedBox = window:CreateImput({
     end
 })
 
--- Rayfield starten
-Rayfield:Run()
+
 
 
 local player = game:GetService("Players").LocalPlayer
@@ -772,3 +771,5 @@ while Window.Parent do
 		end
 	end
 end
+-- Rayfield starten
+Rayfield:Run()
