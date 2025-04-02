@@ -96,7 +96,7 @@ do
 end
 assert(network,"failed to find network")
 
-local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
+local doCashier, doBoxer, doCook, doSupplier, doDelivery
 
 local function toggleCashier(bool)
     if bool ~= nil then
@@ -185,45 +185,6 @@ local ToggleSupplier = F:CreateToggle({
 
 
 
-local oldRefillAt=refillAtBox.Text
-refillAtBox:GetPropertyChangedSignal("Text"):Connect(function()
-	if #refillAtBox.Text>2 or refillAtBox.Text:match("%D") then
-		refillAtBox.Text = oldRefillAt
-	end
-	oldRefillAt = refillAtBox.Text
-end)
-refillAtBox.FocusLost:Connect(function()
-	if tonumber(refillAtBox.Text) then
-		settings.refill_at=tonumber(refillAtBox.Text)
-	end
-	refillAtBox.Text=tostring(settings.refill_at)
-end)
-local oldRefillEnd=refillEndBox.Text
-refillEndBox:GetPropertyChangedSignal("Text"):Connect(function()
-	if #refillEndBox.Text>2 or refillEndBox.Text:match("%D") then
-		refillEndBox.Text = oldRefillEnd
-	end
-	oldRefillEnd = refillEndBox.Text
-end)
-refillEndBox.FocusLost:Connect(function()
-	if tonumber(refillEndBox.Text) then
-		settings.refill_end=tonumber(refillEndBox.Text)
-	end
-	refillEndBox.Text=tostring(settings.refill_end)
-end)
-local oldMovespeedAt=MovespeedBox.Text
-MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
-	if #MovespeedBox.Text>2 or MovespeedBox.Text:match("%D") then
-		MovespeedBox.Text = oldMovespeedAt
-	end
-	oldMovespeedAt = MovespeedBox.Text
-end)
-MovespeedBox.FocusLost:Connect(function()
-	if tonumber(MovespeedBox.Text) then
-		settings.movespeed_at=tonumber(MovespeedBox.Text)
-	end
-	MovespeedBox.Text=tostring(settings.movespeed_at)
-end)
 
 
 
