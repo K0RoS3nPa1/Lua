@@ -48,27 +48,7 @@ local function saveSettings()
     print("Einstellungen gespeichert!")
 end
 
--- Importiere die Rayfield Library
-local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/something/awesome-Rayfield/main/rayfield.lua"))()
 
--- Rayfield Setup
-local window = Rayfield:CreateWindow({
-    Name = "Roblox Exploit",
-    LoadingTitle = "Lade Exploit",
-    LoadingSubtitle = "Verwalte deine Funktionen",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "Exploit_Config"
-    },
-    Discord = {
-        Enabled = true,
-        Invite = "discord.gg/xyz",  -- Beispiel Discord-Invite
-        RememberJoins = true
-    },
-    KeySystem = false,  -- Falls ein Schlüssel erforderlich ist, setze dies auf true
-    Key = "example_key"  -- Beispiel für einen Schlüssel
-})
 
 -- Globale Variablen für die Toggles
 local doCashier = false
