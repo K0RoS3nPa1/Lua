@@ -98,6 +98,7 @@ assert(network,"failed to find network")
 
 
 
+
 -- Beispielsettings (werden in der UI gespeichert und geladen)
 local settings = {
     refill_at = 0,
@@ -134,7 +135,10 @@ local function loadSettings()
         end)
 
         if success and loadedSettings then
-            settings = loadedSettings  -- Lade die gespeicherten Daten in die settings-Variable
+            -- Lade die gespeicherten Daten in die settings-Variable, ohne die Tabelle direkt zu überschreiben
+            for key, value in pairs(loadedSettings) do
+                settings[key] = value
+            end
             print("Einstellungen geladen!")
         elseif not success then
             warn("Fehler beim Laden der Einstellungen: " .. loadedSettings)
@@ -243,7 +247,7 @@ local ToggleSupplier = F:CreateToggle({
 })
 
 -- Input für "refillAt" (Beispiel)
-local refillAtInput = Tab:CreateInput({
+local refillAtInput = F:CreateInput({
     Name = "Refill At",
     CurrentValue = tostring(settings.refill_at),
     PlaceholderText = "Enter refill at value",
@@ -258,7 +262,7 @@ local refillAtInput = Tab:CreateInput({
 })
 
 -- Input für "refillEnd" (Beispiel)
-local refillEndInput = Tab:CreateInput({
+local refillEndInput = F:CreateInput({
     Name = "Refill End",
     CurrentValue = tostring(settings.refill_end),
     PlaceholderText = "Enter refill end value",
@@ -273,7 +277,7 @@ local refillEndInput = Tab:CreateInput({
 })
 
 -- Input für "Movespeed"
-local movespeedInput = Tab:CreateInput({
+local movespeedInput = F:CreateInput({
     Name = "Movespeed",
     CurrentValue = tostring(settings.movespeed_at),
     PlaceholderText = "Enter movespeed value",
