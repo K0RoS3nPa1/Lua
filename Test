@@ -143,26 +143,54 @@ Rayfield:Notify({
 
 
 
-
 for name in pairs(supplyCounts) do
     local success, result = pcall(function()
+        -- Bestimme den richtigen Namen des Counters basierend auf dem Supply
         local counterName = name == "Dew" and "CounterMountainDew" or "Counter" .. name
-        local counterModel = workspace:FindFirstChild("SupplyCounters")
-            and workspace.SupplyCounters:FindFirstChild("Model")
-            and workspace.SupplyCounters.Model:FindFirstChild(counterName)
 
-        if counterModel and counterModel:FindFirstChild("a") and counterModel.a:FindFirstChild("SG") and counterModel.a.SG:FindFirstChild("Counter") then
-            local lbl = counterModel.a.SG.Counter
-            supplyCounts[name] = tonumber(lbl.Text) or 0  
-
-            lbl:GetPropertyChangedSignal("Text"):Connect(function()
-                supplyCounts[name] = tonumber(lbl.Text) or 0
-            end)
+        -- Suche den SupplyCounter im Workspace
+        local supplyCounters = workspace:FindFirstChild("SupplyCounters")
+        if not supplyCounters then
+            error("SupplyCounters nicht gefunden.")
         end
+
+        local model = supplyCounters:FindFirstChild("Model")
+        if not model then
+            error("Model nicht gefunden in SupplyCounters.")
+        end
+
+        local counterModel = model:FindFirstChild(counterName)
+        if not counterModel then
+            error(counterName .. " nicht gefunden.")
+        end
+
+        -- Überprüfe, ob die benötigten Kinder existieren
+        local a = counterModel:FindFirstChild("a")
+        if not a then
+            error("a nicht gefunden in " .. counterName)
+        end
+
+        local sg = a:FindFirstChild("SG")
+        if not sg then
+            error("SG nicht gefunden in " .. counterName)
+        end
+
+        local lbl = sg:FindFirstChild("Counter")
+        if not lbl then
+            error("Counter nicht gefunden in SG für " .. counterName)
+        end
+
+        -- Initialisiere den Wert in supplyCounts
+        supplyCounts[name] = tonumber(lbl.Text) or 0
+
+        -- Event-Handler, wenn sich der Text ändert
+        lbl:GetPropertyChangedSignal("Text"):Connect(function()
+            supplyCounts[name] = tonumber(lbl.Text) or 0
+        end)
     end)
 
     if not success then
-        print("[ERROR] SupplyCounter nicht gefunden oder fehlerhaft:", name, result)
+        print("[ERROR] Fehler beim Laden des SupplyCounters für " .. name .. ": " .. result)
     end
 end
 
