@@ -438,6 +438,12 @@ local function onCharacterAdded(char)
 
     -- Sicherstellen, dass wir den Zustand des Humanoids korrekt setzen
     humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+
+    -- Sicherstellen, dass root und humanoid korrekt initialisiert sind
+    if not root or not humanoid then
+        warn("root oder humanoid konnte nicht gefunden werden!")
+        return
+    end
 end
 
 -- Spieler definieren, falls noch nicht geschehen
@@ -464,7 +470,7 @@ local function smoothTP2(cf)
     local cf0 = (cf - cf.p) + root.Position + Vector3.new(0, 0, 0)
     local diff = cf.p - root.Position
     local oldg = workspace.Gravity
-    workspace.Gravity = 5
+    workspace.Gravity = 0
 
     for i = 0, diff.Magnitude, settings.movespeed_at do
         humanoid.Sit = false
@@ -476,6 +482,7 @@ local function smoothTP2(cf)
     root.CFrame = cf
     workspace.Gravity = oldg
 end
+
 
 local function smoothTP(cf)
     if (cf.p - root.Position).Magnitude > 97 then
