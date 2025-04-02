@@ -1,5 +1,5 @@
 -- Überprüfe ob Rayfield verfügbar ist
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/sirRaiRay/Rayfield/main/source.lua'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfielda'))()
 local player = game:GetService("Players").LocalPlayer
 local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
