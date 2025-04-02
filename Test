@@ -48,88 +48,127 @@ local function saveSettings()
     print("Einstellungen gespeichert!")
 end
 
-local toggles = {
-    doCashier = false,
-    doCook = false,
-    doBoxer = false,
-    doDelivery = false,
-    doSupplier = false
-}
+-- Importiere die Rayfield Library
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/something/awesome-Rayfield/main/rayfield.lua"))()
 
-local function toggleFunction(job, state)
-    toggles[job] = state
-    print(job .. " Toggle: ", state)
+-- Rayfield Setup
+local window = Rayfield:CreateWindow({
+    Name = "Roblox Exploit",
+    LoadingTitle = "Lade Exploit",
+    LoadingSubtitle = "Verwalte deine Funktionen",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Exploit_Config"
+    },
+    Discord = {
+        Enabled = true,
+        Invite = "discord.gg/xyz",  -- Beispiel Discord-Invite
+        RememberJoins = true
+    },
+    KeySystem = false,  -- Falls ein Schlüssel erforderlich ist, setze dies auf true
+    Key = "example_key"  -- Beispiel für einen Schlüssel
+})
+
+-- Globale Variablen für die Toggles
+local doCashier = false
+local doCook = false
+local doBoxer = false
+local doDelivery = false
+local doSupplier = false
+
+-- Toggle Funktionen
+local function toggleCashier(bool)
+    doCashier = bool ~= nil and bool or not doCashier
 end
 
-local ToggleCashier = F:CreateToggle({
-    Name = "Cashier",
-    CurrentValue = toggles.doCashier,
-    Flag = "ToggleCashier",
-    Callback = function(Value)
-        toggleFunction("doCashier", Value)
+local function toggleCook(bool)
+    doCook = bool ~= nil and bool or not doCook
+end
+
+local function toggleBoxer(bool)
+    doBoxer = bool ~= nil and bool or not doBoxer
+end
+
+local function toggleDelivery(bool)
+    doDelivery = bool ~= nil and bool or not doDelivery
+end
+
+local function toggleSupplier(bool)
+    doSupplier = bool ~= nil and bool or not doSupplier
+end
+
+-- Erstellen der Toggle-Schalter für jede Funktion
+local cashierToggle = window:CreateToggle({
+    Name = "Cashier Aktivieren",
+    CurrentValue = doCashier,
+    Callback = function(value)
+        toggleCashier(value)
     end
 })
 
-local ToggleCook = F:CreateToggle({
-    Name = "Cook",
-    CurrentValue = toggles.doCook,
-    Flag = "ToggleCook",
-    Callback = function(Value)
-        toggleFunction("doCook", Value)
+local cookToggle = window:CreateToggle({
+    Name = "Cook Aktivieren",
+    CurrentValue = doCook,
+    Callback = function(value)
+        toggleCook(value)
     end
 })
 
-local ToggleBoxer = F:CreateToggle({
-    Name = "Boxer",
-    CurrentValue = toggles.doBoxer,
-    Flag = "ToggleBoxer",
-    Callback = function(Value)
-        toggleFunction("doBoxer", Value)
+local boxerToggle = window:CreateToggle({
+    Name = "Boxer Aktivieren",
+    CurrentValue = doBoxer,
+    Callback = function(value)
+        toggleBoxer(value)
     end
 })
 
-local ToggleDelivery = F:CreateToggle({
-    Name = "Delivery",
-    CurrentValue = toggles.doDelivery,
-    Flag = "ToggleDelivery",
-    Callback = function(Value)
-        toggleFunction("doDelivery", Value)
+local deliveryToggle = window:CreateToggle({
+    Name = "Delivery Aktivieren",
+    CurrentValue = doDelivery,
+    Callback = function(value)
+        toggleDelivery(value)
     end
 })
 
-local ToggleSupplier = F:CreateToggle({
-    Name = "Supplier",
-    CurrentValue = toggles.doSupplier,
-    Flag = "ToggleSupplier",
-    Callback = function(Value)
-        toggleFunction("doSupplier", Value)
+local supplierToggle = window:CreateToggle({
+    Name = "Supplier Aktivieren",
+    CurrentValue = doSupplier,
+    Callback = function(value)
+        toggleSupplier(value)
     end
 })
 
-local refillAtInput = F:CreateInput({
-    Name = "Refill At",
-    CurrentValue = tostring(settings.refill_at),
-    PlaceholderText = "Enter refill at value",
-    RemoveTextAfterFocusLost = false,
-    Flag = "RefillAtInput",
-    Callback = function(Text)
-        local value = tonumber(Text)
-        if value and value <= 99 then
-            settings.refill_at = value
-            saveSettings()
-        else
-            print("Ungültige Eingabe für refill_at")
-        end
+-- Eingabefelder (TextBox)
+local refillAtBox = window:CreateImput({
+    Name = "Refill bei",
+    PlaceholderText = "Gib den Wert ein",
+    Text = tostring(settings.refill_at),
+    Callback = function(value)
+        settings.refill_at = tonumber(value) or settings.refill_at
     end
 })
 
-local RestartButton = F:CreateButton({
-    Name = "Restart Script",
-    Callback = function()
-        print("Script wird neugestartet...")
-        loadstring(game:HttpGet('https://your-script-url.com'))()
+local refillEndBox = window:CreateImput({
+    Name = "Refill Ende",
+    PlaceholderText = "Gib den Wert ein",
+    Text = tostring(settings.refill_end),
+    Callback = function(value)
+        settings.refill_end = tonumber(value) or settings.refill_end
     end
 })
+
+local movespeedBox = window:CreateImput({
+    Name = "Movespeed At",
+    PlaceholderText = "Gib den Wert ein",
+    Text = tostring(settings.movespeed_at),
+    Callback = function(value)
+        settings.movespeed_at = tonumber(value) or settings.movespeed_at
+    end
+})
+
+-- Rayfield starten
+Rayfield:Run()
 
 
 local player = game:GetService("Players").LocalPlayer
