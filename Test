@@ -1,4 +1,3 @@
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -23,7 +22,7 @@ local Window = Rayfield:CreateWindow({
    KeySettings = {
       Title = "Key",
       Subtitle = "Key System",
-      Note = "Discord: https://discord.gg/Z5YK4XvE" , -- Use this to tell the user how to get a key
+      Note = "Discord: https://discord.gg/Z5YK4XvE", -- Use this to tell the user how to get a key
       FileName = "KeySystemPizzaHub45", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
       SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
@@ -33,6 +32,20 @@ local Window = Rayfield:CreateWindow({
 
 local F = Window:CreateTab("Auto Farm", nil)
 
+local settings = {
+    refill_at = 50,
+    refill_end = 97,
+    movespeed_at = 5
+}
+
+local function saveSettings()
+    Rayfield:SaveConfiguration({
+        FolderName = "Pizza Hub",
+        FileName = "settings",
+        Data = settings
+    })
+    print("Einstellungen gespeichert!")
+end
 
 -- Globale Variablen für die Toggles
 local doCashier = false
@@ -104,7 +117,7 @@ local supplierToggle = F:CreateToggle({
 })
 
 -- Eingabefelder (TextBox)
-local refillAtBox = F:CreateImput({
+local refillAtBox = F:CreateInput({
     Name = "Refill bei",
     PlaceholderText = "Gib den Wert ein",
     Text = tostring(settings.refill_at),
@@ -113,7 +126,7 @@ local refillAtBox = F:CreateImput({
     end
 })
 
-local refillEndBox = F:CreateImput({
+local refillEndBox = F:CreateInput({
     Name = "Refill Ende",
     PlaceholderText = "Gib den Wert ein",
     Text = tostring(settings.refill_end),
@@ -122,7 +135,7 @@ local refillEndBox = F:CreateImput({
     end
 })
 
-local movespeedBox = F:CreateImput({
+local movespeedBox = F:CreateInput({
     Name = "Movespeed At",
     PlaceholderText = "Gib den Wert ein",
     Text = tostring(settings.movespeed_at),
@@ -130,6 +143,10 @@ local movespeedBox = F:CreateImput({
         settings.movespeed_at = tonumber(value) or settings.movespeed_at
     end
 })
+
+-- Optional: Speichern der Einstellungen
+saveSettings()
+
 
 
 
@@ -769,5 +786,3 @@ while Window.Parent do
 		end
 	end
 end
--- Rayfield starten
-Rayfield:Run()
