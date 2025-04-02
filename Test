@@ -1,18 +1,17 @@
-
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua-/refs/heads/main/Library'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Pizza Hub 2.0",
+   Name = "Pizza Hub",
    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
    LoadingTitle = "Pizza Hub",
-   LoadingSubtitle = "by Nick",
+   LoadingSubtitle = "by Pizza Hub",
    Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Pizza Hub"
+      FolderName = "Pizza Hub", -- Create a custom folder for your hub/game
+      FileName = "Settings"
    },
    Discord = {
       Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
@@ -27,501 +26,818 @@ local Window = Rayfield:CreateWindow({
       FileName = "KeySystemPizzaHub45", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
       SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"PizzaHub2"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+      Key = {""} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
    }
 })
 
 local H = Window:CreateTab("Home", nil) -- Title, Image
-local MainSection = H:CreateSection("Home")
+local F = Window:CreateTab("Auto Farm", nil) -- Title, Image
 local T = Window:CreateTab("Teleports", nil) -- Title, Image
-local MainSection = T:CreateSection("Teleports")
-local P = Window:CreateTab("Player", nil) -- Title, Image
-local MainSection = P:CreateSection("Player Settings")
 local S = Window:CreateTab("More Fun", nil) -- Title, Image
-local MainSection = S:CreateSection("Op Scripts")
-local M = Window:CreateTab("Misc", nil) -- Title, Image
-local MainSection = M:CreateSection("More Content")
-Rayfield:Notify({
 
-   Title = "Executed Succesfully",
-   Content = "Daily work on it",
-   Duration = 2,5,
-   Image = 109557676541299,
-})
 
---[Home]
 
-H:CreateButton({
-   Name = "AutoFarm",
-   Callback = function()
-      
-   end,
-})
+getupvalues = getupvalues or debug.getupvalues
+setupvalue = setupvalue or debug.setupvalue
+if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getregistry)) then
+	local h = Instance.new("Hint",workspace)
+	h.Text = "Incompatible exploit."
+	wait(3)
+	h:Destroy()
+	return
+end
 
-H:CreateButton({
-   Name = "Noclip",
-   Callback = function()
-        
-   end,
-})
+local Gravitysettings = 210
 
-H:CreateButton({
-   Name = "Fly",
-   Callback = function()
-        
-   end,
-})
 
-H:CreateButton({
-   Name = "UnAnchor Trees",
-   Callback = function()
-        
-   end,
-})
 
-H:CreateButton({
-   Name = "UnAnchor Mailboxes",
-   Callback = function()
-        
-   end,
-})
+if getconnections then
+	for _,c in next,getconnections(game:GetService("ScriptContext").Error) do
+		c:Disable()
+	end
+end
 
-H:CreateButton({
-   Name = "Bring Trees and Mailboxes",
-   Callback = function()
-        
-   end,
-})
+local player = game:GetService("Players").LocalPlayer
+local ffc = game.FindFirstChild
+local RNG = Random.new()
+local network
+local character,root,humanoid
+do
+	local reg = (getreg or debug.getregistry)()
+	for i=1,#reg do
+		local f = reg[i]
+		if type(f)=="function" then
+		    for k,v in next,getupvalues(f) do
+				if typeof(v)=="Instance" then
+				    if v.Name=="CashOut" then
+						wait(0.5)
+					    setupvalue(f,k,{MouseButton1Click={wait=function()end,Wait=function()end}})
+				    elseif v.Name=="StickerName" then
+				        setupvalue(f,k,nil)
+				    end
+				end
+			end
+    		if tostring(getfenv(f).script) == "Music" then
+    		    local consts = getconstants(f)
+    		    local loc=false
+		        for ci,c in next,consts do
+		            if c == "location changed" then
+		                loc=true
+		            elseif loc and c == "SendData" then
+		                setconstant(f,ci,"ExplodeString")
+		                break
+		            end
+		        end
+    		end
+		elseif type(f)=="table" and rawget(f,"FireServer") and rawget(f,"BindEvents") then
+			network = f
+		end
+	end
+end
+assert(network,"failed to find network")
 
-H:CreateButton({
-   Name = "Anti Afk",
-   Callback = function()
-   
+local toggleCashier = F:CreateToggle({
+    Name = "Cashier",
+    CurrentValue = false,
+    Flag = "ToggleCashier",
+    Callback = function(Value)
+        toggleCashier(Value)
     end,
 })
-            
-H:CreateButton({
-   Name = "Kitchen Destroyer",
-   Callback = function()
-        
-   end,
+
+local ToggleCook = F:CreateToggle({
+    Name = "Cook",
+    CurrentValue = false,
+    Flag = "ToggleCook",
+    Callback = function(Value)
+        toggleCook(Value)
+    end,
 })
 
-H:CreateButton({
-   Name = "Spam Sounds",
-   Callback = function()
-        
-   end,
+local ToggleBoxer = F:CreateToggle({
+    Name = "Boxer",
+    CurrentValue = false,
+    Flag = "ToggleBoxer",
+    Callback = function(Value)
+        toggleBoxer(Value)
+    end,
 })
 
-H:CreateButton({
-   Name = "Anti-Oven Fire",
-   Callback = function()
-        
-   end,
+local ToggleDelivery = F:CreateToggle({
+    Name = "Delivery",
+    CurrentValue = false,
+    Flag = "ToggleDelivery",
+    Callback = function(Value)
+        toggleDelivery(Value)
+    end,
 })
 
-H:CreateButton({
-   Name = "Anti Sit",
-   Callback = function()
-        
-   end,
+local ToggleSupplier = F:CreateToggle({
+    Name = "Supplier",
+    CurrentValue = false,
+    Flag = "ToggleSupplier",
+    Callback = function(Value)
+        toggleSupplier(Value)
+    end,
 })
 
-H:CreateButton({
-   Name = "Anti-Kick",
-   Callback = function()
-        
-   end,
-})
-
-H:CreateButton({
-   Name = "Break Leaderboard",
-   Callback = function()
-        
-   end,
-})
-
-H:CreateButton({
-   Name = "Fling",
-   Callback = function()
-    
-   end,
-})
-
-H:CreateButton({
-   Name = "Tp To Player",
-   Callback = function()
-        
-   end,
-})
-
----[Teleports]
-
-T:CreateButton({
-   Name = "Tp to Cashier",
-   Callback = function()
-      local teleportPosition1 = Vector3.new(49, 4, 83)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition1) -- Korrekte Syntax
-      end
-   end,
-})
-
-T:CreateButton({
-   Name = "Tp to Cook",
-   Callback = function()
-      local teleportPosition2 = Vector3.new(38, 4, 54)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition2) -- Korrekte Syntax
-      end
-   end,
-})
-
-
-T:CreateButton({
-   Name = "Tp to Pizza Boxer",
-   Callback = function()
-      local teleportPosition3 = Vector3.new(60, 4, 13)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition3) -- Korrekte Syntax
-      end
-   end,
-})
-
-
-T:CreateButton({
-   Name = "Tp to Delivery",
-   Callback = function()
-      local teleportPosition4 = Vector3.new(65, 4, -16)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition4) -- Korrekte Syntax
-      end
-   end,
-})
-
-
-T:CreateButton({
-   Name = "Tp to Supplier",
-   Callback = function()
-      local teleportPosition5 = Vector3.new(7, 13, -1022)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition5) -- Korrekte Syntax
-      end
-   end,
-})
-
-
-T:CreateButton({
-   Name = "Tp to Manager Seat",
-   Callback = function()
-      local teleportPosition6 = Vector3.new(24, 4, 6)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition6) -- Korrekte Syntax
-      end
-   end,
-})
-
-
-T:CreateButton({
-   Name = "Tp to Party Island Button",
-   Callback = function()
-      local teleportPosition6 = Vector3.new(88, 1, -315)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-      if humanoidRootPart then
-         humanoidRootPart.CFrame = CFrame.new(teleportPosition6) -- Korrekte Syntax
-      end
-   end,
-})
-
-
-T:CreateDropdown({
-   Name = "Teleport To Houses",
-   Options = {"None","A1","A2","A3","B1","B2","B3","B4","B5","B6","C1","C2","C3"},
-   CurrentOption = "None", -- Sollte ein String sein
-   MultipleOptions = false,
-   Flag = "Dropdown1",
-   Callback = function(Option)
-      local player = game.Players.LocalPlayer
-      if not player then return end  -- Falls `LocalPlayer` nicht existiert, abbrechen
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-      if not humanoidRootPart then return end  -- Falls `HumanoidRootPart` fehlt, abbrechen
-      
-      if Option[1] == "None" then return end  -- Falls "None" gewählt wurde, nichts tun
-
-      local positions = {
-         A1 = CFrame.new(190, 3, -474),
-         A2 = CFrame.new(188, 3, -652),
-         A3 = CFrame.new(187, 3, -823),
-         B1 = CFrame.new(-21, 3, -432),
-         B2 = CFrame.new(24, 3, -481),
-         B3 = CFrame.new(-20, 3, -612),
-         B4 = CFrame.new(24, 3, -663),
-         B5 = CFrame.new(-20, 3, -800),
-         B6 = CFrame.new(23, 3, -836),
-         C1 = CFrame.new(-184, 3, -444),
-         C2 = CFrame.new(-186, 3, -612),
-         C3 = CFrame.new(-185, 3, -792)
-      }
-
-      if positions[Option[1]] then
-         humanoidRootPart.CFrame = positions[Option[1]]
-      end
-   end,
-})
-
-
-T:CreateDropdown({
-   Name = "Teleport To Islands",
-   Options = {"None", "Island 1", "Island 2", "Island 3"},
-   CurrentOption = {"None"},
-   MultipleOptions = false,
-   Flag = "Dropdown2", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(Option)
-      local player = game.Players.LocalPlayer
-      if not player then return end -- Prüft, ob LocalPlayer existiert
-
-      local character = player.Character or player.CharacterAdded:Wait()
-      if not character then return end
-
-      local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-      if not humanoidRootPart then return end
-
-      -- Falls die Auswahl "None" ist, nichts tun
-      if Option[1] == "None" then return end
-
-      -- Teleportiere den Spieler basierend auf der Auswahl
-      local teleportPositions = {
-         ["Island 1"] = Vector3.new(1515, 0, 1373),
-         ["Island 2"] = Vector3.new(-1647, 21, -1214),
-         ["Island 3"] = Vector3.new(944, 1, 673),
-      }
-
-      local position = teleportPositions[Option[1]]
-      if position then
-         humanoidRootPart.CFrame = CFrame.new(position)
-      end
-   end,
-})
-
-
---[Player Settings]
-
-P:CreateSlider({
-   Name = "WalkSpeed",
-   Range = {8, 100},
-   Increment = 2,
-   Suffix = "Speed",
-   CurrentValue = 16,
-   Flag = "Speed1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (Value)
-   end,
-})
-
-P:CreateSlider({
-   Name = "JumpPower",
-   Range = {0, 500},
-   Increment = 5,
-   Suffix = "JumpPower",
-   CurrentValue = 50,
-   Flag = "Jump1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = (Value)
-   end,
-})
-
-P:CreateButton({
- Name = "Infinite Jump",
-   Callback = function()
-        
-   end,
-})
-
-P:CreateButton({
-   Name = "Headless Head",
-   Callback = function()
-      
-   end,
-})
-
-P:CreateButton({
-   Name = "Korblox Right Leg",
-   Callback = function()
-      
-   end,
-})
-
-
---[Music]--
-
-M:CreateButton({
-   Name = "Infinite Yield",
-   Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-   end,
-})
-
-M:CreateButton({
-   Name = "Original Pizza Hub",
-   Callback = function()
-        loadstring(game:HttpGet("https://pastebin.com/raw/dK0SQckm"))()
-   end,
-})
-
-M:CreateButton({
-   Name = "Eclipse Hub",
-   Callback = function()
-      
-   end,
-})
-
---[More Fun]
-
-S:CreateButton({
-   Name = "Tp Player To You",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Fing Supply Trucks",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Break Pizza Boxes (Pizza Boxer Area)",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Fling Supplys",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Remove Job buttons",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Remove Every Door",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Remove Party Island Button",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Buy Presents",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Buy Pet Egg",
-   Callback = function()
-            
-end,
-})
-
-S:CreateButton({
-   Name = "Buy Pet Food",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Auto Kill Pet (Mulberry Quest)",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Revive Pet (Mulberry Quest)",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Sell Items",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Auto Open Selected Present",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Auto Snowball",
-   Callback = function()
-      
-   end,
-})
-
-S:CreateButton({
-   Name = "Get Fire Extinguisher",
-   Callback = function()
-                
-   end,
-})
+local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
+
+local function toggleCashier(bool)
+    if bool ~= nil then
+        doCashier = bool
+    else
+        doCashier = not doCashier
+    end
+end
+
+local function toggleCook(bool)
+    if bool ~= nil then
+        doCook = bool
+    else
+        doCook = not doCook
+    end
+end
+
+local function toggleBoxer(bool)
+    if bool ~= nil then
+        doBoxer = bool
+    else
+        doBoxer = not doBoxer
+    end
+end
+
+local function toggleDelivery(bool)
+    if bool ~= nil then
+        doDelivery = bool
+    else
+        doDelivery = not doDelivery
+    end
+end
+
+local function toggleSupplier(bool)
+    if bool ~= nil then
+        doSupplier = bool
+    else
+        doSupplier = not doSupplier
+    end
+end
+
+
+local oldRefillAt=refillAtBox.Text
+refillAtBox:GetPropertyChangedSignal("Text"):Connect(function()
+	if #refillAtBox.Text>2 or refillAtBox.Text:match("%D") then
+		refillAtBox.Text = oldRefillAt
+	end
+	oldRefillAt = refillAtBox.Text
+end)
+refillAtBox.FocusLost:Connect(function()
+	if tonumber(refillAtBox.Text) then
+		settings.refill_at=tonumber(refillAtBox.Text)
+	end
+	refillAtBox.Text=tostring(settings.refill_at)
+end)
+local oldRefillEnd=refillEndBox.Text
+refillEndBox:GetPropertyChangedSignal("Text"):Connect(function()
+	if #refillEndBox.Text>2 or refillEndBox.Text:match("%D") then
+		refillEndBox.Text = oldRefillEnd
+	end
+	oldRefillEnd = refillEndBox.Text
+end)
+refillEndBox.FocusLost:Connect(function()
+	if tonumber(refillEndBox.Text) then
+		settings.refill_end=tonumber(refillEndBox.Text)
+	end
+	refillEndBox.Text=tostring(settings.refill_end)
+end)
+local oldMovespeedAt=MovespeedBox.Text
+MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
+	if #MovespeedBox.Text>2 or MovespeedBox.Text:match("%D") then
+		MovespeedBox.Text = oldMovespeedAt
+	end
+	oldMovespeedAt = MovespeedBox.Text
+end)
+MovespeedBox.FocusLost:Connect(function()
+	if tonumber(MovespeedBox.Text) then
+		settings.movespeed_at=tonumber(MovespeedBox.Text)
+	end
+	MovespeedBox.Text=tostring(settings.movespeed_at)
+end)
+
+
+
+--//subroutines
+local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
+for name in pairs(supplyCounts) do
+	local lbl = workspace.SupplyCounters.Model[name=="Dew" and "CounterMountainDew" or "Counter"..name].a.SG.Counter
+	supplyCounts[name]=tonumber(lbl.Text)
+	lbl.Changed:Connect(function()
+		supplyCounts[name]=tonumber(lbl.Text)
+	end)
+end
+
+local function FindFirstCustomer()
+
+	local children = workspace.Customers:GetChildren()
+	for i=1,#children do
+		local c = children[i] 
+		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
+			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
+			local order = "MountainDew"
+			if dialog:sub(-30)=="instead." then
+				dialog = dialog:sub(-30)
+			end
+			if dialog:find("pepperoni",1,true) then
+				order = "PepperoniPizza"
+			elseif dialog:find("sausage",1,true) then
+				order = "SausagePizza"
+			elseif dialog:find("cheese",1,true) then
+				order = "CheesePizza"
+			end
+			return c,order
+		end
+	end
+end
+
+local boxPtick=0
+local boxDtick=0
+local function FindBoxes()
+	local c,o,f
+	local children = workspace.AllBox:GetChildren()
+	for i=1,#children do
+		local b = children[i]
+		if ffc(b,"HasPizzaInside") or ffc(b,"Pizza") then
+			if c==nil and b.Name=="BoxClosed" and b.Anchored==false and not b.HasPizzaInside.Value then
+				c=b
+			elseif o==nil and b.Name=="BoxOpen" and b.Anchored==false and not b.Pizza.Value then
+				o=b
+			elseif f==nil and (b.Name=="BoxOpen" and b.Pizza.Value) or (b.Name=="BoxClosed" and b.HasPizzaInside.Value) then
+				f=b
+			end
+			if c and o and f then
+				return c,o,f
+			end
+		end
+	end
+	return c,o,f
+end
+local function FindBoxingFoods()
+	local p,d
+	local children = workspace.BoxingRoom:GetChildren()
+	for i=1,#children do
+		local f = children[i]
+		if not f.Anchored then
+			if p==nil and f.Name=="Pizza" then
+				p=f
+			elseif d==nil and f.Name=="Dew" then
+				d=f
+			end
+			if p and d then
+				return p,d
+			end
+		end
+	end
+	return p,d
+end
+
+local orderDict={["3540529228"]="Cheese",["3540530535"]="Sausage",["3540529917"]="Pepperoni",["2512571151"]="Dew",["2512441325"]="Dew",["11874352009"]="Dew"}
+local cookingDict = {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
+local cookPtick=0
+local cookDtick=0
+local cookWarned=false
+local boxerWarned=false
+local function getOrders()
+	local orders={}
+	local tempCookingDict = {}
+	for i,v in pairs(cookingDict) do tempCookingDict[i]=v end
+	local children = workspace.Orders:GetChildren()
+	for i=1,#children do
+		local o = orderDict[children[i].SG.ImageLabel.Image:match("%d+$")]
+		if o then
+			if tempCookingDict[o]>0 then
+				--ignores oven pizzas, so new orders are priority
+				tempCookingDict[o]=tempCookingDict[o]-1
+			elseif (o=="Dew" and #workspace.AllMountainDew:GetChildren()>0) or (supplyCounts[o]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0) then
+				--need supplies
+				orders[#orders+1]=o
+			end
+		end
+	end
+	return orders
+end
+local function FindFirstDew()
+	local children = workspace.AllMountainDew:GetChildren()
+	for i=1,#children do
+		local d = children[i]
+		if (ffc(d,"IsBurned")==nil or d.IsBurned.Value==false) and not d.Anchored then
+			return d
+		end
+	end
+end
+local function FindBadDew()
+	local children = workspace.AllMountainDew:GetChildren()
+	for i=1,#children do
+		local d = children[i]
+		if (ffc(d,"IsBurned")==nil or d.IsBurned.Value==false) and d.Position.X > 53 and d.Position.Z > 50 and not d.Anchored then
+			return d
+		end
+	end
+end
+local function FindDoughAndWithout(str)
+	local goodraw,p,raw,trash
+	local children = workspace.AllDough:GetChildren()
+	for i = #children, 2, -1 do --shuffle
+		local j = RNG:NextInteger(1, i)
+		children[j], children[i] = children[i], children[j]
+	end
+	for i=1,#children do
+		local d = children[i]
+		if d.Anchored==false and #d:GetChildren()>9 then
+			if d.IsBurned.Value or d.HasBugs.Value or d.Cold.Value or (d.BrickColor.Name=="Bright orange" and ffc(d,"XBillboard")) then
+				if trash==nil and d.Position.Y > 0 and ((d.Position*Vector3.new(1,0,1))-Vector3.new(47.90, 0, 72.49)).Magnitude > 1 then
+					trash=d
+				end
+			elseif p==nil and d.BrickColor.Name=="Bright orange" then
+				p=d
+			elseif goodraw==nil and d.Position.X<55 and d.BrickColor.Name=="Brick yellow" and ((str and not ffc(d.SG.Frame,str)) or (str==nil and ffc(d.SG.Frame,"Sausage")==nil and ffc(d.SG.Frame,"Pepperoni")==nil)) then
+				--prefers flat
+				if d.Mesh.Scale.Y<1.1 then
+					goodraw=d
+				else
+					raw=d
+				end
+			end
+			if goodraw and p and trash then
+				return goodraw,p,trash
+			end
+		end
+	end
+	return goodraw or raw,p,trash
+end
+local function getOvenNear(pos)
+	local children = workspace.Ovens:GetChildren()
+	for i=1,#children do
+		if ffc(children[i],"Bottom") and (children[i].Bottom.Position-pos).magnitude < 1.5 then
+			return children[i]
+		end
+	end
+end
+local function getDoughNear(pos)
+	local children = workspace.AllDough:GetChildren()
+	for i=1,#children do
+		if (children[i].Position-pos).magnitude < 1.5 then
+			return children[i]
+		end
+	end
+end
+local function isFullyOpen(oven)
+	return oven.IsOpen.Value==true and (oven.Door.Meter.RotVelocity.Z^2)^.5<.0001
+end
+
+local bcolorToSupply = {["Dark orange"]="Sausage",["Bright blue"]="Pepperoni",["Bright yellow"]="Cheese",["Bright red"]="TomatoSauce",["Dark green"]="Dew",["Brick yellow"]="Dough",["Light stone grey"]="Box",["Really black"]="Dew",["Navy blue"]="Dew"}
+local supplyButtons = {}
+for i,v in ipairs(workspace.SupplyButtons:GetChildren()) do
+	supplyButtons[i] = v.Unpressed
+end
+table.sort(supplyButtons,function(a,b) return a.Position.X < b.Position.X end)
+local delTick = 0
+local function FindAllDeliveryTools(parent)
+	local t = {}
+	local children = parent:GetChildren()
+	for i=1,#children do
+		local v = children[i]
+		if v.ClassName=="Tool" and v.Name:match("^%u%d$") and ffc(v,"Handle") and ffc(v,"House") and (parent~=workspace or (v.Handle.Position-Vector3.new(54.45, 4.02, -16.56)).Magnitude < 30) then
+			t[#t+1] = v
+		end
+	end
+	return t
+end
+local function getHousePart(address)
+    local houses = workspace.Houses:GetChildren()
+    for i=1,#houses do
+        local h = houses[i]
+        if ffc(h,"Address") and h.Address.Value==address and ffc(h,"GivePizza",true) then
+            return ffc(h,"GivePizza",true)
+        end
+    end
+end
+local function onCharacterAdded(char)
+	if not char then return end
+	character=char
+	root = character:WaitForChild("HumanoidRootPart")
+	humanoid = character:WaitForChild("Humanoid")
+	humanoid:SetStateEnabled("FallingDown",false)
+end
+onCharacterAdded(player.Character or player.CharacterAdded:Wait())
+player.CharacterAdded:Connect(onCharacterAdded)
+
+local function smoothTP2(cf)
+	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
+	local diff = cf.p - root.Position
+	local oldg = workspace.Gravity
+	workspace.Gravity = Gravitysettings
+	for i=0,diff.Magnitude,settings.movespeed_at do
+		humanoid.Sit=false
+		root.CFrame = cf0 + diff.Unit * i
+		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
+		wait()
+	end
+	root.CFrame = cf
+	workspace.Gravity = oldg
+end
+local function smoothTP(cf)
+    if (cf.p-root.Position).Magnitude > 97 then
+        local btns = workspace.JobButtons:GetChildren()
+        if player:FindFirstChild("House") and player.House.Value then
+            btns[#btns+1] = player.House.Value:FindFirstChild("Marker") 
+        end
+        table.sort(btns,function(a,b) return (a.Position-cf.p).Magnitude < (b.Position-cf.p).Magnitude end)
+        if (btns[1].Position-cf.p).Magnitude < (cf.p-root.Position).Magnitude then
+            game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
+            wait(0.9)
+            if (cf.p-root.Position).Magnitude < 9 then
+                return
+            end
+        end
+    end
+    smoothTP2(cf)
+end
+for _,o in ipairs(workspace.Ovens:GetChildren()) do
+	if ffc(o,"Bottom") then
+		o.Bottom.CanTouch = false
+	end
+end
+local function tryCook()
+	for zz=1,38 do
+		local order = getOrders()[1]
+		local topping
+		if order=="Pepperoni" or order=="Sausage" then topping=order end
+		local cookD = FindFirstDew()
+		local badD = FindBadDew()
+		local raw,cookP,trash
+		if topping then
+			--pepperoni order avoids sausage dough and vice verca
+			raw,cookP,trash = FindDoughAndWithout(topping=="Pepperoni" and "Sausage" or "Pepperoni")
+		else
+			raw,cookP,trash = FindDoughAndWithout()
+		end
+		local ovens = workspace.Ovens:GetChildren()
+		for i=#ovens,1,-1 do
+		    if #ovens[i]:GetChildren() < 10 then
+		        table.remove(ovens,i)
+		    end
+		end
+		for i = #ovens, 2, -1 do --shuffle
+			local j = RNG:NextInteger(1, i)
+			ovens[j], ovens[i] = ovens[i], ovens[j]
+		end
+		if doCook then
+			local didsomething=false
+			--move final pizza
+			if cookP and tick()-cookPtick>0.8 then
+				local oven = getOvenNear(cookP.Position)
+				if oven==nil or oven.IsOpen.Value then
+					cookPtick=tick()
+					didsomething=true
+					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+					network:FireServer("UpdateProperty", cookP, "CFrame", CFrame.new(RNG:NextNumber(56,57),4.1,38))
+				end
+			end
+			if order then
+				if order=="Dew" and cookD and tick()-cookDtick>0.8 then
+					--move dew if ordered
+					cookDtick=tick()
+					didsomething=true
+					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+					network:FireServer("UpdateProperty", cookD, "CFrame", CFrame.new(53,4.68,36.5))
+				elseif order~="Dew" and raw and raw.Parent and supplyCounts[order]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0 then
+					--make pizza
+					if raw.Mesh.Scale.Y>1.5 then
+						if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+						didsomething=true
+						network:FireServer("UpdateProperty", raw, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
+						wait()
+						network:FireServer("SquishDough", raw)
+					else
+						--make sure it will have an oven
+						local oven
+						for _,o in ipairs(ovens) do
+							if isFullyOpen(o) then
+								local other = getDoughNear(o.Bottom.Position)
+								if other==nil or not (other.BrickColor.Name=="Bright orange" and ffc(other.SG.Frame,"TomatoSauce") and ffc(other.SG.Frame,"MeltedCheese")) then
+									if other then
+										--replace mistaken dough
+										didsomething=true
+										if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+										network:FireServer("UpdateProperty", other, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
+										wait(0.2)
+									end
+									oven=o
+									break
+								end
+							end
+						end
+						if oven and raw.Parent==workspace.AllDough then
+							--make
+							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+							didsomething=true
+							network:FireServer("AddIngredientToPizza", raw,"TomatoSauce")
+							network:FireServer("AddIngredientToPizza", raw,"Cheese")
+							network:FireServer("AddIngredientToPizza", raw,topping)
+							network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame+Vector3.new(0,0.7,0))
+							oven.Door.ClickDetector.Detector:FireServer()
+							--mark as cooking
+							cookingDict[order]=cookingDict[order]+1
+							local revoked=false
+							spawn(function()
+								raw.AncestryChanged:Wait()
+								if not revoked then
+									cookingDict[order]=cookingDict[order]-1
+									revoked=true
+								end
+							end)
+							delay(40, function()
+								if not revoked then
+									cookingDict[order]=cookingDict[order]-1
+									revoked=true
+								end
+							end)
+						end
+					end
+				end
+			end
+			--open unnecessarily closed ovens
+			for _,o in ipairs(ovens) do
+				local bar = o.Door.Meter.SurfaceGui.ProgressBar.Bar
+				if o.IsOpen.Value==false and (o.IsCooking.Value==false or (Vector3.new(bar.ImageColor3.r,bar.ImageColor3.g,bar.ImageColor3.b)-Vector3.new(.871,.518,.224)).magnitude>.1) then
+					didsomething=true
+					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+					o.Door.ClickDetector.Detector:FireServer()
+					break
+				end
+			end
+			--trash
+			if badD then
+				didsomething=true
+				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+				network:FireServer("UpdateProperty", badD, "CFrame", CFrame.new(RNG:NextNumber(28,30), 1.7, RNG:NextNumber(55,57)))
+			end
+			if trash and (trash.IsBurned.Value==false or getOvenNear(trash.Position)==nil or getOvenNear(trash.Position).IsOpen.Value) then
+				--closed oven breaks if you take burnt out of it
+				didsomething=true
+				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+				network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
+			end
+			if didsomething then wait(0.5) else break end
+		else
+			break
+		end
+	end
+end
+wait(1)
+--//main loop
+while gui.Parent do
+	wait(1.1)
+	humanoid.Sit=false
+	if RNG:NextInteger(1,20)==1 then
+        game:GetService("VirtualInputManager"):SendKeyEvent(true,"Z",false,game)
+        wait()
+        game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
+	end
+	for zz=1,6 do
+		local c,order = FindFirstCustomer()
+		if doCashier and c and order then
+			local reg = 3
+			if c.Head.Position.X < 50 then
+			    reg = 2
+			elseif c.Head.Position.X < 70 then
+			    reg = 1
+			end
+			if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
+			network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
+			wait(0.4)
+		else
+			break
+		end
+	end
+	tryCook()
+	for zz=2,3 do
+		if doBoxer then
+			local didsomething = false
+			local boxP,boxD = FindBoxingFoods()
+			local closedBox,openBox,fullBox = FindBoxes()
+			if boxD and tick()-boxDtick>0.8 then
+				boxDtick=tick()
+				didsomething=true
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+				network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63,4.9,-1,-1,0,0,0,1,0,0,0,-1))
+			end
+			if fullBox then
+				if fullBox.Name=="BoxOpen" then
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+					network:FireServer("CloseBox", fullBox)
+					--will be moved next loop
+				elseif tick()-boxPtick>0.8 then
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+					network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2,4.4,RNG:NextNumber(-3,-2),-1,0,0,0,1,0,0,0,-1))
+					boxPtick=tick()
+				end
+			end
+			if closedBox and not openBox then
+				didsomething=true
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+				network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5,70.5),3.5,RNG:NextNumber(11,25)))
+				wait(0.3)
+				network:FireServer("OpenBox", closedBox)
+			end
+			if openBox and boxP then
+				didsomething=true
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
+				network:FireServer("UpdateProperty", boxP, "Anchored", true)
+				network:FireServer("UpdateProperty", openBox, "Anchored", true)
+				wait(0.4)
+				network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame+Vector3.new(0,-2,0))
+				wait(0.4)
+				network:FireServer("AssignPizzaToBox", openBox, boxP)
+			end
+			if didsomething then wait(0.7) else break end
+		else
+			break
+		end
+	end
+	if doDelivery then
+		local wstools = FindAllDeliveryTools(workspace)
+		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
+			--get tools
+			if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
+			for i=1,#wstools do
+				if wstools[i].Parent == workspace then
+					humanoid:EquipTool(wstools[i])
+					wait(0.2)
+				end
+			end
+			wait(0.8)
+			local t = FindAllDeliveryTools(character)
+    		for i=1,#t do
+    			t[i].Parent = player.Backpack
+    		end
+    		wait(0.1)
+    		if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
+    			character.RightHand.RightGrip:Destroy()
+    		end
+		end
+		local bptools = FindAllDeliveryTools(player.Backpack)
+		if #bptools >= settings.deliver_at and #bptools > 1 and tick()-delTick > 40 then
+			--deliver to houses
+			table.sort(bptools,function(a,b)
+				a,b=tostring(a),tostring(b)
+				if (a:sub(1,1)=="B" and b:sub(1,1)=="B") then
+					return a < b
+				end
+				return a > b
+			end)
+			local fatass=false
+			for i=1,#bptools do
+				if not doDelivery then
+					break
+				end
+				humanoid.Sit=false
+				local tool = bptools[i]
+				local giver = getHousePart(tool.Name)
+				local ogp = giver.Position
+				if giver then
+					if (giver.Position-root.Position).Magnitude > 9 then
+						smoothTP(giver.CFrame+Vector3.new(0,7,0))
+						if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
+							giver = getHousePart(tool.Name) or giver
+							smoothTP(giver.CFrame+Vector3.new(0,7,0))
+						end
+						pcall(function() tool.Parent = character end)
+						wait(1.6)
+						local t = FindAllDeliveryTools(character)
+                		for i=1,#t do
+                		    if t[i] ~= tool then
+                			    t[i].Parent = player.Backpack
+                			end
+                		end
+						wait(3)
+						fatass=false
+					else
+						if fatass then
+							wait(0.6)
+						else
+							wait(1.2)
+						end
+						pcall(function() tool.Parent = character end)
+						wait()
+						fatass=true
+					end
+				end
+			end
+			delTick = tick()
+		end
+	end
+	tryCook()
+	if doSupplier then
+		local refill=false
+		for s,c in pairs(supplyCounts) do
+			if c <= settings.refill_at then
+				refill=true
+				break
+			end
+		end
+		if refill then
+			local oldcf = root.CFrame
+			local waiting = false
+			local waitingTick = 1.8
+			local lastBox
+			while doSupplier do
+				--check if refill is done otherwise hit buttons
+				local fulfilled=true
+				local boxes = workspace.AllSupplyBoxes:GetChildren()
+				for yy=1,9 do
+				local needtp=true
+				local realc = 0
+				for _,btn in ipairs(supplyButtons) do
+				    local s = bcolorToSupply[btn.BrickColor.Name]
+					if supplyCounts[s] < settings.refill_end then
+						local count = 0
+						if #boxes > 30 then
+							for i=1,#boxes do
+								local box = boxes[i]
+								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
+									count=count+1
+								end
+							end
+						end
+						if count < 2 then
+							if needtp then
+							    needtp=false
+								smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
+								wait(0.5)
+							end
+							if not doSupplier then break end
+							root.CFrame = btn.CFrame + Vector3.new(0,3,0)
+							wait(0.3)
+							realc=realc+1
+						end
+						fulfilled=false
+					end
+				end
+				wait(0.3)
+				if yy == 1.2 and realc < 3 then
+				    wait(0.5)
+				end
+				end
+				if fulfilled or not (doSupplier) then
+					break
+				end
+				smoothTP(CFrame.new(8,12.4,-1020))
+				if not doSupplier then break end
+				--check if can finish waiting for boxes to move
+				if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
+					waiting=false
+					if lastBox.Position.X<42 then
+						--clear boxes if stuck
+						smoothTP(CFrame.new(20.5,8,-35))
+						wait(0.5)
+						local boxes = workspace.AllSupplyBoxes:GetChildren()
+						for i=1,#boxes do
+							local box = boxes[i]
+							if box.Anchored==false and box.Position.Z>-55 then
+								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
+								wait()
+							end
+						end
+						wait(0.2)
+					end
+				end
+				if not waiting then
+					--move boxes
+					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
+					wait(0.2)
+					lastBox=nil
+					local j=0
+					local boxes = workspace.AllSupplyBoxes:GetChildren()
+					for i=1,#boxes do
+						local box = boxes[i]
+						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
+							box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
+							network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
+							lastBox=box
+							j=j+1
+							if j>13 then break end
+						end
+					end
+					if lastBox then
+						waiting=true
+						waitingTick=tick()
+					end
+				end
+			end
+			--smoothTP(oldcf)
+		end
+	end
+end
