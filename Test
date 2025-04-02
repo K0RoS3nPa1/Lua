@@ -11,7 +11,7 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "Pizza Hub", -- Create a custom folder for your hub/game
-      FileName = "Settings"
+      FileName = "settings"
    },
    Discord = {
       Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
@@ -96,8 +96,72 @@ do
 end
 assert(network,"failed to find network")
 
-local doCashier, doBoxer, doCook, doSupplier, doDelivery
 
+ -- Konfigurationseinstellungen
+local ConfigurationSaving = {
+    Enabled = true,
+    FolderName = "Pizza Hub",  -- Ordnername für das Spiel
+    FileName = "Settings",     -- Dateiname für die Speicherung
+}
+
+-- Beispielsettings (werden in der UI gespeichert und geladen)
+local settings = {
+    refill_at = 0,
+    refill_end = 0,
+    movespeed_at = 0
+}
+
+-- DataStoreService für das Speichern von Daten
+local DataStoreService = game:GetService("DataStoreService")
+local playerDataStore = DataStoreService:GetDataStore(ConfigurationSaving.FolderName)
+
+-- Funktion zum Speichern der Einstellungen im Spiel
+local function saveSettings()
+    if ConfigurationSaving.Enabled then
+        -- Speichern der Einstellungen im DataStore unter dem spezifischen Dateinamen
+        local success, errorMessage = pcall(function()
+            playerDataStore:SetAsync(ConfigurationSaving.FileName, settings)
+        end)
+
+        if success then
+            print("Einstellungen gespeichert!")
+        else
+            warn("Fehler beim Speichern der Einstellungen: " .. errorMessage)
+        end
+    end
+end
+
+-- Funktion zum Laden der Einstellungen (normalerweise beim Start des Spiels)
+local function loadSettings()
+    if ConfigurationSaving.Enabled then
+        -- Versuchen, die gespeicherten Einstellungen zu laden
+        local success, loadedSettings = pcall(function()
+            return playerDataStore:GetAsync(ConfigurationSaving.FileName)
+        end)
+
+        if success and loadedSettings then
+            settings = loadedSettings  -- Lade die gespeicherten Daten in die settings-Variable
+            print("Einstellungen geladen!")
+        elseif not success then
+            warn("Fehler beim Laden der Einstellungen: " .. loadedSettings)
+        else
+            print("Keine gespeicherten Einstellungen gefunden, Standardwerte verwendet.")
+        end
+    end
+end
+
+-- Lade die Einstellungen beim Start
+loadSettings()
+
+-- Initialisieren der Werte mit den geladenen Daten (oder Standardwerte)
+settings.refill_at = settings.refill_at or 0
+settings.refill_end = settings.refill_end or 0
+settings.movespeed_at = settings.movespeed_at or 0
+
+-- Beispiel für das Setzen von Toggles und Eingaben
+local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
+
+-- Funktionen für die Toggles
 local function toggleCashier(bool)
     if bool ~= nil then
         doCashier = bool
@@ -138,6 +202,7 @@ local function toggleSupplier(bool)
     end
 end
 
+-- Erstelle die Toggles
 local ToggleCashier = F:CreateToggle({
     Name = "Cashier",
     CurrentValue = false,
@@ -183,8 +248,50 @@ local ToggleSupplier = F:CreateToggle({
     end,
 })
 
+-- Input für "refillAt" (Beispiel)
+local refillAtInput = Tab:CreateInput({
+    Name = "Refill At",
+    CurrentValue = tostring(settings.refill_at),
+    PlaceholderText = "Enter refill at value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "RefillAtInput",
+    Callback = function(Text)
+        if tonumber(Text) then
+            settings.refill_at = tonumber(Text)
+            saveSettings()  -- Speichern nach der Änderung
+        end
+    end,
+})
 
+-- Input für "refillEnd" (Beispiel)
+local refillEndInput = Tab:CreateInput({
+    Name = "Refill End",
+    CurrentValue = tostring(settings.refill_end),
+    PlaceholderText = "Enter refill end value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "RefillEndInput",
+    Callback = function(Text)
+        if tonumber(Text) then
+            settings.refill_end = tonumber(Text)
+            saveSettings()  -- Speichern nach der Änderung
+        end
+    end,
+})
 
+-- Input für "Movespeed"
+local movespeedInput = Tab:CreateInput({
+    Name = "Movespeed",
+    CurrentValue = tostring(settings.movespeed_at),
+    PlaceholderText = "Enter movespeed value",
+    RemoveTextAfterFocusLost = false,
+    Flag = "MovespeedInput",
+    Callback = function(Text)
+        if tonumber(Text) then
+            settings.movespeed_at = tonumber(Text)
+            saveSettings()  -- Speichern nach der Änderung
+        end
+    end,
+})
 
 
 
