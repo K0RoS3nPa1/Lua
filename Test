@@ -604,14 +604,25 @@ local function tryCook()
 end
 wait(1)
 --//main loop
-while gui.Parent do
-	wait(1.1)
-	humanoid.Sit=false
-	if RNG:NextInteger(1,20)==1 then
-        game:GetService("VirtualInputManager"):SendKeyEvent(true,"Z",false,game)
+local isRunning = true  -- Eine Variable, die steuert, ob der Loop weiterlaufen soll
+
+while isRunning do
+    wait(1.1)
+    humanoid.Sit = false
+    
+    -- Zufallsgenerierung
+    if RNG:NextInteger(1, 20) == 1 then
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
         wait()
-        game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
-	end
+        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
+    end
+
+    -- Beispiel: Stoppe den Loop, wenn der Charakter stirbt oder das Spiel verlassen wird
+    if humanoid.Health <= 0 then
+        isRunning = false
+    end
+end
+
 	for zz=1,6 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
