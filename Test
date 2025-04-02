@@ -33,20 +33,6 @@ local Window = Rayfield:CreateWindow({
 
 local F = Window:CreateTab("Auto Farm", nil)
 
-local settings = {
-    refill_at = 50,
-    refill_end = 97,
-    movespeed_at = 5
-}
-
-local function saveSettings()
-    Rayfield:SaveConfiguration({
-        FolderName = "Pizza Hub",
-        FileName = "settings",
-        Data = settings
-    })
-    print("Einstellungen gespeichert!")
-end
 
 
 
