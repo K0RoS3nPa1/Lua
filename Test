@@ -16,15 +16,6 @@ local network
 local character,root,humanoid
 local supplyCounts = {TomatoSauce=99, Cheese=99, Sausage=99, Pepperoni=99, Dough=99, Box=99, Dew=99}
 
--- Funktionen zum Umschalten
-
-
-
-
-
-
-
-
 
 
 -- Rayfield GUI erstellen
@@ -615,7 +606,7 @@ local function tryCook()
 	end
 end
 wait(1)
-while Window.Parent do
+while true do
 	wait(1.1)
 	humanoid.Sit = false
 	if RNG:NextInteger(1, 20) == 1 then
