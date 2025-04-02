@@ -13,7 +13,7 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = {
        Enabled = true,
        FolderName = "Pizza Hub",
-       FileName = "settings"
+       FileName = "settings"  -- Konfigurationsdateiname
     },
     Discord = {
        Enabled = true,
@@ -38,54 +38,39 @@ local F = Window:CreateTab("Auto Farm", nil)
 local T = Window:CreateTab("Teleports", nil)
 local S = Window:CreateTab("More Fun", nil)
 
-local settings = {
-    refill_at = 0,
-    refill_end = 0,
-    movespeed_at = 0
-}
+-- Lade die gespeicherten Einstellungen, falls vorhanden (über Rayfield's Konfiguration)
+local settings = Rayfield:LoadConfiguration({
+    FolderName = "Pizza Hub",
+    FileName = "settings",
+    Default = {  -- Standardwerte, falls keine gespeicherten Einstellungen vorhanden sind
+        refill_at = 0,
+        refill_end = 0,
+        movespeed_at = 0
+    }
+})
 
-local DataStoreService = game:GetService("DataStoreService")
-local playerDataStore = DataStoreService:GetDataStore(ConfigurationSaving.FolderName)
-
+-- Speichern der Konfiguration
 local function saveSettings()
-    if ConfigurationSaving.Enabled then
-        local success, errorMessage = pcall(function()
-            playerDataStore:SetAsync(ConfigurationSaving.FileName, settings)
-        end)
-
-        if success then
-            print("Einstellungen gespeichert!")
-        else
-            warn("Fehler beim Speichern der Einstellungen: " .. errorMessage)
-        end
+    if Rayfield.ConfigurationSaving.Enabled then
+        Rayfield:SaveConfiguration({
+            FolderName = "Pizza Hub",
+            FileName = "settings",
+            Data = settings  -- Speichert die aktuellen Einstellungen
+        })
+        print("Einstellungen gespeichert!")
     end
 end
 
-local function loadSettings()
-    if ConfigurationSaving.Enabled then
-        local success, loadedSettings = pcall(function()
-            return playerDataStore:GetAsync(ConfigurationSaving.FileName)
-        end)
-
-        if success and loadedSettings then
-            for key, value in pairs(loadedSettings) do
-                settings[key] = value
-            end
-            print("Einstellungen geladen!")
-        elseif not success then
-            warn("Fehler beim Laden der Einstellungen: " .. loadedSettings)
-        else
-            print("Keine gespeicherten Einstellungen gefunden, Standardwerte verwendet.")
-        end
-    end
+-- Wenn Einstellungen nach Änderungen gespeichert werden müssen
+local function saveOnChange()
+    saveSettings()
 end
-
-loadSettings()
 
 settings.refill_at = settings.refill_at or 0
 settings.refill_end = settings.refill_end or 0
 settings.movespeed_at = settings.movespeed_at or 0
 
+-- Beispiel für Toggles und deren Verarbeitung
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
 
 local function toggleCashier(bool)
@@ -108,6 +93,7 @@ local function toggleSupplier(bool)
     doSupplier = bool ~= nil and bool or not doSupplier
 end
 
+-- Erstellen von Toggle-Buttons
 local ToggleCashier = F:CreateToggle({
     Name = "Cashier",
     CurrentValue = false,
@@ -153,6 +139,7 @@ local ToggleSupplier = F:CreateToggle({
     end,
 })
 
+-- Eingabefelder für Einstellungen
 local refillAtInput = F:CreateInput({
     Name = "Refill At",
     CurrentValue = tostring(settings.refill_at),
@@ -163,7 +150,7 @@ local refillAtInput = F:CreateInput({
         local value = tonumber(Text)
         if value then
             settings.refill_at = value
-            saveSettings()
+            saveOnChange()
         end
     end,
 })
@@ -178,7 +165,7 @@ local refillEndInput = F:CreateInput({
         local value = tonumber(Text)
         if value then
             settings.refill_end = value
-            saveSettings()
+            saveOnChange()
         end
     end,
 })
@@ -193,7 +180,7 @@ local movespeedInput = F:CreateInput({
         local value = tonumber(Text)
         if value then
             settings.movespeed_at = value
-            saveSettings()
+            saveOnChange()
         end
     end,
 })
