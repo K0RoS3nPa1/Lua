@@ -201,7 +201,11 @@ local movespeedInput = F:CreateInput({
 })
 
 
-
+local player = game:GetService("Players").LocalPlayer
+local ffc = game.FindFirstChild
+local RNG = Random.new()
+local network
+local character,root,humanoid
 local supplyCounts = {TomatoSauce=99, Cheese=99, Sausage=99, Pepperoni=99, Dough=99, Box=99, Dew=99}
 
 for name in pairs(supplyCounts) do
@@ -699,23 +703,42 @@ wait(1)
 
 for zz=1,6 do
     local c, order = FindFirstCustomer()
+
+    -- Überprüfen, ob ein Kunde und eine Bestellung gefunden wurden
     if doCashier and c and order then
         local reg = 3
-        if c.Head.Position.X < 50 then
-            reg = 2
-        elseif c.Head.Position.X < 70 then
-            reg = 1
+
+        -- Überprüfen der Position des Kopfes des Kunden, um den richtigen Kassenbereich zu wählen
+        if c:FindFirstChild("Head") then  -- Sicherstellen, dass "Head" existiert
+            if c.Head.Position.X < 50 then
+                reg = 2
+            elseif c.Head.Position.X < 70 then
+                reg = 1
+            end
+        else
+            warn("Kunde hat keinen Kopf!")
+            break
         end
+
+        -- Sicherstellen, dass der Charakter zur richtigen Position teleportiert wird
         if (root.Position - Vector3.new(50.30, 3.80, 83.24)).magnitude > 9 then
             smoothTP(CFrame.new(50.30, 3.80, 83.24))
             wait(0.2)
         end
-        network:FireServer("OrderComplete", c, order, workspace["Register" .. reg])
-        wait(0.4)
+
+        -- Falls die Kasse existiert, die Bestellung abschließen
+        local register = workspace:FindFirstChild("Register" .. reg)
+        if register then
+            network:FireServer("OrderComplete", c, order, register)
+            wait(0.4)
+        else
+            warn("Register" .. reg .. " existiert nicht!")
+        end
     else
         break
     end
 end
+
 
 tryCook()
 
