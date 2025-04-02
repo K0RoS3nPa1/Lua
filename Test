@@ -14,8 +14,11 @@ local settings = {
 }
 
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
-
 local player = game:GetService("Players").LocalPlayer
+local ffc = game.FindFirstChild
+local RNG = Random.new()
+local network
+local character,root,humanoid
 
 -- GUI Info-Anzeige
 Rayfield:Notify({
