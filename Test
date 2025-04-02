@@ -142,7 +142,7 @@ Rayfield:Notify({
 })
 
 
-
+local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
 for name in pairs(supplyCounts) do
     local success, result = pcall(function()
         -- Bestimme den richtigen Namen des Counters basierend auf dem Supply
