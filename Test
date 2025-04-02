@@ -96,7 +96,49 @@ do
 end
 assert(network,"failed to find network")
 
-local toggleCashier = F:CreateToggle({
+local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
+
+local function toggleCashier(bool)
+    if bool ~= nil then
+        doCashier = bool
+    else
+        doCashier = not doCashier
+    end
+end
+
+local function toggleCook(bool)
+    if bool ~= nil then
+        doCook = bool
+    else
+        doCook = not doCook
+    end
+end
+
+local function toggleBoxer(bool)
+    if bool ~= nil then
+        doBoxer = bool
+    else
+        doBoxer = not doBoxer
+    end
+end
+
+local function toggleDelivery(bool)
+    if bool ~= nil then
+        doDelivery = bool
+    else
+        doDelivery = not doDelivery
+    end
+end
+
+local function toggleSupplier(bool)
+    if bool ~= nil then
+        doSupplier = bool
+    else
+        doSupplier = not doSupplier
+    end
+end
+
+local ToggleCashier = F:CreateToggle({
     Name = "Cashier",
     CurrentValue = false,
     Flag = "ToggleCashier",
@@ -141,47 +183,6 @@ local ToggleSupplier = F:CreateToggle({
     end,
 })
 
-local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
-
-local function toggleCashier(bool)
-    if bool ~= nil then
-        doCashier = bool
-    else
-        doCashier = not doCashier
-    end
-end
-
-local function toggleCook(bool)
-    if bool ~= nil then
-        doCook = bool
-    else
-        doCook = not doCook
-    end
-end
-
-local function toggleBoxer(bool)
-    if bool ~= nil then
-        doBoxer = bool
-    else
-        doBoxer = not doBoxer
-    end
-end
-
-local function toggleDelivery(bool)
-    if bool ~= nil then
-        doDelivery = bool
-    else
-        doDelivery = not doDelivery
-    end
-end
-
-local function toggleSupplier(bool)
-    if bool ~= nil then
-        doSupplier = bool
-    else
-        doSupplier = not doSupplier
-    end
-end
 
 
 local oldRefillAt=refillAtBox.Text
