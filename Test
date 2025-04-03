@@ -324,7 +324,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	end
 end
 local function tryCook()
-	for zz=1,28 do
+	for zz = 1,28 do
 		local order = getOrders()[1]
 		local topping
 		if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -481,7 +481,7 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for cashier=1,5 do
+	for cashier = 1,5 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
 			local reg = 3
@@ -498,7 +498,7 @@ local function startLoop()
 		end
 	end
 	tryCook()
-	for boxer=1,26 do
+	for boxer = 1,26 do
 		if doBoxer then
 			local didsomething = false
 			local boxP,boxD = FindBoxingFoods()
