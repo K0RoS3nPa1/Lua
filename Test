@@ -490,12 +490,17 @@ local function tryCook()
 	end
 end
 wait(1)
-local loopEnabled = false
+
 
 -- Hauptschleife, die auf den Status von loopEnabled reagiert
 spawn(function()
 while true do
 	wait(1.1)
+
+	if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
+		print("Alle Funktionen deaktiviert. Schleife wird gestoppt.")
+		break -- Beende die Schleife, wenn alle Toggles `false` sind
+	end
 	if humanoid.Health <= 0 then
         print("Spieler ist tot. Schleife pausiert.")
         return -- Beende die Schleife, wenn der Spieler tot ist
