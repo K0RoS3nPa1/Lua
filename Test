@@ -481,7 +481,7 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for zz=1,5 do
+	for cashier=1,5 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
 			local reg = 3
@@ -498,7 +498,7 @@ local function startLoop()
 		end
 	end
 	tryCook()
-	for zz=2,26 do
+	for boxer=1,26 do
 		if doBoxer then
 			local didsomething = false
 			local boxP,boxD = FindBoxingFoods()
@@ -544,6 +544,8 @@ local function startLoop()
 			break
 		end
 	end
+for delivery = 1,5 do
+
 	if doDelivery then
 		local wstools = FindAllDeliveryTools(workspace)
 		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
@@ -616,7 +618,11 @@ local function startLoop()
 			delTick = tick()
 		end
 	end
+	break
+end
+
 	tryCook()
+	
 	if doSupplier then
 		local refill=false
 		for s,c in pairs(supplyCounts) do
@@ -627,7 +633,7 @@ local function startLoop()
 		end
 		if refill then
 			local oldcf = root.CFrame
-			local waiting = false
+			local waiting = true
 			local waitingTick = 1.8
 			local lastBox
 			while doSupplier do
