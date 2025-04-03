@@ -567,6 +567,15 @@ end
 	end
 end]]
 local function tryCook()
+    -- Position des Kochbereichs
+    local cookAreaPosition = Vector3.new(36.64, 3.80, 54.11)
+
+    -- Teleportiere den Spieler zum Kochbereich, falls er zu weit entfernt ist
+    if (root.Position - cookAreaPosition).Magnitude > 9 then
+        smoothTP(CFrame.new(cookAreaPosition))
+        wait(0.5) -- Warte kurz nach dem Teleport
+    end
+
     for zz = 1, 28 do
         local order = getOrders()[1]
         local topping
@@ -603,7 +612,12 @@ local function tryCook()
 
         -- Entferne schlechten Dough
         if trash then
+            -- Bewege den schlechten Dough in den Mülleimer
             network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49))
+            wait(0.1) -- Warte kurz, bevor die Eigenschaften geändert werden
+
+            -- Deaktiviere die Kollision, damit der Dough durch den Boden fällt
+            network:FireServer("UpdateProperty", trash, "CanCollide", false)
         end
 
         wait(0.5) -- Wartezeit zwischen den Aktionen
