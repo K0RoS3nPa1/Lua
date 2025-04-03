@@ -322,7 +322,7 @@ local function tryCook()
 		local cookD = FindFirstDew()
 		local badD = FindBadDew()
 		local cookP,trash
-		local raw = workspace.AllDough:FindFirstChildOfClass("") -- Nimmt das nächste Dough, falls vorhanden
+		local raw = workspace.AllDough:FindFirstChildOfClass("BasePart") -- Nimmt das nächste Dough, falls vorhanden
 		if not raw then return end
 		if topping then
 			--pepperoni order avoids sausage dough and vice verca
