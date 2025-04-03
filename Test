@@ -544,83 +544,86 @@ local function startLoop()
 			break
 		end
 	end
-for delivery = 1,5 do
-
-	if doDelivery then
-		local wstools = FindAllDeliveryTools(workspace)
-		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
-			--get tools
-			if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
-			for i=1,#wstools do
-				if wstools[i].Parent == workspace then
-					humanoid:EquipTool(wstools[i])
-					wait()
+	for delivery = 1, 5 do
+		if doDelivery then
+			local wstools = FindAllDeliveryTools(workspace)
+			if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle, "X10")) then
+				-- Werkzeuge holen
+				if (root.Position - Vector3.new(54.45, 4.02, -15)).magnitude > 9 then
+					smoothTP(CFrame.new(54.45, 4.02, -15))
+					wait(0.5) -- Wartezeit nach dem Teleport
 				end
-			end
-			wait(0.5)
-			local t = FindAllDeliveryTools(character)
-    		for i=1,#t do
-    			t[i].Parent = player.Backpack
-    		end
-    		wait(0.1)
-    		if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
-    			character.RightHand.RightGrip:Destroy()
-    		end
-		end
-		local bptools = FindAllDeliveryTools(player.Backpack)
-		if #bptools >= settings.deliver_at and #bptools > 0 and tick()-delTick > 30 then
-			--deliver to houses
-			table.sort(bptools,function(a,b)
-				a,b=tostring(a),tostring(b)
-				if (a:sub(1,1)=="B" and b:sub(1,1)=="B") then
-					return a < b
-				end
-				return a > b
-			end)
-			local fatass=false
-			for i=1,#bptools do
-				if not doDelivery then
-					break
-				end
-				
-				local tool = bptools[i]
-				local giver = getHousePart(tool.Name)
-				local ogp = giver.Position
-				if giver then
-					if (giver.Position-root.Position).Magnitude > 9 then
-						smoothTP(giver.CFrame+Vector3.new(0,7,0))
-						if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
-							giver = getHousePart(tool.Name) or giver
-							smoothTP(giver.CFrame+Vector3.new(0,7,0))
-						end
-						pcall(function() tool.Parent = character end)
-						wait(1.3)
-						local t = FindAllDeliveryTools(character)
-                		for i=1,#t do
-                		    if t[i] ~= tool then
-                			    t[i].Parent = player.Backpack
-                			end
-                		end
-						wait(2)
-						fatass=false
-					else
-						if fatass then
-							wait(0.4)
-						else
-							wait(0.8)
-						end
-						pcall(function() tool.Parent = character end)
+				for i = 1, #wstools do
+					if wstools[i].Parent == workspace then
+						humanoid:EquipTool(wstools[i])
 						wait()
-						fatass=true
 					end
 				end
+				wait(0.5)
+				local t = FindAllDeliveryTools(character)
+				for i = 1, #t do
+					t[i].Parent = player.Backpack
+				end
+				wait(0.1)
+				if ffc(character, "RightHand") and ffc(character.RightHand, "RightGrip") then
+					character.RightHand.RightGrip:Destroy()
+				end
 			end
-			delTick = tick()
+			local bptools = FindAllDeliveryTools(player.Backpack)
+			if #bptools >= settings.deliver_at and #bptools > 0 and tick() - delTick > 30 then
+				-- Lieferung an Häuser
+				table.sort(bptools, function(a, b)
+					a, b = tostring(a), tostring(b)
+					if (a:sub(1, 1) == "B" and b:sub(1, 1) == "B") then
+						return a < b
+					end
+					return a > b
+				end)
+				local fatass = false
+				for i = 1, #bptools do
+					if not doDelivery then
+						break
+					end
+	
+					local tool = bptools[i]
+					local giver = getHousePart(tool.Name)
+					local ogp = giver.Position
+					if giver then
+						if (giver.Position - root.Position).Magnitude > 9 then
+							smoothTP(giver.CFrame + Vector3.new(0, 7, 0))
+							wait(1) -- Wartezeit nach dem Teleport
+							if giver.Parent == nil or (giver.Position - ogp).Magnitude > 1 then
+								giver = getHousePart(tool.Name) or giver
+								smoothTP(giver.CFrame + Vector3.new(0, 7, 0))
+								wait(1) -- Wartezeit nach dem Teleport
+							end
+							pcall(function() tool.Parent = character end)
+							wait(1.3)
+							local t = FindAllDeliveryTools(character)
+							for i = 1, #t do
+								if t[i] ~= tool then
+									t[i].Parent = player.Backpack
+								end
+							end
+							wait(2)
+							fatass = false
+						else
+							if fatass then
+								wait(0.4)
+							else
+								wait(0.8)
+							end
+							pcall(function() tool.Parent = character end)
+							wait()
+							fatass = true
+						end
+					end
+				end
+				delTick = tick()
+			end
 		end
+		break
 	end
-	break
-end
-
 	tryCook()
 	
 	if doSupplier then
