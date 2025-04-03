@@ -315,7 +315,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	end
 end
 local function tryCook()
-	for zz=1,18 do
+	for zz=1,7 do
 		local order = getOrders()[1]
 		local topping
 		if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -471,7 +471,7 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for zz=2,7 do
+	for zz=2,6 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
 			local reg = 3
@@ -624,7 +624,7 @@ local function startLoop()
 				--check if refill is done otherwise hit buttons
 				local fulfilled=true
 				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy=2,2 do
+				for yy=1,2 do
 				local needtp=true
 				local realc = 0
 				for _,btn in ipairs(supplyButtons) do
@@ -654,7 +654,7 @@ local function startLoop()
 					end
 				end
 				wait(0.3)
-				if yy == 2.6 and realc < 3 then
+				if yy == 1.1 and realc < 3 then
 				    wait(0.5)
 				end
 				end
