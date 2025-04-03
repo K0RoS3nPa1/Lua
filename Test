@@ -610,26 +610,19 @@ local function tryCook()
             end
         end
 
-        -- Entferne schlechten Dough
+        
       -- Entferne schlechten Dough
-if trash then
-    -- Bewege den schlechten Dough in den Mülleimer
-    network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49))
-    wait(0.1) -- Warte kurz, bevor die Eigenschaften geändert werden
-
-    -- Deaktiviere die Kollision, damit der Dough durch den Boden fällt
-    network:FireServer("UpdateProperty", trash, "CanCollide", false)
-
-    -- Setze den Teig auf unsichtbar, um sicherzustellen, dass er nicht mehr sichtbar ist
-    network:FireServer("UpdateProperty", trash, "Transparency", 1)
-
-    -- Entferne den Teig aus dem Workspace nach einer kurzen Verzögerung
-    delay(1, function()
-        if trash and trash.Parent then
-            trash:Destroy()
-        end
-    end)
-end
+	  if trash then
+		-- Bewege den schlechten Dough in den Mülleimer
+		network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49))
+		wait(0.1) -- Warte kurz, bevor die Eigenschaften geändert werden
+	
+		-- Deaktiviere die Kollision, damit der Dough durch den Boden fällt
+		network:FireServer("UpdateProperty", trash, "CanCollide", false)
+	
+		-- Stelle sicher, dass die Schwerkraft auf den Teig wirkt
+		network:FireServer("UpdateProperty", trash, "Anchored", false)
+	end
 
         wait(0.5) -- Wartezeit zwischen den Aktionen
     end
