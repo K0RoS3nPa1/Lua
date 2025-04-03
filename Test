@@ -503,10 +503,10 @@ local function startLoop()
 			break
 		end
 	end
-	if doCook then
-		tryCook()
-	end
-	
+	wait(2)
+	tryCook
+	wait(2)
+
 	for zz=2,3 do
 		if doBoxer then
 			local didsomething = false
@@ -553,6 +553,7 @@ local function startLoop()
 			break
 		end
 	end
+
 	if doDelivery then
 		local wstools = FindAllDeliveryTools(workspace)
 		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
@@ -625,7 +626,9 @@ local function startLoop()
 			delTick = tick()
 		end
 	end
-	
+	wait(2)
+	tryCook()
+	wait(2)
 	if doSupplier then
 		local refill=false
 		for s,c in pairs(supplyCounts) do
