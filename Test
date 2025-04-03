@@ -698,13 +698,13 @@ local function startLoop()
 								wait(0.2) -- Längere Wartezeit zwischen den Boxen
 							end
 						end
-						wait(1) -- Zusätzliche Pause nach dem Bewegen der Boxen
+						wait(0.5) -- Zusätzliche Pause nach dem Bewegen der Boxen
 					end
 				end
 				if not waiting then
 					-- Boxen bewegen
 					if root.Position.Z > -900 then smoothTP(CFrame.new(8, 12.4, -1020)) end
-					wait(0.3) -- Längere Wartezeit nach dem Teleport
+					wait(0.5) -- Längere Wartezeit nach dem Teleport
 					lastBox = nil
 					local j = 0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
