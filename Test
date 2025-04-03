@@ -503,6 +503,9 @@ local function startLoop()
 			break
 		end
 	end
+	if doCook then
+		tryCook()
+	end
 	
 	for zz=2,3 do
 		if doBoxer then
