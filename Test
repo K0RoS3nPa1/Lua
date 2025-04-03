@@ -13,25 +13,8 @@ local settings = {
     stay_in_kitchen = true
 }
 
-local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
-local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
-local RNG = Random.new()
-local character,root,humanoid
-local network
-do
-    local reg = (getreg or debug.getregistry)()
-    for i = 1, #reg do
-        local f = reg[i]
-        if type(f) == "table" then
-            if rawget(f, "FireServer") and rawget(f, "BindEvents") then
-                print("Network gefunden:", f)
-                network = f
-                break
-            end
-        end
-    end
-end
+local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
+
 assert(network, "failed to find network")
 -- GUI Info-Anzeige
 Rayfield:Notify({
@@ -57,8 +40,52 @@ local window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- Erstelle ein Tab für die Einstellungen
+local reg = (getreg or debug.getregistry)
+if not reg then
+    error("getreg oder debug.getregistry ist nicht verfügbar.")
+end
 
+local player = game:GetService("Players").LocalPlayer
+local ffc = game.FindFirstChild
+local RNG = Random.new()
+local network
+local character,root,humanoid
+do
+	local reg = (getreg or debug.getregistry)()
+	for i=1,#reg do
+		local f = reg[i]
+		if type(f)=="function" then
+		    for k,v in next,getupvalues(f) do
+				if typeof(v)=="Instance" then
+				    if v.Name=="CashOut" then
+						wait(0.2)
+					    setupvalue(f,k,{MouseButton1Click={wait=function()end,Wait=function()end}})
+				    elseif v.Name=="StickerName" then
+				        setupvalue(f,k,nil)
+				    end
+				end
+			end
+    		if tostring(getfenv(f).script) == "Music" then
+    		    local consts = getconstants(f)
+    		    local loc=false
+		        for ci,c in next,consts do
+		            if c == "location changed" then
+		                loc=true
+		            elseif loc and c == "SendData" then
+		                setconstant(f,ci,"ExplodeString")
+		                break
+		            end
+		        end
+    		end
+		elseif type(f)=="table" and rawget(f,"FireServer") and rawget(f,"BindEvents") then
+			network = f
+		end
+	end
+end
+assert(network,"failed to find network")
+
+
+--//subroutines
 local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
 for name in pairs(supplyCounts) do
 	local lbl = workspace.SupplyCounters.Model[name=="Dew" and "CounterMountainDew" or "Counter"..name].a.SG.Counter
@@ -76,7 +103,7 @@ local function FindFirstCustomer()
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
-			if dialog:sub(-8)=="instead." then
+			if dialog:sub(-30)=="instead." then
 				dialog = dialog:sub(-30)
 			end
 			if dialog:find("pepperoni",1,true) then
@@ -267,7 +294,7 @@ local function smoothTP2(cf)
 	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
-	workspace.Gravity = 0
+	workspace.Gravity = Gravitysettings
 	for i=0,diff.Magnitude,settings.movespeed_at do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
@@ -426,31 +453,22 @@ local function tryCook()
 		end
 	end
 end
-
-local ToggleChanged = Instance.new("BindableEvent")
--- Hauptschleife, die bei jedem Frame ausgeführt wird
-local function MainLoop()
-    wait(1.1)
-
-	if not Rayfield or not Rayfield.Enabled then
-        print("Rayfield ist nicht geladen oder deaktiviert. Schleife wird nicht ausgeführt.")
-        return
-    end
-    -- Überprüfen, ob der Spieler lebt
-    if humanoid.Health <= 0 then
+wait(1)
+--//main loop
+while Rayfield.Enabled do
+	wait(1.1)
+	if humanoid.Health <= 0 then
         print("Spieler ist tot. Schleife pausiert.")
         return -- Beende die Schleife, wenn der Spieler tot ist
     end
-
-    if humanoid and humanoid.Sit then
-    humanoid.Sit = false
-	end-- Setzt den Spieler in den Stand-Zustand zurück
-
-    if RNG:NextInteger(1, 20) == 1 then
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
+	if humanoid and humanoid.Sit then
+		humanoid.Sit = false
+	end
+	if RNG:NextInteger(1,20)==1 then
+        game:GetService("VirtualInputManager"):SendKeyEvent(true,"Z",false,game)
         wait()
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
-    end
+        game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
+	end
 	for zz=1,6 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
@@ -689,6 +707,7 @@ local function MainLoop()
 	end
 end
 
+local sectionSettings = window:CreateTab("Settings", 4483362458)
 
 local function toggleCashier(bool)
 	if bool~=nil then
@@ -696,6 +715,7 @@ local function toggleCashier(bool)
 	else
 		doCashier = not doCashier
 	end
+	
 end
 local function toggleCook(bool)
 	if bool~=nil then
@@ -729,8 +749,6 @@ local function toggleSupplier(bool)
 	end
 	
 end
-local sectionSettings = window:CreateTab("Settings", 4483362458)
-
 -- Refill Einstellungen
 sectionSettings:CreateSlider({
     Name = "Refill At",
@@ -774,7 +792,7 @@ CurrentValue = doCashier,
 Flag = "doCashier",
 Callback = function(bool)
 toggleCashier(bool)
-ToggleChanged:Fire()
+
 end
 })
 sectionSettings:CreateToggle({
@@ -783,7 +801,7 @@ CurrentValue = doCook,
 Flag = "doCook",
 Callback = function(bool)
 toggleCook(bool)
-ToggleChanged:Fire()
+
 end
 })
 sectionSettings:CreateToggle({
@@ -792,7 +810,7 @@ CurrentValue = doBoxer,
 Flag = "doBoxer",
 Callback = function(bool)
 toggleBoxer(bool)
-ToggleChanged:Fire()
+
 end
 })
 sectionSettings:CreateToggle({
@@ -801,7 +819,7 @@ CurrentValue = doDelivery,
 Flag = "doDelivery",
 Callback = function(bool)
 toggleDelivery(bool)
-ToggleChanged:Fire()
+
 end
 })
 sectionSettings:CreateToggle({
@@ -810,7 +828,7 @@ CurrentValue = doSupplier,
 Flag = "doSupplier",
 Callback = function(bool)
 toggleSupplier(bool)
-ToggleChanged:Fire()
+
 end
 })
 
@@ -824,6 +842,3 @@ Content = "Das GUI wurde geschlossen.",
 Duration = 3
 })
 
-ToggleChanged.Event:Connect(function()
-    MainLoop()
-end)
