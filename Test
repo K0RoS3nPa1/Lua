@@ -493,14 +493,15 @@ wait(1)
 
 
 -- Hauptschleife, die auf den Status von loopEnabled reagiert
-spawn(function()
-while true do
-	wait(1.1)
+local loopEnabled = false
+local loopThread = nil -- Speichert den Thread der Schleife
 
-	if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
-		print("Alle Funktionen deaktiviert. Schleife wird gestoppt.")
-		break -- Beende die Schleife, wenn alle Toggles `false` sind
-	end
+-- Funktion, um die Schleife zu starten
+local function startLoop()
+    if loopThread then return end -- Verhindere, dass mehrere Threads gestartet werden
+
+    loopThread = spawn(function()
+        while loopEnabled do
 	if humanoid.Health <= 0 then
         print("Spieler ist tot. Schleife pausiert.")
         return -- Beende die Schleife, wenn der Spieler tot ist
@@ -749,19 +750,18 @@ while true do
 			--smoothTP(oldcf)
 		end
 	end
+	if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
+		print("Alle Funktionen deaktiviert. Schleife wird gestoppt.")
+		loopEnabled = false
+		loopThread = nil -- Beende den Thread
+		return
+	end
 end
 end)
+end
 local sectionSettings = window:CreateTab("Settings", 4483362458)
 
-sectionSettings:CreateToggle({
-    Name = "Farm Aktivieren",
-    CurrentValue = loopEnabled,
-    Flag = "loopEnabled",
-    Callback = function(bool)
-        loopEnabled = bool -- Ändert den Wert von loopEnabled
-        print("Schleifenstatus geändert:", bool)
-    end
-})
+
 -- Refill Einstellungen
 sectionSettings:CreateSlider({
     Name = "Refill At",
@@ -800,52 +800,86 @@ sectionSettings:CreateSlider({
 })
 -- Toggle Buttons für verschiedene Funktionen
 sectionSettings:CreateToggle({
-Name = "Cashier Aktivieren",
-CurrentValue = doCashier,
-Flag = "doCashier",
-Callback = function(bool)
-toggleCashier(bool)
+    Name = "Cashier Aktivieren",
+    CurrentValue = doCashier,
+    Flag = "doCashier",
+    Callback = function(bool)
+        doCashier = bool
+        print("Cashier-Toggle geändert:", bool)
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then startLoop() end
+    end
+})
 
-end
+sectionSettings:CreateToggle({
+    Name = "Cook Aktivieren",
+    CurrentValue = doCook,
+    Flag = "doCook",
+    Callback = function(bool)
+        doCook = bool
+        print("Cook-Toggle geändert:", bool)
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then startLoop() end
+    end
+})
+
+sectionSettings:CreateToggle({
+    Name = "Boxer Aktivieren",
+    CurrentValue = doBoxer,
+    Flag = "doBoxer",
+    Callback = function(bool)
+        doBoxer = bool
+        print("Boxer-Toggle geändert:", bool)
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then startLoop() end
+    end
+})
+
+sectionSettings:CreateToggle({
+    Name = "Delivery Aktivieren",
+    CurrentValue = doDelivery,
+    Flag = "doDelivery",
+    Callback = function(bool)
+        doDelivery = bool
+        print("Delivery-Toggle geändert:", bool)
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then startLoop() end
+    end
+})
+
+sectionSettings:CreateToggle({
+    Name = "Supplier Aktivieren",
+    CurrentValue = doSupplier,
+    Flag = "doSupplier",
+    Callback = function(bool)
+        doSupplier = bool
+        print("Supplier-Toggle geändert:", bool)
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then startLoop() end
+    end
 })
 sectionSettings:CreateToggle({
-Name = "Cook Aktivieren",
-CurrentValue = doCook,
-Flag = "doCook",
-Callback = function(bool)
-toggleCook(bool)
+    Name = "Alle Aktivieren",
+    CurrentValue = false, -- Standardmäßig deaktiviert
+    Flag = "allEnabled",
+    Callback = function(bool)
+        -- Setze alle anderen Toggles auf den gleichen Wert wie "Alle Aktivieren"
+        doCashier = bool
+        doCook = bool
+        doBoxer = bool
+        doDelivery = bool
+        doSupplier = bool
 
-end
+        -- Debugging-Ausgabe
+        print("Alle Toggles geändert:", bool)
+
+        -- Aktualisiere die Schleife
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then
+            startLoop()
+        end
+    end
 })
-sectionSettings:CreateToggle({
-Name = "Boxer Aktivieren",
-CurrentValue = doBoxer,
-Flag = "doBoxer",
-Callback = function(bool)
-toggleBoxer(bool)
-
-end
-})
-sectionSettings:CreateToggle({
-Name = "Delivery Aktivieren",
-CurrentValue = doDelivery,
-Flag = "doDelivery",
-Callback = function(bool)
-toggleDelivery(bool)
-
-end
-})
-sectionSettings:CreateToggle({
-Name = "Supplier Aktivieren",
-CurrentValue = doSupplier,
-Flag = "doSupplier",
-Callback = function(bool)
-toggleSupplier(bool)
-
-end
-})
-
-
 -- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
 wait(5) -- Wartezeit kann angepasst werden
 -- Info-Anzeige beim Schließen
