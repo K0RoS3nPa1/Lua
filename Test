@@ -315,7 +315,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	end
 end
 local function tryCook()
-	for zz=2,4 do
+	for zz=3,5 do
 		local order = getOrders()[1]
 		local topping
 		if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -391,11 +391,11 @@ local function tryCook()
 							didsomething=true
 							
 							network:FireServer("AddIngredientToPizza", raw,"TomatoSauce")
-							wait(1)
+							wait(0.1)
 							network:FireServer("AddIngredientToPizza", raw,"Cheese")
-							wait(1)
+							wait(0.2)
 							network:FireServer("AddIngredientToPizza", raw,topping)
-							wait(1)
+							wait(0.3)
 							network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame+Vector3.new(0,0.7,0))
 							oven.Door.ClickDetector.Detector:FireServer()
 							--mark as cooking
@@ -476,7 +476,7 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for zz=2,6 do
+	for zz=1,6 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
 			local reg = 3
@@ -494,7 +494,7 @@ local function startLoop()
 	end
 	wait(2)
 	tryCook()
-	for zz=3,3 do
+	for zz=2,7 do
 		if doBoxer then
 			local didsomething = false
 			local boxP,boxD = FindBoxingFoods()
@@ -532,7 +532,7 @@ local function startLoop()
 				network:FireServer("UpdateProperty", openBox, "Anchored", true)
 				wait(0.4)
 				network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame+Vector3.new(0,-2,0))
-				wait(0.4)
+				wait(0.6)
 				network:FireServer("AssignPizzaToBox", openBox, boxP)
 			end
 			if didsomething then wait(0.7) else break end
@@ -631,7 +631,7 @@ local function startLoop()
 				--check if refill is done otherwise hit buttons
 				local fulfilled=true
 				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy=1,2 do
+				for yy=1,7 do
 				local needtp=true
 				local realc = 0
 				for _,btn in ipairs(supplyButtons) do
@@ -661,7 +661,7 @@ local function startLoop()
 					end
 				end
 				wait(0.3)
-				if yy == 1.1 and realc < 3 then
+				if yy == 1.2 and realc < 3 then
 				    wait(0.5)
 				end
 				end
