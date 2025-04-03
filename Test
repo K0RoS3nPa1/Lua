@@ -495,8 +495,9 @@ local function startLoop()
 		end
 	end
 	
-	wait(2)
+	if doCook then
 	tryCook()
+	end
 	for zz = 2,9 do  -- Wiederhole den Vorgang von 2 bis 7, was bedeutet, dass dieser Block 6 Mal durchlaufen wird
 		if doBoxer then  -- Wenn der Boxer-Modus aktiviert ist
 			local didsomething = false  -- Flagge, um zu prüfen, ob eine Aktion ausgeführt wurde
