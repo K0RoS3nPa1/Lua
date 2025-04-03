@@ -681,7 +681,7 @@ local function startLoop()
 					break
 				end
 				smoothTP(CFrame.new(8, 12.4, -1020))
-				wait(1.5) -- Längere Wartezeit nach dem Teleport
+				wait(1) -- Längere Wartezeit nach dem Teleport
 	
 				-- Überprüfen, ob das Warten auf die Bewegung der Boxen abgeschlossen ist
 				if waiting and (lastBox.Position.X > 42 or tick() - waitingTick > 6) then
@@ -689,7 +689,7 @@ local function startLoop()
 					if lastBox.Position.X < 42 then
 						-- Feststeckende Boxen entfernen
 						smoothTP(CFrame.new(20.5, 8, -35))
-						wait(1) -- Längere Wartezeit nach dem Teleport
+						wait(0.8) -- Längere Wartezeit nach dem Teleport
 						local boxes = workspace.AllSupplyBoxes:GetChildren()
 						for i = 1, #boxes do
 							local box = boxes[i]
@@ -698,13 +698,13 @@ local function startLoop()
 								wait(0.2) -- Längere Wartezeit zwischen den Boxen
 							end
 						end
-						wait(0.5) -- Zusätzliche Pause nach dem Bewegen der Boxen
+						wait(0.1) -- Zusätzliche Pause nach dem Bewegen der Boxen
 					end
 				end
 				if not waiting then
 					-- Boxen bewegen
 					if root.Position.Z > -900 then smoothTP(CFrame.new(8, 12.4, -1020)) end
-					wait(0.5) -- Längere Wartezeit nach dem Teleport
+					wait(0.1) -- Längere Wartezeit nach dem Teleport
 					lastBox = nil
 					local j = 0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
