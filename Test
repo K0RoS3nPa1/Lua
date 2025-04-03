@@ -472,7 +472,7 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for zz = 1,9 do  -- Wiederhole den Vorgang 6 Mal
+	for zz = 2,8 do  -- Wiederhole den Vorgang 6 Mal
 		local c, order = FindFirstCustomer()  -- Finde den ersten Kunden und seine Bestellung
 		if doCashier and c and order then  -- Wenn der Kassierer-Modus aktiviert ist und ein Kunde sowie eine Bestellung vorhanden sind
 			local reg = 3  -- Setze den Standard-Registerwert auf 3
@@ -494,14 +494,11 @@ local function startLoop()
 			break  -- Wenn kein Kunde oder keine Bestellung vorhanden ist, beende die Schleife
 		end
 	end
-	
-	if doCook then
-        local success = tryCook()
-        if not success then
-            print("Kochprozess abgeschlossen oder abgebrochen. Gehe zum nächsten Punkt.")
-        end
-    end
-	for zz = 2,9 do  -- Wiederhole den Vorgang von 2 bis 7, was bedeutet, dass dieser Block 6 Mal durchlaufen wird
+
+     tryCook()
+
+ 
+	for zz = 3,9 do  -- Wiederhole den Vorgang von 2 bis 7, was bedeutet, dass dieser Block 6 Mal durchlaufen wird
 		if doBoxer then  -- Wenn der Boxer-Modus aktiviert ist
 			local didsomething = false  -- Flagge, um zu prüfen, ob eine Aktion ausgeführt wurde
 			local boxP, boxD = FindBoxingFoods()  -- Finde Boxen, die zum Verpacken der Lebensmittel verwendet werden
@@ -683,12 +680,8 @@ local function startLoop()
 		end
 	end
 	
-	if doCook then
-        local success = tryCook()
-        if not success then
-            print("Kochprozess abgeschlossen oder abgebrochen. Gehe zum nächsten Punkt.")
-        end
-    end
+tryCook()
+
 	if doSupplier then  -- Wenn der Supplier-Modus aktiviert ist, gehe weiter
 		local refill = false  -- Variable, die angibt, ob eine Auffüllung notwendig ist
 	
@@ -713,7 +706,7 @@ local function startLoop()
 				local boxes = workspace.AllSupplyBoxes:GetChildren()  -- Alle Boxen im Workspace werden abgerufen
 	
 				-- Schleife von 1 bis 7, um den Auffüllvorgang mehrfach zu versuchen
-				for yy = 1,12 do
+				for yy = 4,12 do
 					local needtp = true  -- Flagge, die angibt, ob der Spieler teleportiert werden muss
 					local realc = 0  -- Zähler für die Boxen, die bewegt wurden
 	
@@ -755,7 +748,7 @@ local function startLoop()
 					wait(0.3)  -- Kurze Pause, bevor die nächste Überprüfung stattfindet
 	
 					-- Wenn weniger als 3 Boxen bewegt wurden, warte noch eine halbe Sekunde
-					if yy == 1.2 and realc < 3 then
+					if yy == 5.2 and realc < 3 then
 						wait(0.4)
 					end
 				end
