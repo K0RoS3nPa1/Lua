@@ -486,7 +486,7 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for zz=2,8 do
+	for zz=2,7 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
 			local reg = 3
@@ -565,7 +565,7 @@ local function startLoop()
     		for i=1,#t do
     			t[i].Parent = player.Backpack
     		end
-    		wait(0.1)
+    		wait(0.2)
     		if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
     			character.RightHand.RightGrip:Destroy()
     		end
@@ -632,8 +632,8 @@ local function startLoop()
 		end
 		if refill then
 			local oldcf = root.CFrame
-			local waiting = false
-			local waitingTick = 1.8
+			local waiting = true
+			local waitingTick = 1.2
 			local lastBox
 			while doSupplier do
 				--check if refill is done otherwise hit buttons
