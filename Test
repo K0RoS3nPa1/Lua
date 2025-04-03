@@ -2,7 +2,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 if not Rayfield then
-    error("Rayfield konnte nicht geladen werden. Überprüfe die URL.")
+error("Rayfield konnte nicht geladen werden. Überprüfe die URL.")
 end
 
 local settings = {
@@ -15,11 +15,10 @@ local settings = {
 
 local doCashier, doBoxer, doCook, doSupplier, doDelivery = false, false, false, false, false
 local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
 local RNG = Random.new()
 local network
-local character,root,humanoid
-
+local character, root, humanoid
+local ffc = game.FindFirstChild
 -- GUI Info-Anzeige
 Rayfield:Notify({
     Title = "Info",
@@ -45,214 +44,70 @@ local window = Rayfield:CreateWindow({
 })
 
 -- Erstelle ein Tab für die Einstellungen
-local sectionSettings = window:CreateTab("Settings", 4483362458)
-
--- Refill Einstellungen
-sectionSettings:CreateSlider({
-    Name = "Refill At",
-    Range = {1, 100},
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_at,
-    Flag = "refill_at",
-    Callback = function(value)
-        settings.refill_at = value
-    end
-})
-
-sectionSettings:CreateSlider({
-    Name = "Refill End",
-    Range = {1, 100},
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_end,
-    Flag = "refill_end",
-    Callback = function(value)
-        settings.refill_end = value
-    end
-})
-
--- Movespeed Einstellungen
-sectionSettings:CreateSlider({
-    Name = "Movespeed",
-    Range = {1, 50},
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = settings.movespeed_at,
-    Flag = "movespeed_at",
-    Callback = function(value)
-        settings.movespeed_at = value
-    end
-})
-
--- Toggle Buttons für verschiedene Funktionen
-sectionSettings:CreateToggle({
-    Name = "Cashier Aktivieren",
-    CurrentValue = doCashier,
-    Flag = "doCashier",
-    Callback = function(bool)
-        doCashier = bool
-    end
-})
-
-sectionSettings:CreateToggle({
-    Name = "Cook Aktivieren",
-    CurrentValue = doCook,
-    Flag = "doCook",
-    Callback = function(bool)
-        doCook = bool
-    end
-})
-
-sectionSettings:CreateToggle({
-    Name = "Boxer Aktivieren",
-    CurrentValue = doBoxer,
-    Flag = "doBoxer",
-    Callback = function(bool)
-        doBoxer = bool
-    end
-})
-
-sectionSettings:CreateToggle({
-    Name = "Delivery Aktivieren",
-    CurrentValue = doDelivery,
-    Flag = "doDelivery",
-    Callback = function(bool)
-        doDelivery = bool
-    end
-})
-
-sectionSettings:CreateToggle({
-    Name = "Supplier Aktivieren",
-    CurrentValue = doSupplier,
-    Flag = "doSupplier",
-    Callback = function(bool)
-        doSupplier = bool
-    end
-})
-
--- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
 
 
--- Info-Anzeige beim Schließen
-Rayfield:Notify({
-    Title = "Beendet",
-    Content = "Das GUI wurde geschlossen.",
-    Duration = 3
-})
-
-
-local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
+local supplyCounts = {}
 for name in pairs(supplyCounts) do
-    local success, result = pcall(function()
-        -- Bestimme den richtigen Namen des Counters basierend auf dem Supply
-        local counterName = name == "Dew" and "CounterMountainDew" or "Counter" .. name
-
-        -- Suche den SupplyCounter im Workspace
-        local supplyCounters = workspace:FindFirstChild("SupplyCounters")
-        if not supplyCounters then
-            error("SupplyCounters nicht gefunden.")
-        end
-
-        local model = supplyCounters:FindFirstChild("Model")
-        if not model then
-            error("Model nicht gefunden in SupplyCounters.")
-        end
-
-        local counterModel = model:FindFirstChild(counterName)
-        if not counterModel then
-            error(counterName .. " nicht gefunden.")
-        end
-
-        -- Überprüfe, ob die benötigten Kinder existieren
-        local a = counterModel:FindFirstChild("a")
-        if not a then
-            error("a nicht gefunden in " .. counterName)
-        end
-
-        local sg = a:FindFirstChild("SG")
-        if not sg then
-            error("SG nicht gefunden in " .. counterName)
-        end
-
-        local lbl = sg:FindFirstChild("Counter")
-        if not lbl then
-            error("Counter nicht gefunden in SG für " .. counterName)
-        end
-
-        -- Initialisiere den Wert in supplyCounts
-        supplyCounts[name] = tonumber(lbl.Text) or 0
-
-        -- Event-Handler, wenn sich der Text ändert
-        lbl:GetPropertyChangedSignal("Text"):Connect(function()
-            supplyCounts[name] = tonumber(lbl.Text) or 0
-        end)
-    end)
-
-    if not success then
-        print("[ERROR] Fehler beim Laden des SupplyCounters für " .. name .. ": " .. result)
-    end
+local lbl = workspace.SupplyCounters.Model[name == "Dew" and "CounterMountainDew" or "Counter" .. name].a.SG.Counter
+supplyCounts[name] = tonumber(lbl.Text)
+lbl.Changed:Connect(function()
+supplyCounts[name] = tonumber(lbl.Text)
+end)
 end
 
+function ffc(parent, childName)
+    return parent:FindFirstChild(childName)
+end
 
-
--- Deine anderen Funktionen wie `FindFirstCustomer`, `FindBoxes` und weitere bleiben unverändert
 --Kassierer
 local function FindFirstCustomer()
-    local children = workspace.Customers:GetChildren()  -- Holen Sie alle Kinderobjekte des 'Customers' Ordners im Workspace
-    for i = 1, #children do  -- Iteration durch alle Kinderobjekte
-        local c = children[i]  -- Das aktuelle Kindobjekt (Kunde)
-
-        -- Überprüfen, ob der Kunde die erforderlichen Eigenschaften hat:
-        if ffc(c, "Head") and ffc(c, "Humanoid") and c.Head.CFrame.Z < 102 and ffc(c.Head, "Dialog") and ffc(c.Head.Dialog, "Correct") and
-           ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart == nil and (c.Head.Velocity.Z ^ 2) ^ 0.5 < 0.0001)) then
-
-            -- Wenn alle Bedingungen erfüllt sind, überprüfen Sie den Dialog des Kunden und legen Sie die Bestellung fest
-            local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
-            local order = "MountainDew"  -- Standardbestellung ist Mountain Dew (falls der Dialog nichts anderes ergibt)
-
-            -- Wenn der Dialog mit "instead." endet, wird dieser Teil abgeschnitten
-            if dialog:sub(-30) == "instead." then
-                dialog = dialog:sub(-30)
-            end
-
-            -- Bestimmen der Bestellung basierend auf dem Dialogtext
-            if dialog:find("pepperoni", 1, true) then
-                order = "PepperoniPizza"  -- Bestellung wird auf "PepperoniPizza" gesetzt
-            elseif dialog:find("sausage", 1, true) then
-                order = "SausagePizza"  -- Bestellung wird auf "SausagePizza" gesetzt
-            elseif dialog:find("cheese", 1, true) then
-                order = "CheesePizza"  -- Bestellung wird auf "CheesePizza" gesetzt
-            end
-
-            -- Rückgabe des Kunden und der Bestellung
-            return c, order
-        end
-    end
+local children = workspace.Customers:GetChildren()  -- Holen Sie alle Kinderobjekte des 'Customers' Ordners im Workspace
+for i = 1, #children do  -- Iteration durch alle Kinderobjekte
+local c = children[i]  -- Das aktuelle Kindobjekt (Kunde)
+-- Überprüfen, ob der Kunde die erforderlichen Eigenschaften hat:
+if ffc(c, "Head") and ffc(c, "Humanoid") and c.Head.CFrame.Z < 102 and ffc(c.Head, "Dialog") and ffc(c.Head.Dialog, "Correct") and
+((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart == nil and (c.Head.Velocity.Z ^ 2) ^ 0.5 < 0.0001)) then
+-- Wenn alle Bedingungen erfüllt sind, überprüfen Sie den Dialog des Kunden und legen Sie die Bestellung fest
+local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
+local order = "MountainDew"  -- Standardbestellung ist Mountain Dew (falls der Dialog nichts anderes ergibt)
+-- Wenn der Dialog mit "instead." endet, wird dieser Teil abgeschnitten
+if dialog:sub(-30) == "instead." then
+dialog = dialog:sub(-30)
+end
+-- Bestimmen der Bestellung basierend auf dem Dialogtext
+if dialog:find("pepperoni", 1, true) then
+order = "PepperoniPizza"  -- Bestellung wird auf "PepperoniPizza" gesetzt
+elseif dialog:find("sausage", 1, true) then
+order = "SausagePizza"  -- Bestellung wird auf "SausagePizza" gesetzt
+elseif dialog:find("cheese", 1, true) then
+order = "CheesePizza"  -- Bestellung wird auf "CheesePizza" gesetzt
+end
+-- Rückgabe des Kunden und der Bestellung
+return c, order
+end
+end
 end
 --
-
 -- Boxer
 local boxPtick = 0  -- Variablen zum Überprüfen der Boxen
 local boxDtick = 0  -- Weitere Variable zum Überprüfen der Boxen
-
 -- Funktion zum Finden von Boxen, die Pizza enthalten oder leer sind
 local function FindBoxes()
-    local c, o, f  -- Boxen-Variablen (geschlossen, offen ohne Pizza, offen mit Pizza)
-    
-    -- Alle Kinder (Boxen) im AllBox-Ordner durchsuchen
-    local children = workspace.AllBox:GetChildren()
-    for i = 1, #children do
-        local b = children[i]  -- Jedes Kind der Boxen
+local c, o, f  -- Boxen-Variablen (geschlossen, offen ohne Pizza, offen mit Pizza)
+-- Alle Kinder (Boxen) im AllBox-Ordner durchsuchen
+local children = workspace.AllBox:GetChildren()
+for i = 1, #children do
+local b = children[i]  -- Jedes Kind der Boxen
+
         -- Überprüfen, ob die Box entweder Pizza enthält oder eine leere Box ist
         if ffc(b, "HasPizzaInside") or ffc(b, "Pizza") then
             -- Schließen: Box ohne Pizza und nicht fest verankert
             if c == nil and b.Name == "BoxClosed" and b.Anchored == false and not b.HasPizzaInside.Value then
                 c = b
-            -- Offen und leer: Box, die geöffnet ist und keine Pizza enthält
+                -- Offen und leer: Box, die geöffnet ist und keine Pizza enthält
             elseif o == nil and b.Name == "BoxOpen" and b.Anchored == false and not b.Pizza.Value then
                 o = b
-            -- Offen und mit Pizza: Box, die geöffnet ist und Pizza enthält
+                -- Offen und mit Pizza: Box, die geöffnet ist und Pizza enthält
             elseif f == nil and (b.Name == "BoxOpen" and b.Pizza.Value) or (b.Name == "BoxClosed" and b.HasPizzaInside.Value) then
                 f = b
             end
@@ -265,6 +120,8 @@ local function FindBoxes()
     -- Falls nicht alle Boxen gefunden wurden, wird nil zurückgegeben
     return c, o, f
 end
+
+
 
 -- Funktion zum Finden der Pizza und Mountain Dew, die für das Verpacken erforderlich sind
 local function FindBoxingFoods()
@@ -645,14 +502,15 @@ local function tryCook()
 	end
 end
 
-while Rayfield.Enabled do
-	
-	humanoid.Sit = false
-	if RNG:NextInteger(1, 20) == 1 then
-		game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
-		wait()
-		game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
-	end
+local ToggleChanged = Instance.new("BindableEvent")
+-- Hauptschleife, die bei jedem Frame ausgeführt wird
+local function MainLoop()
+    humanoid.Sit = false
+    if RNG:NextInteger(1, 20) == 1 then
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game:GetService("Players").LocalPlayer)
+        wait()
+        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
+    end
 
 
 	for zz=1,6 do
@@ -892,3 +750,99 @@ while Rayfield.Enabled do
 		end
 	end
 end
+local sectionSettings = window:CreateTab("Settings", 4483362458)
+
+-- Refill Einstellungen
+sectionSettings:CreateSlider({
+    Name = "Refill At",
+    Range = { 1, 100 },
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_at,
+    Flag = "refill_at",
+    Callback = function(value)
+        settings.refill_at = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Refill End",
+    Range = { 1, 100 },
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_end,
+    Flag = "refill_end",
+    Callback = function(value)
+        settings.refill_end = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Movespeed",
+    Range = { 1, 50 },
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = settings.movespeed_at,
+    Flag = "movespeed_at",
+    Callback = function(value)
+        settings.movespeed_at = value -- This should be within the Callback function
+    end
+})
+-- Toggle Buttons für verschiedene Funktionen
+sectionSettings:CreateToggle({
+Name = "Cashier Aktivieren",
+CurrentValue = doCashier,
+Flag = "doCashier",
+Callback = function(bool)
+doCashier = bool
+ToggleChanged:Fire()
+end
+})
+sectionSettings:CreateToggle({
+Name = "Cook Aktivieren",
+CurrentValue = doCook,
+Flag = "doCook",
+Callback = function(bool)
+doCook = bool
+ToggleChanged:Fire()
+end
+})
+sectionSettings:CreateToggle({
+Name = "Boxer Aktivieren",
+CurrentValue = doBoxer,
+Flag = "doBoxer",
+Callback = function(bool)
+doBoxer = bool
+ToggleChanged:Fire()
+end
+})
+sectionSettings:CreateToggle({
+Name = "Delivery Aktivieren",
+CurrentValue = doDelivery,
+Flag = "doDelivery",
+Callback = function(bool)
+doDelivery = bool
+ToggleChanged:Fire()
+end
+})
+sectionSettings:CreateToggle({
+Name = "Supplier Aktivieren",
+CurrentValue = doSupplier,
+Flag = "doSupplier",
+Callback = function(bool)
+doSupplier = bool
+ToggleChanged:Fire()
+end
+})
+-- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
+wait(5) -- Wartezeit kann angepasst werden
+-- Info-Anzeige beim Schließen
+Rayfield:Notify({
+Title = "Beendet",
+Content = "Das GUI wurde geschlossen.",
+Duration = 3
+})
+
+ToggleChanged.Event:Connect(function()
+    MainLoop()
+end)
