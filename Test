@@ -45,334 +45,245 @@ local window = Rayfield:CreateWindow({
 
 -- Erstelle ein Tab für die Einstellungen
 
-
-local supplyCounts = {}
+local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
 for name in pairs(supplyCounts) do
-local lbl = workspace.SupplyCounters.Model[name == "Dew" and "CounterMountainDew" or "Counter" .. name].a.SG.Counter
-supplyCounts[name] = tonumber(lbl.Text)
-lbl.Changed:Connect(function()
-supplyCounts[name] = tonumber(lbl.Text)
-end)
+	local lbl = workspace.SupplyCounters.Model[name=="Dew" and "CounterMountainDew" or "Counter"..name].a.SG.Counter
+	supplyCounts[name]=tonumber(lbl.Text)
+	lbl.Changed:Connect(function()
+		supplyCounts[name]=tonumber(lbl.Text)
+	end)
 end
 
-function ffc(parent, childName)
-    return parent:FindFirstChild(childName)
-end
-
---Kassierer
 local function FindFirstCustomer()
-local children = workspace.Customers:GetChildren()  -- Holen Sie alle Kinderobjekte des 'Customers' Ordners im Workspace
-for i = 1, #children do  -- Iteration durch alle Kinderobjekte
-local c = children[i]  -- Das aktuelle Kindobjekt (Kunde)
--- Überprüfen, ob der Kunde die erforderlichen Eigenschaften hat:
-if ffc(c, "Head") and ffc(c, "Humanoid") and c.Head.CFrame.Z < 102 and ffc(c.Head, "Dialog") and ffc(c.Head.Dialog, "Correct") and
-((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart == nil and (c.Head.Velocity.Z ^ 2) ^ 0.5 < 0.0001)) then
--- Wenn alle Bedingungen erfüllt sind, überprüfen Sie den Dialog des Kunden und legen Sie die Bestellung fest
-local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
-local order = "MountainDew"  -- Standardbestellung ist Mountain Dew (falls der Dialog nichts anderes ergibt)
--- Wenn der Dialog mit "instead." endet, wird dieser Teil abgeschnitten
-if dialog:sub(-30) == "instead." then
-dialog = dialog:sub(-30)
+
+	local children = workspace.Customers:GetChildren()
+	for i=1,#children do
+		local c = children[i] 
+		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
+			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
+			local order = "MountainDew"
+			if dialog:sub(-30)=="instead." then
+				dialog = dialog:sub(-30)
+			end
+			if dialog:find("pepperoni",1,true) then
+				order = "PepperoniPizza"
+			elseif dialog:find("sausage",1,true) then
+				order = "SausagePizza"
+			elseif dialog:find("cheese",1,true) then
+				order = "CheesePizza"
+			end
+			return c,order
+		end
+	end
 end
--- Bestimmen der Bestellung basierend auf dem Dialogtext
-if dialog:find("pepperoni", 1, true) then
-order = "PepperoniPizza"  -- Bestellung wird auf "PepperoniPizza" gesetzt
-elseif dialog:find("sausage", 1, true) then
-order = "SausagePizza"  -- Bestellung wird auf "SausagePizza" gesetzt
-elseif dialog:find("cheese", 1, true) then
-order = "CheesePizza"  -- Bestellung wird auf "CheesePizza" gesetzt
-end
--- Rückgabe des Kunden und der Bestellung
-return c, order
-end
-end
-end
---
--- Boxer
-local boxPtick = 0  -- Variablen zum Überprüfen der Boxen
-local boxDtick = 0  -- Weitere Variable zum Überprüfen der Boxen
--- Funktion zum Finden von Boxen, die Pizza enthalten oder leer sind
+
+local boxPtick=0
+local boxDtick=0
 local function FindBoxes()
-local c, o, f  -- Boxen-Variablen (geschlossen, offen ohne Pizza, offen mit Pizza)
--- Alle Kinder (Boxen) im AllBox-Ordner durchsuchen
-local children = workspace.AllBox:GetChildren()
-for i = 1, #children do
-local b = children[i]  -- Jedes Kind der Boxen
-
-        -- Überprüfen, ob die Box entweder Pizza enthält oder eine leere Box ist
-        if ffc(b, "HasPizzaInside") or ffc(b, "Pizza") then
-            -- Schließen: Box ohne Pizza und nicht fest verankert
-            if c == nil and b.Name == "BoxClosed" and b.Anchored == false and not b.HasPizzaInside.Value then
-                c = b
-                -- Offen und leer: Box, die geöffnet ist und keine Pizza enthält
-            elseif o == nil and b.Name == "BoxOpen" and b.Anchored == false and not b.Pizza.Value then
-                o = b
-                -- Offen und mit Pizza: Box, die geöffnet ist und Pizza enthält
-            elseif f == nil and (b.Name == "BoxOpen" and b.Pizza.Value) or (b.Name == "BoxClosed" and b.HasPizzaInside.Value) then
-                f = b
-            end
-            -- Rückgabe, wenn alle drei Boxen gefunden wurden
-            if c and o and f then
-                return c, o, f
-            end
-        end
-    end
-    -- Falls nicht alle Boxen gefunden wurden, wird nil zurückgegeben
-    return c, o, f
+	local c,o,f
+	local children = workspace.AllBox:GetChildren()
+	for i=1,#children do
+		local b = children[i]
+		if ffc(b,"HasPizzaInside") or ffc(b,"Pizza") then
+			if c==nil and b.Name=="BoxClosed" and b.Anchored==false and not b.HasPizzaInside.Value then
+				c=b
+			elseif o==nil and b.Name=="BoxOpen" and b.Anchored==false and not b.Pizza.Value then
+				o=b
+			elseif f==nil and (b.Name=="BoxOpen" and b.Pizza.Value) or (b.Name=="BoxClosed" and b.HasPizzaInside.Value) then
+				f=b
+			end
+			if c and o and f then
+				return c,o,f
+			end
+		end
+	end
+	return c,o,f
 end
-
-
-
--- Funktion zum Finden der Pizza und Mountain Dew, die für das Verpacken erforderlich sind
 local function FindBoxingFoods()
-    local p, d  -- Variablen für Pizza und Dew
-    
-    -- Alle Kinder (Lebensmittel) im BoxingRoom durchsuchen
-    local children = workspace.BoxingRoom:GetChildren()
-    for i = 1, #children do
-        local f = children[i]  -- Jedes Kind im BoxingRoom
-        -- Überprüfen, ob das Objekt nicht verankert ist
-        if not f.Anchored then
-            -- Pizza finden
-            if p == nil and f.Name == "Pizza" then
-                p = f
-            -- Mountain Dew finden
-            elseif d == nil and f.Name == "Dew" then
-                d = f
-            end
-            -- Rückgabe, wenn sowohl Pizza als auch Dew gefunden wurden
-            if p and d then
-                return p, d
-            end
-        end
-    end
-    -- Falls entweder Pizza oder Dew nicht gefunden wurden, wird nil zurückgegeben
-    return p, d
+	local p,d
+	local children = workspace.BoxingRoom:GetChildren()
+	for i=1,#children do
+		local f = children[i]
+		if not f.Anchored then
+			if p==nil and f.Name=="Pizza" then
+				p=f
+			elseif d==nil and f.Name=="Dew" then
+				d=f
+			end
+			if p and d then
+				return p,d
+			end
+		end
+	end
+	return p,d
 end
--- boxer end
-local orderDict = {["3540529228"] = "Cheese", ["3540530535"] = "Sausage", ["3540529917"] = "Pepperoni", ["2512571151"] = "Dew", ["2512441325"] = "Dew", ["11874352009"] = "Dew"}
-local cookingDict = {Cheese = 0, Sausage = 0, Pepperoni = 0, Dew = 0}
-local cookPtick = 0
-local cookDtick = 0
-local cookWarned = false
-local boxerWarned = false
 
--- Koch
+local orderDict={["3540529228"]="Cheese",["3540530535"]="Sausage",["3540529917"]="Pepperoni",["2512571151"]="Dew",["2512441325"]="Dew",["11874352009"]="Dew"}
+local cookingDict = {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
+local cookPtick=0
+local cookDtick=0
+local cookWarned=false
+local boxerWarned=false
 local function getOrders()
-    local orders = {}
-    local tempCookingDict = {}
-    
-    -- Kopiert die aktuellen Bestellungen aus dem cookingDict
-    for i, v in pairs(cookingDict) do
-        tempCookingDict[i] = v
-    end
-    
-    local children = workspace.Orders:GetChildren() -- Alle Bestellungen aus dem "Orders"-Ordner im Workspace holen
-    
-    -- Durchläuft alle Bestellungen
-    for i = 1, #children do
-        local o = orderDict[children[i].SG.ImageLabel.Image:match("%d+$")] -- Bestell-ID herausfinden und den Artikel zuordnen
-        
-        if o then
-            -- Wenn es noch Pizzen zu kochen gibt, wird die Zählung in tempCookingDict reduziert
-            if tempCookingDict[o] > 0 then
-                tempCookingDict[o] = tempCookingDict[o] - 1
-            -- Überprüft, ob genügend Zutaten vorhanden sind
-            elseif (o == "Dew" and #workspace.AllMountainDew:GetChildren() > 0) or (supplyCounts[o] > 0 and supplyCounts.TomatoSauce > 0 and supplyCounts.Cheese > 0) then
-                orders[#orders + 1] = o -- Fügt die Bestellung der Liste hinzu
-            end
-        end
-    end
-    return orders -- Gibt die Bestellliste zurück
+	local orders={}
+	local tempCookingDict = {}
+	for i,v in pairs(cookingDict) do tempCookingDict[i]=v end
+	local children = workspace.Orders:GetChildren()
+	for i=1,#children do
+		local o = orderDict[children[i].SG.ImageLabel.Image:match("%d+$")]
+		if o then
+			if tempCookingDict[o]>0 then
+				--ignores oven pizzas, so new orders are priority
+				tempCookingDict[o]=tempCookingDict[o]-1
+			elseif (o=="Dew" and #workspace.AllMountainDew:GetChildren()>0) or (supplyCounts[o]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0) then
+				--need supplies
+				orders[#orders+1]=o
+			end
+		end
+	end
+	return orders
 end
-
--- Funktion, um die erste nicht verbrannte Mountain Dew Flasche zu finden
 local function FindFirstDew()
-    local children = workspace.AllMountainDew:GetChildren() -- Alle Dew-Flaschen durchsuchen
-    for i = 1, #children do
-        local d = children[i]
-        if (ffc(d, "IsBurned") == nil or d.IsBurned.Value == false) and not d.Anchored then
-            return d -- Gibt die erste nicht verbrannte Dew-Flasche zurück
-        end
-    end
+	local children = workspace.AllMountainDew:GetChildren()
+	for i=1,#children do
+		local d = children[i]
+		if (ffc(d,"IsBurned")==nil or d.IsBurned.Value==false) and not d.Anchored then
+			return d
+		end
+	end
 end
-
--- Funktion, um eine "schlechte" Mountain Dew Flasche zu finden (innerhalb eines bestimmten Bereichs)
 local function FindBadDew()
-    local children = workspace.AllMountainDew:GetChildren() -- Alle Dew-Flaschen durchsuchen
-    for i = 1, #children do
-        local d = children[i]
-        if (ffc(d, "IsBurned") == nil or d.IsBurned.Value == false) and d.Position.X > 53 and d.Position.Z > 50 and not d.Anchored then
-            return d -- Gibt die Dew-Flasche zurück, die die Bedingungen erfüllt
-        end
-    end
+	local children = workspace.AllMountainDew:GetChildren()
+	for i=1,#children do
+		local d = children[i]
+		if (ffc(d,"IsBurned")==nil or d.IsBurned.Value==false) and d.Position.X > 53 and d.Position.Z > 50 and not d.Anchored then
+			return d
+		end
+	end
 end
-
--- Funktion, um guten Teig und den passenden Teig für die Bestellung zu finden
 local function FindDoughAndWithout(str)
-    local goodraw, p, raw, trash
-    local children = workspace.AllDough:GetChildren()
-    
-    -- Mische die Teigstücke
-    for i = #children, 2, -1 do
-        local j = RNG:NextInteger(1, i)
-        children[j], children[i] = children[i], children[j]
-    end
-    
-    -- Durchlaufe alle Teigstücke
-    for i = 1, #children do
-        local d = children[i]
-        if d.Anchored == false and #d:GetChildren() > 9 then
-            -- Ignoriere schlechten Teig, der verbrannt oder mit Bugs ist
-            if d.IsBurned.Value or d.HasBugs.Value or d.Cold.Value or (d.BrickColor.Name == "Bright orange" and ffc(d, "XBillboard")) then
-                if trash == nil and d.Position.Y > 0 and ((d.Position * Vector3.new(1, 0, 1)) - Vector3.new(47.90, 0, 72.49)).Magnitude > 1 then
-                    trash = d -- Weist schlechten Teig als "Müll" zu
-                end
-            elseif p == nil and d.BrickColor.Name == "Bright orange" then
-                p = d -- Weist den normalen Teig zu
-            elseif goodraw == nil and d.Position.X < 55 and d.BrickColor.Name == "Brick yellow" and ((str and not ffc(d.SG.Frame, str)) or (str == nil and ffc(d.SG.Frame, "Sausage") == nil and ffc(d.SG.Frame, "Pepperoni") == nil)) then
-                if d.Mesh.Scale.Y < 1.1 then
-                    goodraw = d -- Weist guten Teig zu
-                else
-                    raw = d -- Weist rohen Teig zu
-                end
-            end
-            if goodraw and p and trash then
-                return goodraw, p, trash -- Gibt guten Teig, normalen Teig und "Müll"-Teig zurück
-            end
-        end
-    end
-    return goodraw or raw, p, trash -- Gibt entweder guten Teig oder rohen Teig zurück
+	local goodraw,p,raw,trash
+	local children = workspace.AllDough:GetChildren()
+	for i = #children, 2, -1 do --shuffle
+		local j = RNG:NextInteger(1, i)
+		children[j], children[i] = children[i], children[j]
+	end
+	for i=1,#children do
+		local d = children[i]
+		if d.Anchored==false and #d:GetChildren()>9 then
+			if d.IsBurned.Value or d.HasBugs.Value or d.Cold.Value or (d.BrickColor.Name=="Bright orange" and ffc(d,"XBillboard")) then
+				if trash==nil and d.Position.Y > 0 and ((d.Position*Vector3.new(1,0,1))-Vector3.new(47.90, 0, 72.49)).Magnitude > 1 then
+					trash=d
+				end
+			elseif p==nil and d.BrickColor.Name=="Bright orange" then
+				p=d
+			elseif goodraw==nil and d.Position.X<55 and d.BrickColor.Name=="Brick yellow" and ((str and not ffc(d.SG.Frame,str)) or (str==nil and ffc(d.SG.Frame,"Sausage")==nil and ffc(d.SG.Frame,"Pepperoni")==nil)) then
+				--prefers flat
+				if d.Mesh.Scale.Y<1.1 then
+					goodraw=d
+				else
+					raw=d
+				end
+			end
+			if goodraw and p and trash then
+				return goodraw,p,trash
+			end
+		end
+	end
+	return goodraw or raw,p,trash
 end
-
--- Funktion, um den Ofen in der Nähe einer Position zu finden
 local function getOvenNear(pos)
-    local children = workspace.Ovens:GetChildren() -- Alle Öfen durchsuchen
-    for i = 1, #children do
-        if ffc(children[i], "Bottom") and (children[i].Bottom.Position - pos).Magnitude < 1.5 then
-            return children[i] -- Gibt den Ofen zurück, der in der Nähe der angegebenen Position ist
-        end
-    end
+	local children = workspace.Ovens:GetChildren()
+	for i=1,#children do
+		if ffc(children[i],"Bottom") and (children[i].Bottom.Position-pos).magnitude < 1.5 then
+			return children[i]
+		end
+	end
 end
-
--- Funktion, um Teig in der Nähe einer Position zu finden
 local function getDoughNear(pos)
-    local children = workspace.AllDough:GetChildren() -- Alle Teigstücke durchsuchen
-    for i = 1, #children do
-        if (children[i].Position - pos).Magnitude < 1.5 then
-            return children[i] -- Gibt das Teigstück zurück, das sich in der Nähe der angegebenen Position befindet
-        end
-    end
+	local children = workspace.AllDough:GetChildren()
+	for i=1,#children do
+		if (children[i].Position-pos).magnitude < 1.5 then
+			return children[i]
+		end
+	end
 end
-
--- Funktion, um zu prüfen, ob der Ofen vollständig geöffnet ist
 local function isFullyOpen(oven)
-    return oven.IsOpen.Value == true and (oven.Door.Meter.RotVelocity.Z^2)^.5 < .0001 -- Gibt true zurück, wenn der Ofen vollständig geöffnet ist
+	return oven.IsOpen.Value==true and (oven.Door.Meter.RotVelocity.Z^2)^.5<.0001
 end
---
-local bcolorToSupply = {
-    ["Dark orange"] = "Sausage", 
-    ["Bright blue"] = "Pepperoni", 
-    ["Bright yellow"] = "Cheese", 
-    ["Bright red"] = "TomatoSauce", 
-    ["Dark green"] = "Dew", 
-    ["Brick yellow"] = "Dough", 
-    ["Light stone grey"] = "Box", 
-    ["Really black"] = "Dew", 
-    ["Navy blue"] = "Dew"
-}
 
+local bcolorToSupply = {["Dark orange"]="Sausage",["Bright blue"]="Pepperoni",["Bright yellow"]="Cheese",["Bright red"]="TomatoSauce",["Dark green"]="Dew",["Brick yellow"]="Dough",["Light stone grey"]="Box",["Really black"]="Dew",["Navy blue"]="Dew"}
 local supplyButtons = {}
--- Durchsucht alle SupplyButtons und speichert sie in einer sortierten Tabelle
-for i, v in ipairs(workspace.SupplyButtons:GetChildren()) do
-    supplyButtons[i] = v.Unpressed
+for i,v in ipairs(workspace.SupplyButtons:GetChildren()) do
+	supplyButtons[i] = v.Unpressed
 end
-table.sort(supplyButtons, function(a, b) return a.Position.X < b.Position.X end)
-
+table.sort(supplyButtons,function(a,b) return a.Position.X < b.Position.X end)
 local delTick = 0
-
--- Funktion zum Finden aller Lieferwerkzeuge, die im Spiel vorhanden sind
 local function FindAllDeliveryTools(parent)
-    local t = {}
-    local children = parent:GetChildren()
-    for i = 1, #children do
-        local v = children[i]
-        -- Überprüft, ob das Objekt ein Werkzeug ist und bestimmte Kriterien erfüllt
-        if v.ClassName == "Tool" and v.Name:match("^%u%d$") and ffc(v, "Handle") and ffc(v, "House") and 
-            (parent ~= workspace or (v.Handle.Position - Vector3.new(54.45, 4.02, -16.56)).Magnitude < 30) then
-            t[#t + 1] = v
-        end
-    end
-    return t
+	local t = {}
+	local children = parent:GetChildren()
+	for i=1,#children do
+		local v = children[i]
+		if v.ClassName=="Tool" and v.Name:match("^%u%d$") and ffc(v,"Handle") and ffc(v,"House") and (parent~=workspace or (v.Handle.Position-Vector3.new(54.45, 4.02, -16.56)).Magnitude < 30) then
+			t[#t+1] = v
+		end
+	end
+	return t
 end
-
--- Funktion zum Finden des Hausobjekts basierend auf einer Adresse
 local function getHousePart(address)
     local houses = workspace.Houses:GetChildren()
-    for i = 1, #houses do
+    for i=1,#houses do
         local h = houses[i]
-        -- Überprüft, ob das Haus die angegebene Adresse hat und die "GivePizza"-Eigenschaft enthält
-        if ffc(h, "Address") and h.Address.Value == address and ffc(h, "GivePizza", true) then
-            return ffc(h, "GivePizza", true)
+        if ffc(h,"Address") and h.Address.Value==address and ffc(h,"GivePizza",true) then
+            return ffc(h,"GivePizza",true)
         end
     end
 end
-
--- Funktion, die ausgeführt wird, wenn ein Charakter dem Spiel hinzugefügt wird
 local function onCharacterAdded(char)
-    if not char then return end
-    character = char
-    root = character:WaitForChild("HumanoidRootPart")
-    humanoid = character:WaitForChild("Humanoid")
-    humanoid:SetStateEnabled("FallingDown", false)  -- Deaktiviert den Zustand "FallingDown" für den Charakter
+	if not char then return end
+	character=char
+	root = character:WaitForChild("HumanoidRootPart")
+	humanoid = character:WaitForChild("Humanoid")
+	humanoid:SetStateEnabled("FallingDown",false)
 end
-
--- Charakter hinzufügen
 onCharacterAdded(player.Character or player.CharacterAdded:Wait())
 player.CharacterAdded:Connect(onCharacterAdded)
 
--- Glattes Teleportieren (Version 2)
 local function smoothTP2(cf)
-    local cf0 = (cf - cf.p) + root.Position + Vector3.new(0, 0, 0)
-    local diff = cf.p - root.Position
-    local oldg = workspace.Gravity
-    workspace.Gravity = 0
-    for i = 0, diff.Magnitude, settings.movespeed_at do
-        humanoid.Sit = false
-        root.CFrame = cf0 + diff.Unit * i
-        root.Velocity, root.RotVelocity = Vector3.new(), Vector3.new()
-        wait()
-    end
-    root.CFrame = cf
-    workspace.Gravity = oldg
+	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
+	local diff = cf.p - root.Position
+	local oldg = workspace.Gravity
+	workspace.Gravity = Gravitysettings
+	for i=0,diff.Magnitude,settings.movespeed_at do
+		humanoid.Sit=false
+		root.CFrame = cf0 + diff.Unit * i
+		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
+		wait()
+	end
+	root.CFrame = cf
+	workspace.Gravity = oldg
 end
-
--- Glattes Teleportieren
 local function smoothTP(cf)
-    if (cf.p - root.Position).Magnitude > 97 then
+    if (cf.p-root.Position).Magnitude > 97 then
         local btns = workspace.JobButtons:GetChildren()
         if player:FindFirstChild("House") and player.House.Value then
-            btns[#btns + 1] = player.House.Value:FindFirstChild("Marker")
+            btns[#btns+1] = player.House.Value:FindFirstChild("Marker") 
         end
-        table.sort(btns, function(a, b)
-            return (a.Position - cf.p).Magnitude < (b.Position - cf.p).Magnitude
-        end)
-        if (btns[1].Position - cf.p).Magnitude < (cf.p - root.Position).Magnitude then
+        table.sort(btns,function(a,b) return (a.Position-cf.p).Magnitude < (b.Position-cf.p).Magnitude end)
+        if (btns[1].Position-cf.p).Magnitude < (cf.p-root.Position).Magnitude then
             game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
             wait(0.9)
-            if (cf.p - root.Position).Magnitude < 9 then
+            if (cf.p-root.Position).Magnitude < 9 then
                 return
             end
         end
     end
     smoothTP2(cf)
 end
-
--- Verhindern, dass die Öfen in der falschen Weise verwendet werden
-for _, o in ipairs(workspace.Ovens:GetChildren()) do
-    if o:FindFirstChild("Bottom") then
-        o.Bottom.CanTouch = false
-    end
+for _,o in ipairs(workspace.Ovens:GetChildren()) do
+	if ffc(o,"Bottom") then
+		o.Bottom.CanTouch = false
+	end
 end
 local function tryCook()
 	for zz=1,38 do
@@ -505,14 +416,13 @@ end
 local ToggleChanged = Instance.new("BindableEvent")
 -- Hauptschleife, die bei jedem Frame ausgeführt wird
 local function MainLoop()
-    humanoid.Sit = false
-    if RNG:NextInteger(1, 20) == 1 then
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game:GetService("Players").LocalPlayer)
+	wait(1.1)
+	humanoid.Sit=false
+	if RNG:NextInteger(1,20)==1 then
+        game:GetService("VirtualInputManager"):SendKeyEvent(true,"Z",false,game)
         wait()
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
-    end
-
-
+        game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
+	end
 	for zz=1,6 do
 		local c,order = FindFirstCustomer()
 		if doCashier and c and order then
@@ -750,6 +660,45 @@ local function MainLoop()
 		end
 	end
 end
+local function toggleCashier(bool)
+	if bool~=nil then
+		doCashier=bool
+	else
+		doCashier = not doCashier
+	end
+end
+local function toggleCook(bool)
+	if bool~=nil then
+		doCook=bool
+	else
+		doCook = not doCook
+	end
+	
+end
+local function toggleBoxer(bool)
+	if bool~=nil then
+		doBoxer=bool
+	else
+		doBoxer = not doBoxer
+	end
+	
+end
+local function toggleDelivery(bool)
+	if bool~=nil then
+		doDelivery=bool
+	else
+		doDelivery = not doDelivery
+	end
+	
+end
+local function toggleSupplier(bool)
+	if bool~=nil then
+		doSupplier=bool
+	else
+		doSupplier = not doSupplier
+	end
+	
+end
 local sectionSettings = window:CreateTab("Settings", 4483362458)
 
 -- Refill Einstellungen
@@ -794,7 +743,7 @@ Name = "Cashier Aktivieren",
 CurrentValue = doCashier,
 Flag = "doCashier",
 Callback = function(bool)
-doCashier = bool
+toggleCashier(bool)
 ToggleChanged:Fire()
 end
 })
@@ -803,7 +752,7 @@ Name = "Cook Aktivieren",
 CurrentValue = doCook,
 Flag = "doCook",
 Callback = function(bool)
-doCook = bool
+toggleCook(bool)
 ToggleChanged:Fire()
 end
 })
@@ -812,7 +761,7 @@ Name = "Boxer Aktivieren",
 CurrentValue = doBoxer,
 Flag = "doBoxer",
 Callback = function(bool)
-doBoxer = bool
+toggleBoxer(bool)
 ToggleChanged:Fire()
 end
 })
@@ -821,7 +770,7 @@ Name = "Delivery Aktivieren",
 CurrentValue = doDelivery,
 Flag = "doDelivery",
 Callback = function(bool)
-doDelivery = bool
+toggleDelivery(bool)
 ToggleChanged:Fire()
 end
 })
@@ -830,10 +779,12 @@ Name = "Supplier Aktivieren",
 CurrentValue = doSupplier,
 Flag = "doSupplier",
 Callback = function(bool)
-doSupplier = bool
+toggleSupplier(bool)
 ToggleChanged:Fire()
 end
 })
+
+
 -- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
 wait(5) -- Wartezeit kann angepasst werden
 -- Info-Anzeige beim Schließen
