@@ -91,7 +91,7 @@ local function FindFirstCustomer()
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
-			if dialog:sub(-30)=="instead." then
+			if dialog:sub(-8)=="instead." then
 				dialog = dialog:sub(-30)
 			end
 			if dialog:find("pepperoni",1,true) then
@@ -671,7 +671,7 @@ end
 				end
 				wait(0.4)
 				if yy == 1.8 and realc < 3 then
-				    wait(0.8)
+				    wait(0.5)
 				end
 				end
 				if fulfilled or not (doSupplier) then
