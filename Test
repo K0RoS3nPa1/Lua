@@ -282,8 +282,8 @@ local function smoothTP2(cf)
 	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
 	local diff = cf.p - root.Position
 	local oldg = workspace.Gravity
-	workspace.Gravity = 197
-	for i=0,diff.Magnitude,settings.movespeed_at do
+	workspace.Gravity = 0
+	for i=0,diff.Magnitude,movespeed do
 		humanoid.Sit=false
 		root.CFrame = cf0 + diff.Unit * i
 		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
@@ -301,7 +301,7 @@ local function smoothTP(cf)
         table.sort(btns,function(a,b) return (a.Position-cf.p).Magnitude < (b.Position-cf.p).Magnitude end)
         if (btns[1].Position-cf.p).Magnitude < (cf.p-root.Position).Magnitude then
             game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
-            wait(0.9)
+            wait(0.7)
             if (cf.p-root.Position).Magnitude < 9 then
                 return
             end
@@ -315,7 +315,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	end
 end
 local function tryCook()
-	for zz=1,38 do
+	for zz=1,19 do
 		local order = getOrders()[1]
 		local topping
 		if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -472,351 +472,243 @@ local function startLoop()
         wait()
         game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
 	end
-	for zz = 2,8 do  -- Wiederhole den Vorgang 6 Mal
-		local c, order = FindFirstCustomer()  -- Finde den ersten Kunden und seine Bestellung
-		if doCashier and c and order then  -- Wenn der Kassierer-Modus aktiviert ist und ein Kunde sowie eine Bestellung vorhanden sind
-			local reg = 3  -- Setze den Standard-Registerwert auf 3
-			if c.Head.Position.X < 50 then  -- Wenn der Kunde sich links des Registers befindet
-				reg = 2  -- Setze das Register auf 2
-			elseif c.Head.Position.X < 70 then  -- Wenn der Kunde sich in der Nähe von Register 1 befindet
-				reg = 1  -- Setze das Register auf 1
+	for zz=1,5 do
+		local c,order = FindFirstCustomer()
+		if doCashier and c and order then
+			local reg = 3
+			if c.Head.Position.X < 50 then
+			    reg = 2
+			elseif c.Head.Position.X < 70 then
+			    reg = 1
 			end
-			
-			if (root.Position - Vector3.new(50.30, 3.80, 83.24)).magnitude > 9 then  -- Wenn der Spieler zu weit von der Position des Registers entfernt ist
-				smoothTP(CFrame.new(50.30, 3.80, 83.24))  -- Teleportiere den Spieler zur Position des Registers
-				wait(0.2)  -- Warte eine kurze Zeit
-			end
-	
-			-- Markiere die Bestellung des Kunden als abgeschlossen und aktualisiere das entsprechende Register
+			if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(.1) end
 			network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
-			wait(0.4)  -- Warte 0.4 Sekunden, um den nächsten Schritt vorzubereiten
+			wait(0.3)
 		else
-			break  -- Wenn kein Kunde oder keine Bestellung vorhanden ist, beende die Schleife
+			break
 		end
 	end
-
-     tryCook()
-
- 
-	for zz = 3,9 do  -- Wiederhole den Vorgang von 2 bis 7, was bedeutet, dass dieser Block 6 Mal durchlaufen wird
-		if doBoxer then  -- Wenn der Boxer-Modus aktiviert ist
-			local didsomething = false  -- Flagge, um zu prüfen, ob eine Aktion ausgeführt wurde
-			local boxP, boxD = FindBoxingFoods()  -- Finde Boxen, die zum Verpacken der Lebensmittel verwendet werden
-			local closedBox, openBox, fullBox = FindBoxes()  -- Finde geschlossene, offene und volle Boxen
-			
-			if boxD and tick() - boxDtick > 0.8 then  -- Wenn eine Box zum Verpacken gefunden wurde und eine bestimmte Zeit vergangen ist
-				boxDtick = tick()  -- Setze die Zeit des letzten Tick auf den aktuellen Zeitpunkt
-				didsomething = true  -- Setze didsomething auf true, da etwas getan wurde
-				if (root.Position - Vector3.new(58.74, 3.80, 12.400)).magnitude > 9 then
-					-- Wenn der Spieler zu weit von der Position entfernt ist, teleportiere ihn dorthin
-					smoothTP(CFrame.new(58.74, 3.80, 12.40)) 
-					wait(0.2)  -- Warte eine kurze Zeit
-				end
-				-- Aktualisiere die Position der Box
-				network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63, 4.9, -1, -1, 0, 0, 0, 1, 0, 0, 0, -1))
+	tryCook()
+	for zz=2,26 do
+		if doBoxer then
+			local didsomething = false
+			local boxP,boxD = FindBoxingFoods()
+			local closedBox,openBox,fullBox = FindBoxes()
+			if boxD and tick()-boxDtick>0.8 then
+				boxDtick=tick()
+				didsomething=true
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
+				network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63,4.9,-1,-1,0,0,0,1,0,0,0,-1))
 			end
-	
-			if fullBox then  -- Wenn eine volle Box vorhanden ist
-				if fullBox.Name == "BoxOpen" then  -- Wenn es sich um eine offene Box handelt
-					didsomething = true  -- Setze didsomething auf true
-					if (root.Position - Vector3.new(58.74, 3.80, 12.400)).magnitude > 9 then
-						-- Teleportiere den Spieler zur Position der offenen Box, wenn er zu weit entfernt ist
-						smoothTP(CFrame.new(58.74, 3.80, 12.40)) 
-						wait(0.2)
-					end
-					-- Schließe die offene Box
+			if fullBox then
+				if fullBox.Name=="BoxOpen" then
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
 					network:FireServer("CloseBox", fullBox)
-					-- Die Box wird im nächsten Loop verschoben
-				elseif tick() - boxPtick > 0.8 then  -- Wenn mehr als 0.8 Sekunden vergangen sind
-					didsomething = true  -- Setze didsomething auf true
-					if (root.Position - Vector3.new(58.74, 3.80, 12.400)).magnitude > 9 then
-						-- Teleportiere den Spieler zur Box, wenn er zu weit entfernt ist
-						smoothTP(CFrame.new(58.74, 3.80, 12.40))
-						wait(0.2)
-					end
-					-- Aktualisiere die Position der vollen Box
-					network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2, 4.4, RNG:NextNumber(-3, -2), -1, 0, 0, 0, 1, 0, 0, 0, -1))
-					boxPtick = tick()  -- Setze den Zeitpunkt des letzten Ticks
+					--will be moved next loop
+				elseif tick()-boxPtick>0.8 then
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
+					network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2,4.4,RNG:NextNumber(-3,-2),-1,0,0,0,1,0,0,0,-1))
+					boxPtick=tick()
 				end
 			end
-	
-			if closedBox and not openBox then  -- Wenn eine geschlossene Box vorhanden ist und keine offene Box existiert
-				didsomething = true  -- Setze didsomething auf true
-				if (root.Position - Vector3.new(58.74, 3.80, 12.400)).magnitude > 9 then
-					-- Teleportiere den Spieler zur geschlossenen Box, wenn er zu weit entfernt ist
-					smoothTP(CFrame.new(58.74, 3.80, 12.40))
-					wait(0.2)
-				end
-				-- Aktualisiere die Position der geschlossenen Box
-				network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5, 70.5), 3.5, RNG:NextNumber(11, 25)))
-				wait(0.3)  -- Warte eine kurze Zeit
-				-- Öffne die geschlossene Box
+			if closedBox and not openBox then
+				didsomething=true
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
+				network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5,70.5),3.5,RNG:NextNumber(11,25)))
+				wait()
 				network:FireServer("OpenBox", closedBox)
 			end
-	
-			if openBox and boxP then  -- Wenn eine offene Box und eine Pizza-Box vorhanden sind
-				didsomething = true  -- Setze didsomething auf true
-				if (root.Position - Vector3.new(58.74, 3.80, 12.400)).magnitude > 9 then
-					-- Teleportiere den Spieler zur offenen Box, wenn er zu weit entfernt ist
-					smoothTP(CFrame.new(58.74, 3.80, 12.40)) 
-					wait(0.1)
-				end
-				-- Aktualisiere die Position der Pizza-Box und der offenen Box
+			if openBox and boxP then
+				didsomething=true
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
 				network:FireServer("UpdateProperty", boxP, "Anchored", true)
 				network:FireServer("UpdateProperty", openBox, "Anchored", true)
-				wait(0.4)
-				-- Verschiebe die Pizza-Box in die offene Box
-				network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame + Vector3.new(0, -2, 0))
-				wait(0.6)
-				-- Weise die Pizza der offenen Box zu
+				wait()
+				network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame+Vector3.new(0,-2,0))
+				wait()
 				network:FireServer("AssignPizzaToBox", openBox, boxP)
 			end
-	
-			if didsomething then 
-				wait(0.7)  -- Wenn eine Aktion ausgeführt wurde, warte 0.7 Sekunden
-			else 
-				break  -- Wenn keine Aktion ausgeführt wurde, beende die Schleife
-			end
+			if didsomething then wait(0.5) else break end
 		else
-			break  -- Beende die Schleife, wenn der Boxer-Modus deaktiviert ist
+			break
 		end
 	end
-	
-	if doDelivery then  -- Wenn der Delivery-Modus aktiviert ist
-		local wstools = FindAllDeliveryTools(workspace)  -- Finde alle Werkzeuge für die Lieferung im Workspace
-	
-		-- Überprüfe, ob mehr als ein Werkzeug im Workspace ist oder ob das erste Werkzeug ein spezielles Attribut hat ("X10")
+	if doDelivery then
+		local wstools = FindAllDeliveryTools(workspace)
 		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
-			-- Holen der Werkzeuge
-			if (root.Position - Vector3.new(54.45, 4.02, -15)).magnitude > 9 then 
-				-- Wenn der Spieler zu weit vom Zielpunkt entfernt ist, teleportiere den Spieler
-				smoothTP(CFrame.new(54.45, 4.02, -15)) 
-				wait(0.1)  -- Kurze Wartezeit
-			end
-	
-			-- Gehe durch jedes Werkzeug im Workspace und rüste den Spieler damit aus
-			for i = 1, #wstools do
+			--get tools
+			if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
+			for i=1,#wstools do
 				if wstools[i].Parent == workspace then
-					humanoid:EquipTool(wstools[i])  -- Rüste den Spieler mit dem Werkzeug aus
-					wait(0.2)  -- Warte eine kurze Zeit, um sicherzustellen, dass der Spieler das Werkzeug erhalten hat
+					humanoid:EquipTool(wstools[i])
+					wait()
 				end
 			end
-			wait(0.9)  -- Warte eine weitere kurze Zeit, um sicherzustellen, dass der Spieler bereit ist
-	
-			-- Finde alle Werkzeuge im Inventar des Spielers (Character)
+			wait(0.5)
 			local t = FindAllDeliveryTools(character)
-			-- Verschiebe die Werkzeuge von Character zurück in den Rucksack
-			for i = 1, #t do
-				t[i].Parent = player.Backpack
-			end
-			wait(0.2)  -- Kurze Wartezeit
-	
-			-- Wenn der Charakter das RightHand hat und RightGrip vorhanden ist, zerstöre es
-			if ffc(character, "RightHand") and ffc(character.RightHand, "RightGrip") then
-				character.RightHand.RightGrip:Destroy()
-			end
+    		for i=1,#t do
+    			t[i].Parent = player.Backpack
+    		end
+    		wait(0.1)
+    		if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
+    			character.RightHand.RightGrip:Destroy()
+    		end
 		end
-	
-		-- Hole alle Werkzeuge aus dem Rucksack des Spielers
 		local bptools = FindAllDeliveryTools(player.Backpack)
-		
-		-- Überprüfe, ob genügend Werkzeuge vorhanden sind und ob mehr als 40 Sekunden vergangen sind
-		if #bptools >= settings.deliver_at and #bptools > 1 and tick() - delTick > 40 then
-			-- Sortiere die Werkzeuge, wobei Werkzeuge, die mit 'B' anfangen, bevorzugt werden
-			table.sort(bptools, function(a, b)
-				a, b = tostring(a), tostring(b)
-				if (a:sub(1, 1) == "B" and b:sub(1, 1) == "B") then
-					return a < b  -- Wenn beide mit 'B' anfangen, sortiere sie alphabetisch
+		if #bptools >= settings.deliver_at and #bptools > 0 and tick()-delTick > 30 then
+			--deliver to houses
+			table.sort(bptools,function(a,b)
+				a,b=tostring(a),tostring(b)
+				if (a:sub(1,1)=="B" and b:sub(1,1)=="B") then
+					return a < b
 				end
-				return a > b  -- Ansonsten in umgekehrter Reihenfolge
+				return a > b
 			end)
-	
-			local fatass = false  -- Flagge, um zu prüfen, ob das Tool bereits abgelegt wurde
-			-- Gehe durch jedes Werkzeug, um es an das richtige Haus zu liefern
-			for i = 1, #bptools do
+			local fatass=false
+			for i=1,#bptools do
 				if not doDelivery then
-					break  -- Wenn der Liefermodus deaktiviert ist, beende die Schleife
+					break
 				end
-	
-				local tool = bptools[i]  -- Das aktuelle Werkzeug, das geliefert werden soll
-				local giver = getHousePart(tool.Name)  -- Hole das Hausteil, das das Werkzeug erhalten soll
-				local ogp = giver.Position  -- Speichere die ursprüngliche Position des Hauses
-	
+				
+				local tool = bptools[i]
+				local giver = getHousePart(tool.Name)
+				local ogp = giver.Position
 				if giver then
-					-- Wenn der Spieler zu weit vom Haus entfernt ist, teleportiere ihn näher
-					if (giver.Position - root.Position).Magnitude > 9 then
-						smoothTP(giver.CFrame + Vector3.new(0, 4, 0))  -- Teleportiere den Spieler zum Haus
-						if giver.Parent == nil or (giver.Position - ogp).Magnitude > 1 then
-							-- Wenn das Haus nicht mehr existiert oder sich weit bewegt hat, hole das Hausteil erneut
+					if (giver.Position-root.Position).Magnitude > 9 then
+						smoothTP(giver.CFrame+Vector3.new(0,7,0))
+						if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
 							giver = getHousePart(tool.Name) or giver
-							smoothTP(giver.CFrame + Vector3.new(0, 4, 0))  -- Teleportiere wieder hin
+							smoothTP(giver.CFrame+Vector3.new(0,7,0))
 						end
-						pcall(function() tool.Parent = character end)  -- Versuche, das Werkzeug auszustatten
-						wait(1.6)  -- Warte, um sicherzustellen, dass der Prozess abgeschlossen ist
-	
-						-- Überprüfe alle Werkzeuge im Character und verschiebe sie wieder in den Rucksack, falls nötig
+						pcall(function() tool.Parent = character end)
+						wait(1.3)
 						local t = FindAllDeliveryTools(character)
-						for i = 1, #t do
-							if t[i] ~= tool then
-								t[i].Parent = player.Backpack
-							end
-						end
-						wait(3)  -- Warte 3 Sekunden, um sicherzustellen, dass die Lieferung abgeschlossen ist
-						fatass = false  -- Setze fatass auf false, falls das Werkzeug erfolgreich abgelegt wurde
+                		for i=1,#t do
+                		    if t[i] ~= tool then
+                			    t[i].Parent = player.Backpack
+                			end
+                		end
+						wait(2)
+						fatass=false
 					else
-						-- Wenn das Werkzeug bereits abgelegt wurde, warte eine kurze Zeit
 						if fatass then
-							wait(1)
+							wait(0.4)
 						else
-							wait(1.2)
+							wait(0.8)
 						end
-						pcall(function() tool.Parent = character end)  -- Stelle sicher, dass das Werkzeug korrekt ausgerüstet wird
-						wait()  -- Warte, um sicherzustellen, dass der Vorgang abgeschlossen ist
-						fatass = true  -- Setze fatass auf true, um zu verhindern, dass das Werkzeug wieder abgelegt wird
+						pcall(function() tool.Parent = character end)
+						wait()
+						fatass=true
 					end
 				end
 			end
-			delTick = tick(0.1)  -- Setze die Zeit des letzten Liefervorgangs
+			delTick = tick()
 		end
 	end
-	
-tryCook()
-
-	if doSupplier then  -- Wenn der Supplier-Modus aktiviert ist, gehe weiter
-		local refill = false  -- Variable, die angibt, ob eine Auffüllung notwendig ist
-	
-		-- Überprüfe, ob einer der Vorratsschubladen weniger als den Schwellenwert erreicht hat
-		for s, c in pairs(supplyCounts) do
+	tryCook()
+	if doSupplier then
+		local refill=false
+		for s,c in pairs(supplyCounts) do
 			if c <= settings.refill_at then
-				refill = true  -- Wenn ein Vorrat unter den festgelegten Schwellenwert fällt, setze refill auf true
-				break  -- Breche die Schleife ab, weil keine weiteren Prüfungen nötig sind
+				refill=true
+				break
 			end
 		end
-	
-		-- Wenn eine Auffüllung erforderlich ist, beginne mit dem Auffüllprozess
 		if refill then
-			local oldcf = root.CFrame  -- Speichere die aktuelle Position des Spielers
-			local waiting = false  -- Flagge, die anzeigt, ob auf Boxen gewartet wird
-			local waitingTick = 0.5  -- Speichert den Zeitpunkt, ab dem gewartet wird
-			local lastBox  -- Speichert die letzte Box, die bewegt wurde
-	
-			-- Beginne den Auffüllprozess und gehe weiter, solange der Supplier-Modus aktiv ist
+			local oldcf = root.CFrame
+			local waiting = false
+			local waitingTick = 1.8
+			local lastBox
 			while doSupplier do
-				local fulfilled = true  -- Flagge, die angibt, ob alle Auffüllungen erledigt sind
-				local boxes = workspace.AllSupplyBoxes:GetChildren()  -- Alle Boxen im Workspace werden abgerufen
-	
-				-- Schleife von 1 bis 7, um den Auffüllvorgang mehrfach zu versuchen
-				for yy = 1,7 do
-					local needtp = true  -- Flagge, die angibt, ob der Spieler teleportiert werden muss
-					local realc = 0  -- Zähler für die Boxen, die bewegt wurden
-	
-					-- Gehe durch alle Versorgungsbuttons, um zu prüfen, ob eine Auffüllung notwendig ist
-					for _, btn in ipairs(supplyButtons) do
-						local s = bcolorToSupply[btn.BrickColor.Name]  -- Bestimme, welchen Vorrat dieser Button benötigt
-	
-						-- Wenn der Vorrat unter dem Endwert liegt, muss er aufgefüllt werden
-						if supplyCounts[s] < settings.refill_end then
-							local count = 0  -- Zähler für Boxen, die noch bewegt werden müssen
-	
-							-- Wenn mehr als 30 Boxen existieren, überprüfe die Position jeder Box
-							if #boxes > 25 then
-								for i = 1, #boxes do
-									local box = boxes[i]
-									if bcolorToSupply[box.BrickColor.Name] == s and box.Anchored == false and box.Position.Z < -940 then
-										count = count + 1  -- Zähle, wie viele Boxen noch in der richtigen Position sind
-									end
+				--check if refill is done otherwise hit buttons
+				local fulfilled=true
+				local boxes = workspace.AllSupplyBoxes:GetChildren()
+				for yy=1,9 do
+				local needtp=true
+				local realc = 0
+				for _,btn in ipairs(supplyButtons) do
+				    local s = bcolorToSupply[btn.BrickColor.Name]
+					if supplyCounts[s] < settings.refill_end then
+						local count = 0
+						if #boxes > 30 then
+							for i=1,#boxes do
+								local box = boxes[i]
+								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
+									count=count+1
 								end
 							end
-	
-							-- Wenn weniger als 2 Boxen in der richtigen Position sind, teleportiere den Spieler zum Button
-							if count < 2 then
-								if needtp then
-									needtp = false
-									smoothTP(btn.CFrame + Vector3.new(0, 3, 2.5))  -- Teleportiere den Spieler leicht über den Button
-									wait(0.5)  -- Warte kurz, um sicherzustellen, dass der Spieler teleportiert wurde
-								end
-								if not doSupplier then break end  -- Wenn der Supplier-Modus deaktiviert wird, beende die Schleife
-	
-								-- Bewege den Spieler an die Position des Buttons und warte
-								root.CFrame = btn.CFrame + Vector3.new(0, 3, 0)
-								wait(0.5)
-								realc = realc + 1  -- Erhöhe den Zähler für bewegte Boxen
-							end
-							fulfilled = false  -- Setze fulfilled auf false, da noch nicht alle Boxen aufgefüllt wurden
 						end
-					end
-					wait(0.3)  -- Kurze Pause, bevor die nächste Überprüfung stattfindet
-	
-					-- Wenn weniger als 3 Boxen bewegt wurden, warte noch eine halbe Sekunde
-					if yy == 1.2 and realc < 3 then
-						wait(0.4)
+						if count < 2 then
+							if needtp then
+							    needtp=false
+								smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
+								wait(0.3)
+							end
+							if not doSupplier then break end
+							root.CFrame = btn.CFrame + Vector3.new(0,3,0)
+							wait(0.1)
+							realc=realc+1
+						end
+						fulfilled=false
 					end
 				end
-	
-				-- Wenn alle Boxen aufgefüllt sind oder der Supplier-Modus deaktiviert wurde, beende die Schleife
+				wait(0.4)
+				if yy == 1.7 and realc < 3 then
+				    wait(0.8)
+				end
+				end
 				if fulfilled or not (doSupplier) then
 					break
 				end
-	
-				-- Wenn der Auffüllvorgang noch nicht abgeschlossen ist, teleportiere den Spieler zu einer neuen Position
-				smoothTP(CFrame.new(8, 12.4, -1020))
-	
-				-- Wenn der Supplier-Modus deaktiviert wurde, beende die Schleife
+				smoothTP(CFrame.new(8,12.4,-1020))
 				if not doSupplier then break end
-	
-				-- Wenn der Spieler auf Boxen wartet, überprüfe, ob die Boxen sich bewegen
-				if waiting and (lastBox.Position.X > 42 or tick() - waitingTick > 6) then
-					waiting = false  -- Setze waiting auf false, wenn das Warten zu lange dauert
-					if lastBox.Position.X < 42 then
-						wait(0.3)
-						-- Wenn die Boxen sich nicht korrekt bewegen, bewege sie manuell
-						smoothTP(CFrame.new(20.5, 8, -35))
-						wait(0.3)
+				--check if can finish waiting for boxes to move
+				if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
+					waiting=false
+					if lastBox.Position.X<42 then
+						--clear boxes if stuck
+						smoothTP(CFrame.new(20.5,8,-35))
+						wait(0.1)
 						local boxes = workspace.AllSupplyBoxes:GetChildren()
-						for i = 1, #boxes do
+						for i=1,#boxes do
 							local box = boxes[i]
-							if box.Anchored == false and box.Position.Z > -55 then
-								-- Bewege die Boxen, wenn sie in der Nähe des Ziels sind
-								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0, 40), RNG:NextNumber(-10, -30), -70))
-								wait(0.2)  -- Kurze Pause zwischen den Bewegungen der Boxen
+							if box.Anchored==false and box.Position.Z>-55 then
+								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
+								wait()
 							end
 						end
-						wait(0.2)  -- Kurze Pause nach dem Bewegen der Boxen
+						wait(0.1)
 					end
 				end
-	
-				-- Wenn nicht auf Boxen gewartet wird, bewege die Boxen weiter
 				if not waiting then
-					-- Wenn der Spieler zu nah am Z-Startpunkt ist, teleportiere ihn weiter weg
-					if root.Position.Z > -900 then smoothTP(CFrame.new(8, 12.4, -1020)) end
-					wait(0.4)
-					lastBox = nil  -- Setze die letzte Box auf nil
-					local j = 0  -- Zähler für die Boxen
-	
-					-- Gehe durch alle Boxen, um die Position jeder Box zu überprüfen und ggf. zu bewegen
+					--move boxes
+					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
+					wait(0.2)
+					lastBox=nil
+					local j=0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
-					for i = 1, #boxes do
+					for i=1,#boxes do
 						local box = boxes[i]
-						if box.Anchored == false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]] < settings.refill_end then
-							-- Bewege die Boxen in die passende Position
-							box.CFrame = CFrame.new(38 - 4.3 * math.floor(j / 2), 5, -7 - 5 * (j % 2))
+						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
+							box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
 							network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
-							lastBox = box  -- Speichere die letzte bewegte Box
-							j = j + 1
-							if j > 13 then break end  -- Wenn mehr als 13 Boxen bewegt wurden, beende die Schleife
+							lastBox=box
+							j=j+1
+							if j>13 then break end
 						end
 					end
-	
-					-- Wenn eine Box bewegt wurde, beginne zu warten
 					if lastBox then
-						waiting = true
-						waitingTick = tick(1)  -- Setze den Zeitpunkt des Wartens
+						waiting=true
+						waitingTick=tick()
 					end
 				end
 			end
+			--smoothTP(oldcf)
 		end
 	end
-	
+
 
 	if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
 		print("Alle Funktionen deaktiviert. Schleife wird gestoppt.")
