@@ -545,7 +545,7 @@ local function startLoop()
 					wait(0.2)
 				end
 			end
-			wait(0.8)
+			wait(0.9)
 			local t = FindAllDeliveryTools(character)
     		for i=1,#t do
     			t[i].Parent = player.Backpack
@@ -576,10 +576,10 @@ local function startLoop()
 				local ogp = giver.Position
 				if giver then
 					if (giver.Position-root.Position).Magnitude > 9 then
-						smoothTP(giver.CFrame+Vector3.new(0,7,0))
+						smoothTP(giver.CFrame+Vector3.new(0,4,0))
 						if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
 							giver = getHousePart(tool.Name) or giver
-							smoothTP(giver.CFrame+Vector3.new(0,7,0))
+							smoothTP(giver.CFrame+Vector3.new(0,4,0))
 						end
 						pcall(function() tool.Parent = character end)
 						wait(1.6)
@@ -593,7 +593,7 @@ local function startLoop()
 						fatass=false
 					else
 						if fatass then
-							wait(0.6)
+							wait(1)
 						else
 							wait(1.2)
 						end
@@ -603,7 +603,7 @@ local function startLoop()
 					end
 				end
 			end
-			delTick = tick()
+			delTick = tick(0.1)
 		end
 	end
 	tryCook()
