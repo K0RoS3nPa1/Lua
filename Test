@@ -5,14 +5,6 @@ if not Rayfield then
 error("Rayfield konnte nicht geladen werden. Überprüfe die URL.")
 end
 
-local settings = {
-    refill_at = 50,
-    refill_end = 97,
-    movespeed_at = 5,
-    deliver_at = 5,
-    stay_in_kitchen = true
-}
-
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 
 
@@ -41,7 +33,7 @@ local window = Rayfield:CreateWindow({
 })
 
 
-
+local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
 local player = game:GetService("Players").LocalPlayer
 local ffc = game.FindFirstChild
 local RNG = Random.new()
@@ -622,7 +614,7 @@ local function startLoop()
 							wait(1.2)
 						end
 						pcall(function() tool.Parent = character end)
-						wait()
+						wait(1)
 						fatass=true
 					end
 				end
@@ -757,6 +749,13 @@ sectionSettings:CreateToggle({
         -- Debugging-Ausgabe
         print("Alle Toggles geändert:", bool)
 
+        -- Aktualisiere die GUI-Toggles visuell
+        Rayfield.Flags["doCashier"]:Set(bool)
+        Rayfield.Flags["doCook"]:Set(bool)
+        Rayfield.Flags["doBoxer"]:Set(bool)
+        Rayfield.Flags["doDelivery"]:Set(bool)
+        Rayfield.Flags["doSupplier"]:Set(bool)
+
         -- Aktualisiere die Schleife
         loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
         if loopEnabled then
@@ -764,7 +763,8 @@ sectionSettings:CreateToggle({
         end
     end
 })
--- Toggle Buttons für verschiedene Funktionen
+
+-- Einzelne Toggles
 sectionSettings:CreateToggle({
     Name = "Cashier Aktivieren",
     CurrentValue = doCashier,
@@ -801,42 +801,6 @@ sectionSettings:CreateToggle({
     end
 })
 
--- Refill Einstellungen
-sectionSettings:CreateSlider({
-    Name = "Refill At",
-    Range = { 1, 100 },
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_at,
-    Flag = "refill_at",
-    Callback = function(value)
-        settings.refill_at = value
-    end
-})
-
-sectionSettings:CreateSlider({
-    Name = "Refill End",
-    Range = { 1, 100 },
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_end,
-    Flag = "refill_end",
-    Callback = function(value)
-        settings.refill_end = value
-    end
-})
-
-sectionSettings:CreateSlider({
-    Name = "Movespeed",
-    Range = { 1, 50 },
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = settings.movespeed_at,
-    Flag = "movespeed_at",
-    Callback = function(value)
-        settings.movespeed_at = value -- This should be within the Callback function
-    end
-})
 sectionSettings:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
@@ -860,6 +824,44 @@ sectionSettings:CreateToggle({
         if loopEnabled then startLoop() end
     end
 })
+
+-- Refill Einstellungen
+sectionSettings:CreateSlider({
+    Name = "Refill At",
+    Range = { 50, 99 },
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_at,
+    Flag = "refill_at",
+    Callback = function(value)
+        settings.refill_at = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Refill End",
+    Range = { 97, 99 },
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_end,
+    Flag = "refill_end",
+    Callback = function(value)
+        settings.refill_end = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Movespeed",
+    Range = { 1, 50 },
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = settings.movespeed_at,
+    Flag = "movespeed_at",
+    Callback = function(value)
+        settings.movespeed_at = value -- This should be within the Callback function
+    end
+})
+
 
 -- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
 wait(5) -- Wartezeit kann angepasst werden
