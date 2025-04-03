@@ -487,6 +487,7 @@ local function startLoop()
 			break
 		end
 	end
+	wait(2)
 	tryCook()
 	for zz=2,9 do
 		if doBoxer then
@@ -606,6 +607,7 @@ local function startLoop()
 			delTick = tick(0.1)
 		end
 	end
+	wait(2)
 	tryCook()
 	if doSupplier then
 		local refill=false
