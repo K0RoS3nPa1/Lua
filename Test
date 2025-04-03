@@ -634,7 +634,7 @@ local function startLoop()
 				--check if refill is done otherwise hit buttons
 				local fulfilled=true
 				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy=1,49 do
+				for yy=1,29 do
 				local needtp=true
 				local realc = 0
 				for _,btn in ipairs(supplyButtons) do
