@@ -439,7 +439,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 		o.Bottom.CanTouch = false
 	end
 end
-local function tryCook()
+--[[local function tryCook()
 	for zz = 1,28 do
 		local order = getOrders()[1]
 		local topping
@@ -565,8 +565,50 @@ local function tryCook()
 			break
 		end
 	end
-end
+end]]
+local function tryCook()
+    for zz = 1, 28 do
+        local order = getOrders()[1]
+        local topping
+        if order == "Pepperoni" or order == "Sausage" then
+            topping = order
+        end
 
+        local raw, cookP, trash = FindDoughAndWithout(topping and (topping == "Pepperoni" and "Sausage" or "Pepperoni"))
+        local oven = nil
+
+        -- Suche nach einem freien Ofen
+        for _, o in ipairs(workspace.Ovens:GetChildren()) do
+            if isFullyOpen(o) then
+                oven = o
+                break
+            end
+        end
+
+        if raw and oven then
+            -- Bereite das Dough vor
+            if raw.Mesh.Scale.Y > 1.5 then
+                network:FireServer("SquishDough", raw)
+            else
+                -- Füge Zutaten hinzu und lege das Dough in den Ofen
+                network:FireServer("AddIngredientToPizza", raw, "TomatoSauce")
+                network:FireServer("AddIngredientToPizza", raw, "Cheese")
+                if topping then
+                    network:FireServer("AddIngredientToPizza", raw, topping)
+                end
+                network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame + Vector3.new(0, 0.7, 0))
+                oven.Door.ClickDetector.Detector:FireServer()
+            end
+        end
+
+        -- Entferne schlechten Dough
+        if trash then
+            network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49))
+        end
+
+        wait(0.5) -- Wartezeit zwischen den Aktionen
+    end
+end
 
 -- Hauptschleife, die auf den Status von loopEnabled reagiert
 local loopEnabled = false
