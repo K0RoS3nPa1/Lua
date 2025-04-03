@@ -76,7 +76,7 @@ local function FindFirstCustomer()
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
-			if dialog:sub(-30)=="instead." then
+			if dialog:sub(-8)=="instead." then
 				dialog = dialog:sub(-30)
 			end
 			if dialog:find("pepperoni",1,true) then
@@ -431,14 +431,20 @@ local ToggleChanged = Instance.new("BindableEvent")
 -- Hauptschleife, die bei jedem Frame ausgeführt wird
 local function MainLoop()
     wait(1.1)
-    
+
+	if not Rayfield or not Rayfield.Enabled then
+        print("Rayfield ist nicht geladen oder deaktiviert. Schleife wird nicht ausgeführt.")
+        return
+    end
     -- Überprüfen, ob der Spieler lebt
     if humanoid.Health <= 0 then
         print("Spieler ist tot. Schleife pausiert.")
         return -- Beende die Schleife, wenn der Spieler tot ist
     end
 
-    humanoid.Sit = false -- Setzt den Spieler in den Stand-Zustand zurück
+    if humanoid and humanoid.Sit then
+    humanoid.Sit = false
+	end-- Setzt den Spieler in den Stand-Zustand zurück
 
     if RNG:NextInteger(1, 20) == 1 then
         game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
