@@ -315,7 +315,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	end
 end
 local function tryCook()
-	for zz=1,7 do
+	for zz=2,4 do
 		local order = getOrders()[1]
 		local topping
 		if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -362,8 +362,9 @@ local function tryCook()
 					if raw.Mesh.Scale.Y>1.5 then
 						if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 						didsomething=true
+						wait(2)
 						network:FireServer("UpdateProperty", raw, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
-						wait(1)
+						wait(2)
 						network:FireServer("SquishDough", raw)
 					else
 						--make sure it will have an oven
@@ -388,9 +389,13 @@ local function tryCook()
 							--make
 							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 							didsomething=true
+							
 							network:FireServer("AddIngredientToPizza", raw,"TomatoSauce")
+							wait(1)
 							network:FireServer("AddIngredientToPizza", raw,"Cheese")
+							wait(1)
 							network:FireServer("AddIngredientToPizza", raw,topping)
+							wait(1)
 							network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame+Vector3.new(0,0.7,0))
 							oven.Door.ClickDetector.Detector:FireServer()
 							--mark as cooking
@@ -489,7 +494,7 @@ local function startLoop()
 	end
 	wait(2)
 	tryCook()
-	for zz=2,9 do
+	for zz=3,3 do
 		if doBoxer then
 			local didsomething = false
 			local boxP,boxD = FindBoxingFoods()
