@@ -490,8 +490,11 @@ local function tryCook()
 	end
 end
 wait(1)
---//main loop
-while Rayfield.Enabled do
+local loopEnabled = false
+
+-- Hauptschleife, die auf den Status von loopEnabled reagiert
+spawn(function()
+while true do
 	wait(1.1)
 	if humanoid.Health <= 0 then
         print("Spieler ist tot. Schleife pausiert.")
@@ -742,10 +745,18 @@ while Rayfield.Enabled do
 		end
 	end
 end
-
+end)
 local sectionSettings = window:CreateTab("Settings", 4483362458)
 
-
+sectionSettings:CreateToggle({
+    Name = "Farm Aktivieren",
+    CurrentValue = loopEnabled,
+    Flag = "loopEnabled",
+    Callback = function(bool)
+        loopEnabled = bool -- Ändert den Wert von loopEnabled
+        print("Schleifenstatus geändert:", bool)
+    end
+})
 -- Refill Einstellungen
 sectionSettings:CreateSlider({
     Name = "Refill At",
