@@ -91,7 +91,7 @@ local function FindFirstCustomer()
 		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
 			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
 			local order = "MountainDew"
-			if dialog:sub(-8)=="instead." then
+			if dialog:sub(-30)=="instead." then
 				dialog = dialog:sub(-30)
 			end
 			if dialog:find("pepperoni",1,true) then
@@ -279,37 +279,18 @@ onCharacterAdded(player.Character or player.CharacterAdded:Wait())
 player.CharacterAdded:Connect(onCharacterAdded)
 
 local function smoothTP2(cf)
-    if not root or not humanoid then
-        error("HumanoidRootPart oder Humanoid ist nicht initialisiert.")
-    end
-
-    local startPos = root.Position
-    local targetPos = cf.p
-    local diff = targetPos - startPos
-
-    -- Überprüfen, ob die Differenz groß genug ist, um Bewegung zu rechtfertigen
-    if diff.Magnitude < 0.1 then
-        return -- Keine Bewegung erforderlich
-    end
-
-    local oldGravity = workspace.Gravity
-    workspace.Gravity = 197 -- Setze die Schwerkraft auf benutzerdefinierte Werte
-
-    -- Bewegungsschleife
-    for i = 50, diff.Magnitude, settings.movespeed_at do
-        humanoid.Sit = false -- Stelle sicher, dass der Spieler nicht sitzt
-        local newPos = startPos + diff.Unit * i
-        root.CFrame = CFrame.new(newPos) -- Aktualisiere die Position
-        root.Velocity = Vector3.new() -- Setze die Geschwindigkeit zurück
-        root.RotVelocity = Vector3.new() -- Setze die Rotationsgeschwindigkeit zurück
-        wait()
-    end
-
-    -- Setze die endgültige Position
-    root.CFrame = cf
-
-    -- Schwerkraft zurücksetzen
-    workspace.Gravity = oldGravity
+	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
+	local diff = cf.p - root.Position
+	local oldg = workspace.Gravity
+	workspace.Gravity = Gravitysettings
+	for i=0,diff.Magnitude,settings.movespeed_at do
+		humanoid.Sit=false
+		root.CFrame = cf0 + diff.Unit * i
+		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
+		wait()
+	end
+	root.CFrame = cf
+	workspace.Gravity = oldg
 end
 local function smoothTP(cf)
     if (cf.p-root.Position).Magnitude > 97 then
@@ -461,7 +442,6 @@ local function tryCook()
 	end
 end
 
-
 -- Hauptschleife, die auf den Status von loopEnabled reagiert
 local loopEnabled = false
 local loopThread = nil -- Speichert den Thread der Schleife
@@ -508,7 +488,7 @@ local function startLoop()
 		end
 	end
 	tryCook()
-	for zz=2,5 do
+	for zz=2,6 do
 		if doBoxer then
 			local didsomething = false
 			local boxP,boxD = FindBoxingFoods()
@@ -590,7 +570,7 @@ local function startLoop()
 				if not doDelivery then
 					break
 				end
-				humanoid.Sit=false
+				
 				local tool = bptools[i]
 				local giver = getHousePart(tool.Name)
 				local ogp = giver.Position
