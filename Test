@@ -301,6 +301,7 @@ local function smoothTP2(cf)
         warn("Fehler in smoothTP2:", err)
     end
 end
+--[[ 
 local function smoothTP(cf)
     if (cf.p - root.Position).Magnitude > 97 then
         local btns = workspace.JobButtons:GetChildren()
@@ -319,6 +320,36 @@ local function smoothTP(cf)
         end
     end
     humanoid.Sit = false -- Stelle sicher, dass der Spieler nicht sitzt
+    smoothTP2(cf)
+end
+]]
+local function smoothTP(cf)
+    -- Berechne die Distanz zwischen der aktuellen Position und dem Ziel
+    local distance = (cf.p - root.Position).Magnitude
+
+    -- Wenn die Distanz zu groß ist, teleportiere zuerst in die Nähe
+    if distance > 97 then
+        local btns = workspace.JobButtons:GetChildren()
+        if player:FindFirstChild("House") and player.House.Value then
+            btns[#btns + 1] = player.House.Value:FindFirstChild("Marker")
+        end
+        table.sort(btns, function(a, b)
+            return (a.Position - cf.p).Magnitude < (b.Position - cf.p).Magnitude
+        end)
+        if (btns[1].Position - cf.p).Magnitude < distance then
+            game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
+            wait(0.7)
+            -- Überprüfe, ob die Position nah genug ist
+            if (cf.p - root.Position).Magnitude < 9 then
+                return
+            end
+        end
+    end
+
+    -- Stelle sicher, dass der Spieler nicht sitzt
+    humanoid.Sit = false
+
+    -- Verwende smoothTP2 für die Bewegung in kleinen Schritten
     smoothTP2(cf)
 end
 for _,o in ipairs(workspace.Ovens:GetChildren()) do
@@ -500,7 +531,9 @@ local function startLoop()
 			break
 		end
 	end
+	wait(1)
 	tryCook()
+	wait(1)
 	for boxer = 1,26 do
 		if doBoxer then
 			local didsomething = false
@@ -547,7 +580,7 @@ local function startLoop()
 			break
 		end
 	end
-	for delivery = 1, 5 do
+	for delivery = 1,7 do
 		if doDelivery then
 			local wstools = FindAllDeliveryTools(workspace)
 			if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle, "X10")) then
@@ -627,8 +660,9 @@ local function startLoop()
 		end
 		break
 	end
+	wait(1)
 	tryCook()
-	
+	wait(1)
 	if doSupplier then
 		local refill = false
 		for s, c in pairs(supplyCounts) do
