@@ -662,7 +662,7 @@ local function startLoop()
 								if needtp then
 									needtp = false
 									smoothTP(btn.CFrame + Vector3.new(0, 3, 2.5))
-									wait(1) -- Längere Wartezeit nach dem Teleport
+									wait(0.7) -- Längere Wartezeit nach dem Teleport
 								end
 								if not doSupplier then break end
 								root.CFrame = btn.CFrame + Vector3.new(0, 3, 0)
@@ -704,7 +704,7 @@ local function startLoop()
 				if not waiting then
 					-- Boxen bewegen
 					if root.Position.Z > -900 then smoothTP(CFrame.new(8, 12.4, -1020)) end
-					wait(0.5) -- Längere Wartezeit nach dem Teleport
+					wait(0.3) -- Längere Wartezeit nach dem Teleport
 					lastBox = nil
 					local j = 0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
