@@ -828,7 +828,7 @@ sectionSettings:CreateToggle({
 -- Refill Einstellungen
 sectionSettings:CreateSlider({
     Name = "Refill At",
-    Range = { 50, 99 },
+    Range = { 0, 99 },
     Increment = 1,
     Suffix = "%",
     CurrentValue = settings.refill_at,
@@ -840,7 +840,7 @@ sectionSettings:CreateSlider({
 
 sectionSettings:CreateSlider({
     Name = "Refill End",
-    Range = { 97, 99 },
+    Range = { 0, 99 },
     Increment = 1,
     Suffix = "%",
     CurrentValue = settings.refill_end,
@@ -852,7 +852,7 @@ sectionSettings:CreateSlider({
 
 sectionSettings:CreateSlider({
     Name = "Movespeed",
-    Range = { 1, 50 },
+    Range = { 0, 50 },
     Increment = 1,
     Suffix = "Speed",
     CurrentValue = settings.movespeed_at,
