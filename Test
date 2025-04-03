@@ -643,14 +643,14 @@ local function startLoop()
 				-- Überprüfen, ob das Nachfüllen abgeschlossen ist
 				local fulfilled = true
 				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy = 1, 6 do
+				for yy = 1,5 do
 					local needtp = true
 					local realc = 0
 					for _, btn in ipairs(supplyButtons) do
 						local s = bcolorToSupply[btn.BrickColor.Name]
 						if supplyCounts[s] < settings.refill_end then
 							local count = 0
-							if #boxes > 25 then
+							if #boxes > 30 then
 								for i = 1, #boxes do
 									local box = boxes[i]
 									if bcolorToSupply[box.BrickColor.Name] == s and box.Anchored == false and box.Position.Z < -940 then
@@ -673,7 +673,7 @@ local function startLoop()
 						end
 					end
 					wait(0.6) -- Zusätzliche Pause zwischen den Button-Checks
-					if yy == 1.8 and realc < 3 then
+					if yy == 1.2 and realc < 3 then
 						wait(0.8) -- Längere Pause, wenn weniger als 3 Aktionen ausgeführt wurden
 					end
 				end
@@ -695,7 +695,7 @@ local function startLoop()
 							local box = boxes[i]
 							if box.Anchored == false and box.Position.Z > -55 then
 								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0, 40), RNG:NextNumber(-10, -30), -70))
-								wait(0.5) -- Längere Wartezeit zwischen den Boxen
+								wait(0.2) -- Längere Wartezeit zwischen den Boxen
 							end
 						end
 						wait(1) -- Zusätzliche Pause nach dem Bewegen der Boxen
