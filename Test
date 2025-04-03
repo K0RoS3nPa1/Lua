@@ -481,10 +481,12 @@ local function startLoop()
 
     loopThread = spawn(function()
         while loopEnabled do
-	if humanoid.Health <= 0 then
-        print("Spieler ist tot. Schleife pausiert.")
-        return -- Beende die Schleife, wenn der Spieler tot ist
-    end
+			if humanoid.Health <= 0 then
+                print("Spieler ist tot. Schleife pausiert.")
+                loopEnabled = false
+                loopThread = nil
+                return
+            end
 	if humanoid and humanoid.Sit then
 		humanoid.Sit = false
 	end
@@ -509,7 +511,7 @@ local function startLoop()
 			break
 		end
 	end
-	tryCook()
+	
 	for zz=2,3 do
 		if doBoxer then
 			local didsomething = false
@@ -628,7 +630,7 @@ local function startLoop()
 			delTick = tick()
 		end
 	end
-	tryCook()
+	
 	if doSupplier then
 		local refill=false
 		for s,c in pairs(supplyCounts) do
@@ -740,41 +742,26 @@ end)
 end
 local sectionSettings = window:CreateTab("Settings", 4483362458)
 
+sectionSettings:CreateToggle({
+    Name = "Alle Aktivieren",
+    CurrentValue = false, -- Standardmäßig deaktiviert
+    Flag = "allEnabled",
+    Callback = function(bool)
+        -- Setze alle anderen Toggles auf den gleichen Wert wie "Alle Aktivieren"
+        doCashier = bool
+        doCook = bool
+        doBoxer = bool
+        doDelivery = bool
+        doSupplier = bool
 
--- Refill Einstellungen
-sectionSettings:CreateSlider({
-    Name = "Refill At",
-    Range = { 1, 100 },
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_at,
-    Flag = "refill_at",
-    Callback = function(value)
-        settings.refill_at = value
-    end
-})
+        -- Debugging-Ausgabe
+        print("Alle Toggles geändert:", bool)
 
-sectionSettings:CreateSlider({
-    Name = "Refill End",
-    Range = { 1, 100 },
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_end,
-    Flag = "refill_end",
-    Callback = function(value)
-        settings.refill_end = value
-    end
-})
-
-sectionSettings:CreateSlider({
-    Name = "Movespeed",
-    Range = { 1, 50 },
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = settings.movespeed_at,
-    Flag = "movespeed_at",
-    Callback = function(value)
-        settings.movespeed_at = value -- This should be within the Callback function
+        -- Aktualisiere die Schleife
+        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
+        if loopEnabled then
+            startLoop()
+        end
     end
 })
 -- Toggle Buttons für verschiedene Funktionen
@@ -814,6 +801,42 @@ sectionSettings:CreateToggle({
     end
 })
 
+-- Refill Einstellungen
+sectionSettings:CreateSlider({
+    Name = "Refill At",
+    Range = { 1, 100 },
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_at,
+    Flag = "refill_at",
+    Callback = function(value)
+        settings.refill_at = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Refill End",
+    Range = { 1, 100 },
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = settings.refill_end,
+    Flag = "refill_end",
+    Callback = function(value)
+        settings.refill_end = value
+    end
+})
+
+sectionSettings:CreateSlider({
+    Name = "Movespeed",
+    Range = { 1, 50 },
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = settings.movespeed_at,
+    Flag = "movespeed_at",
+    Callback = function(value)
+        settings.movespeed_at = value -- This should be within the Callback function
+    end
+})
 sectionSettings:CreateToggle({
     Name = "Delivery Aktivieren",
     CurrentValue = doDelivery,
@@ -837,28 +860,7 @@ sectionSettings:CreateToggle({
         if loopEnabled then startLoop() end
     end
 })
-sectionSettings:CreateToggle({
-    Name = "Alle Aktivieren",
-    CurrentValue = false, -- Standardmäßig deaktiviert
-    Flag = "allEnabled",
-    Callback = function(bool)
-        -- Setze alle anderen Toggles auf den gleichen Wert wie "Alle Aktivieren"
-        doCashier = bool
-        doCook = bool
-        doBoxer = bool
-        doDelivery = bool
-        doSupplier = bool
 
-        -- Debugging-Ausgabe
-        print("Alle Toggles geändert:", bool)
-
-        -- Aktualisiere die Schleife
-        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
-        if loopEnabled then
-            startLoop()
-        end
-    end
-})
 -- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
 wait(5) -- Wartezeit kann angepasst werden
 -- Info-Anzeige beim Schließen
