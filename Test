@@ -190,7 +190,7 @@ local function FindBadDew()
 		end
 	end
 end
-local function FindDoughAndWithout(str)
+--[[ local function FindDoughAndWithout(str)
 	local goodraw,p,raw,trash
 	local children = workspace.AllDough:GetChildren()
 	for i = #children, 2, -1 do --shuffle
@@ -220,6 +220,51 @@ local function FindDoughAndWithout(str)
 		end
 	end
 	return goodraw or raw,p,trash
+end ]]
+
+local function FindDoughAndWithout(str)
+    local goodraw, p, raw, trash
+    local children = workspace.AllDough:GetChildren()
+
+    -- Mische die Dough-Liste, um zufällige Auswahl zu ermöglichen
+    for i = #children, 2, -1 do
+        local j = RNG:NextInteger(1, i)
+        children[j], children[i] = children[i], children[j]
+    end
+
+    for i = 1, #children do
+        local d = children[i]
+
+        -- Überprüfe, ob der Dough nicht verankert ist und genügend Kinder hat
+        if d.Anchored == false and #d:GetChildren() > 9 then
+            -- Überprüfe, ob der Dough schlecht ist (verbrannt, kalt, mit Bugs)
+            if d.IsBurned.Value or d.HasBugs.Value or d.Cold.Value or (d.BrickColor.Name == "Bright orange" and ffc(d, "XBillboard")) then
+                -- Markiere schlechten Dough als "trash"
+                if trash == nil and d.Position.Y > 0 and ((d.Position * Vector3.new(1, 0, 1)) - Vector3.new(47.90, 0, 72.49)).Magnitude > 1 then
+                    trash = d
+                end
+            -- Überprüfe, ob der Dough bereits vorbereitet ist (z. B. mit Toppings)
+            elseif p == nil and d.BrickColor.Name == "Bright orange" then
+                p = d
+            -- Überprüfe, ob der Dough gut ist (flach und ohne Probleme)
+            elseif goodraw == nil and d.Position.X < 55 and d.BrickColor.Name == "Brick yellow" and ((str and not ffc(d.SG.Frame, str)) or (str == nil and ffc(d.SG.Frame, "Sausage") == nil and ffc(d.SG.Frame, "Pepperoni") == nil)) then
+                -- Bevorzuge flachen Dough
+                if d.Mesh.Scale.Y < 1.1 then
+                    goodraw = d
+                else
+                    raw = d
+                end
+            end
+
+            -- Beende die Suche, wenn alle benötigten Doughs gefunden wurden
+            if goodraw and p and trash then
+                return goodraw, p, trash
+            end
+        end
+    end
+
+    -- Gib den besten verfügbaren Dough zurück
+    return goodraw or raw, p, trash
 end
 local function getOvenNear(pos)
 	local children = workspace.Ovens:GetChildren()
