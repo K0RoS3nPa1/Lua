@@ -386,63 +386,81 @@ local function tryCook()
 								end
 							end
 						end
-						if oven and raw.Parent==workspace.AllDough then
-							--make
-							
-							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
-							didsomething=true
-							network:FireServer("AddIngredientToPizza", raw,"TomatoSauce")
-							network:FireServer("AddIngredientToPizza", raw,"Cheese")
-							network:FireServer("AddIngredientToPizza", raw,topping)
-							network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame+Vector3.new(0,0.7,0))
-							oven.Door.ClickDetector.Detector:FireServer()
-							--mark as cooking
-							cookingDict[order]=cookingDict[order]+1
-							local revoked=false
-							spawn(function()
-								raw.AncestryChanged:Wait()
-								if not revoked then
-									cookingDict[order]=cookingDict[order]-1
-									revoked=true
-								end
-							end)
-							delay(40, function()
-								if not revoked then
-									cookingDict[order]=cookingDict[order]-1
-									revoked=true
-								end
-							end)
-						end
+						if oven and raw.Parent == workspace.AllDough then
+							-- Sicherstellen, dass der Ofen und der Teig im AllDough-Bereich vorhanden sind
+							-- `oven` muss existieren und `raw.Parent` muss im `AllDough` Bereich sein (der Bereich, wo der Teig liegt)
+						
+							-- Überprüfen, ob der Teig sich nicht an der Zielposition befindet
+							-- Wenn der Teig zu weit entfernt ist, teleportieren wir ihn zu der Zielposition (36.64, 3.80, 54.11)
+							if (root.Position - Vector3.new(36.64, 3.80, 54.11)).magnitude > 9 then
+								smoothTP(CFrame.new(36.64, 3.80, 54.11))  -- Teleportiere den Teig zur Zielposition
+								wait(0.3)  -- Kurze Pause, um sicherzustellen, dass der Teig korrekt teleportiert wurde
+							end
+						
+							-- Setze eine Flagge auf true, um anzugeben, dass etwas passiert ist
+							didsomething = true
+						
+							-- Füge die Zutaten zum Teig hinzu:
+							network:FireServer("AddIngredientToPizza", raw, "TomatoSauce")  -- Tomatensauce wird hinzugefügt
+							wait(0.1)  -- Kurze Pause zwischen den Zutaten
+							network:FireServer("AddIngredientToPizza", raw, "Cheese")  -- Käse wird hinzugefügt
+							wait(0.2)  -- Kurze Pause, bevor die nächste Zutat hinzugefügt wird
+							network:FireServer("AddIngredientToPizza", raw, topping)  -- Die spezifische Zutat (z.B. Pepperoni) wird hinzugefügt
+						
+							-- Bewege den Teig in den Ofen:
+							-- Der Teig wird an die Position des Ofens verschoben, leicht über dem Boden des Ofens (0,7 Einheiten höher)
+							network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame + Vector3.new(0, 0.7, 0))
+						
+							-- Öffne die Ofentür, um den Teig hineinzulegen
+							oven.Door.ClickDetector.Detector:FireServer()  -- Simuliere den Klick auf die Ofentür, um den Teig hineinzulegen
+						
+						
+						cookingDict[order]=cookingDict[order]+1
+						local revoked=false
+						spawn(function()
+							raw.AncestryChanged:Wait()
+							if not revoked then
+								cookingDict[order]=cookingDict[order]-1
+								revoked=true
+							end
+						end)
+						delay(40, function()
+							if not revoked then
+								cookingDict[order]=cookingDict[order]-1
+								revoked=true
+							end
+						end)
 					end
 				end
 			end
-			--open unnecessarily closed ovens
-			for _,o in ipairs(ovens) do
-				local bar = o.Door.Meter.SurfaceGui.ProgressBar.Bar
-				if o.IsOpen.Value==false and (o.IsCooking.Value==false or (Vector3.new(bar.ImageColor3.r,bar.ImageColor3.g,bar.ImageColor3.b)-Vector3.new(.871,.518,.224)).magnitude>.1) then
-					didsomething=true
-					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
-					o.Door.ClickDetector.Detector:FireServer()
-					break
-				end
-			end
-			--trash
-			if badD then
-				didsomething=true
-				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
-				network:FireServer("UpdateProperty", badD, "CFrame", CFrame.new(RNG:NextNumber(28,30), 1.7, RNG:NextNumber(55,57)))
-			end
-			if trash and (trash.IsBurned.Value==false or getOvenNear(trash.Position)==nil or getOvenNear(trash.Position).IsOpen.Value) then
-				--closed oven breaks if you take burnt out of it
-				didsomething=true
-				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
-				network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
-			end
-			if didsomething then wait(0.5) else break end
-		else
-			break
 		end
+		--open unnecessarily closed ovens
+		for _,o in ipairs(ovens) do
+			local bar = o.Door.Meter.SurfaceGui.ProgressBar.Bar
+			if o.IsOpen.Value==false and (o.IsCooking.Value==false or (Vector3.new(bar.ImageColor3.r,bar.ImageColor3.g,bar.ImageColor3.b)-Vector3.new(.871,.518,.224)).magnitude>.1) then
+				didsomething=true
+				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
+				o.Door.ClickDetector.Detector:FireServer()
+				break
+			end
+		end
+		--trash
+		if badD then
+			didsomething=true
+			if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
+			network:FireServer("UpdateProperty", badD, "CFrame", CFrame.new(RNG:NextNumber(28,30), 1.7, RNG:NextNumber(55,57)))
+		end
+		if trash and (trash.IsBurned.Value==false or getOvenNear(trash.Position)==nil or getOvenNear(trash.Position).IsOpen.Value) then
+			--closed oven breaks if you take burnt out of it
+			didsomething=true
+			if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.1) end
+			network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
+		end
+		if didsomething then wait(0.5) else break end
+	else
+		break
 	end
+end
 end
 
 -- Hauptschleife, die auf den Status von loopEnabled reagiert
