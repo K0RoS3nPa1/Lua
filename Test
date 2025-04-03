@@ -55,40 +55,30 @@ do
 
     for i = 1, #reg() do
         local f = reg()[i]
-        if type(f) == "function" then
-            for k, v in next, getupvalues(f) do
-                if typeof(v) == "Instance" then
-                    if v.Name == "CashOut" then
-                        wait(0.2)
-                        setupvalue(f, k, { MouseButton1Click = { wait = function() end, Wait = function() end } })
-                    elseif v.Name == "StickerName" then
-                        setupvalue(f, k, nil)
-                    end
-                end
+        if type(f) == "table" then
+            if rawget(f, "FireServer") and rawget(f, "BindEvents") then
+                print("Network gefunden:", f)
+                network = f
+                break
             end
-            if getfenv and tostring(getfenv(f).script) == "Music" then
-                local consts = getconstants(f)
-                if consts then
-                    local loc = false
-                    for ci, c in next, consts do
-                        if c == "location changed" then
-                            loc = true
-                        elseif loc and c == "SendData" then
-                            setconstant(f, ci, "ExplodeString")
-                            break
-                        end
-                    end
-                end
+        end
+    end
+
+    -- Fallback, falls die erste Suche fehlschlägt
+    if not network then
+        for i = 1, #reg() do
+            local f = reg()[i]
+            if type(f) == "table" and rawget(f, "FireServer") then
+                print("Alternative Network gefunden:", f)
+                network = f
+                break
             end
-        elseif type(f) == "table" and rawget(f, "FireServer") and rawget(f, "BindEvents") then
-            print("Network gefunden:", f)
-            network = f
         end
     end
 end
 
 if not network then
-    error("Network konnte nicht gefunden werden. Überprüfe die Struktur der Registry.")
+    error("Network konnte nicht gefunden werden. Überprüfe die Struktur der Registry oder die Bedingungen.")
 end
 
 
