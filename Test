@@ -277,7 +277,43 @@ local function onCharacterAdded(char)
 end
 onCharacterAdded(player.Character or player.CharacterAdded:Wait())
 player.CharacterAdded:Connect(onCharacterAdded)
+local function smoothTP2(cf)
+    local cf0 = (cf - cf.p) + root.Position -- Behalte die Rotation bei
+    local diff = cf.p - root.Position -- Differenz zwischen Ziel und aktueller Position
+    local stepSize = settings.movespeed_at or 5 -- Schrittweite (Geschwindigkeit der Bewegung)
+    local oldGravity = workspace.Gravity -- Speichere die aktuelle Schwerkraft
 
+    -- Deaktiviere die Schwerkraft für präzisere Bewegung
+    workspace.Gravity = 0
+
+    local success, err = pcall(function()
+        for i = 0, diff.Magnitude, stepSize do
+            -- Stelle sicher, dass der Spieler nicht sitzt
+            if humanoid.Sit then
+                humanoid.Sit = false
+                wait(0.1) -- Warte kurz, um sicherzustellen, dass der Spieler aufsteht
+            end
+
+            -- Bewege den Spieler schrittweise
+            root.CFrame = cf0 + diff.Unit * i
+            root.Velocity, root.RotVelocity = Vector3.zero, Vector3.zero -- Setze Geschwindigkeit zurück
+            wait(0.03) -- Wartezeit zwischen den Schritten
+        end
+
+        -- Setze die endgültige Position
+        root.CFrame = cf
+    end)
+
+    -- Stelle die ursprüngliche Schwerkraft wieder her
+    workspace.Gravity = oldGravity
+
+    if not success then
+        warn("Fehler in smoothTP2:", err)
+        -- Fehlerbehandlung: Charakter zurücksetzen, falls nötig
+        player:LoadCharacter()
+    end
+end
+--[[ 
 local function smoothTP2(cf)
     local cf0 = (cf - cf.p) + root.Position + Vector3.new(0, 0, 0)
     local diff = cf.p - root.Position
@@ -301,6 +337,7 @@ local function smoothTP2(cf)
         warn("Fehler in smoothTP2:", err)
     end
 end
+]]
 --[[ 
 local function smoothTP(cf)
     if (cf.p - root.Position).Magnitude > 97 then
