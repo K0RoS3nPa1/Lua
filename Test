@@ -627,10 +627,10 @@ local function startLoop()
 	tryCook()
 	
 	if doSupplier then
-		local refill=false
-		for s,c in pairs(supplyCounts) do
+		local refill = false
+		for s, c in pairs(supplyCounts) do
 			if c <= settings.refill_at then
-				refill=true
+				refill = true
 				break
 			end
 		end
@@ -640,93 +640,94 @@ local function startLoop()
 			local waitingTick = 1.8
 			local lastBox
 			while doSupplier do
-				--check if refill is done otherwise hit buttons
-				local fulfilled=true
+				-- Überprüfen, ob das Nachfüllen abgeschlossen ist
+				local fulfilled = true
 				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy=1,6 do
-				local needtp=true
-				local realc = 0
-				for _,btn in ipairs(supplyButtons) do
-				    local s = bcolorToSupply[btn.BrickColor.Name]
-					if supplyCounts[s] < settings.refill_end then
-						local count = 0
-						if #boxes > 25 then
-							for i=1,#boxes do
-								local box = boxes[i]
-								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
-									count=count+1
+				for yy = 1, 6 do
+					local needtp = true
+					local realc = 0
+					for _, btn in ipairs(supplyButtons) do
+						local s = bcolorToSupply[btn.BrickColor.Name]
+						if supplyCounts[s] < settings.refill_end then
+							local count = 0
+							if #boxes > 25 then
+								for i = 1, #boxes do
+									local box = boxes[i]
+									if bcolorToSupply[box.BrickColor.Name] == s and box.Anchored == false and box.Position.Z < -940 then
+										count = count + 1
+									end
 								end
 							end
-						end
-						if count < 2 then
-							if needtp then
-							    needtp=false
-								smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
-								wait(0.3)
+							if count < 2 then
+								if needtp then
+									needtp = false
+									smoothTP(btn.CFrame + Vector3.new(0, 3, 2.5))
+									wait(1) -- Längere Wartezeit nach dem Teleport
+								end
+								if not doSupplier then break end
+								root.CFrame = btn.CFrame + Vector3.new(0, 3, 0)
+								wait(0.5) -- Längere Wartezeit nach dem Drücken des Buttons
+								realc = realc + 1
 							end
-							if not doSupplier then break end
-							root.CFrame = btn.CFrame + Vector3.new(0,3,0)
-							wait(0.1)
-							realc=realc+1
+							fulfilled = false
 						end
-						fulfilled=false
+					end
+					wait(0.6) -- Zusätzliche Pause zwischen den Button-Checks
+					if yy == 1.8 and realc < 3 then
+						wait(0.8) -- Längere Pause, wenn weniger als 3 Aktionen ausgeführt wurden
 					end
 				end
-				wait(0.4)
-				if yy == 1.8 and realc < 3 then
-				    wait(0.5)
-				end
-				end
-				if fulfilled or not (doSupplier) then
+				if fulfilled or not doSupplier then
 					break
 				end
-				smoothTP(CFrame.new(8,12.4,-1020))
-				if not doSupplier then break end
-				--check if can finish waiting for boxes to move
-				if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
-					waiting=true
-					if lastBox.Position.X<42 then
-						--clear boxes if stuck
-						smoothTP(CFrame.new(20.5,8,-35))
-						wait(0.1)
+				smoothTP(CFrame.new(8, 12.4, -1020))
+				wait(1.5) -- Längere Wartezeit nach dem Teleport
+	
+				-- Überprüfen, ob das Warten auf die Bewegung der Boxen abgeschlossen ist
+				if waiting and (lastBox.Position.X > 42 or tick() - waitingTick > 6) then
+					waiting = true
+					if lastBox.Position.X < 42 then
+						-- Feststeckende Boxen entfernen
+						smoothTP(CFrame.new(20.5, 8, -35))
+						wait(1) -- Längere Wartezeit nach dem Teleport
 						local boxes = workspace.AllSupplyBoxes:GetChildren()
-						for i=1,#boxes do
+						for i = 1, #boxes do
 							local box = boxes[i]
-							if box.Anchored==false and box.Position.Z>-55 then
-								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
-								wait()
+							if box.Anchored == false and box.Position.Z > -55 then
+								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0, 40), RNG:NextNumber(-10, -30), -70))
+								wait(0.5) -- Längere Wartezeit zwischen den Boxen
 							end
 						end
-						wait(0.1)
+						wait(1) -- Zusätzliche Pause nach dem Bewegen der Boxen
 					end
 				end
 				if not waiting then
-					--move boxes
-					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
-					wait(0.2)
-					lastBox=nil
-					local j=0
+					-- Boxen bewegen
+					if root.Position.Z > -900 then smoothTP(CFrame.new(8, 12.4, -1020)) end
+					wait(0.5) -- Längere Wartezeit nach dem Teleport
+					lastBox = nil
+					local j = 0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
-					for i=1,#boxes do
+					for i = 1, #boxes do
 						local box = boxes[i]
-						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
-							box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
+						if box.Anchored == false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]] < settings.refill_end then
+							box.CFrame = CFrame.new(38 - 4.3 * math.floor(j / 2), 5, -7 - 5 * (j % 2))
 							network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
-							lastBox=box
-							j=j+1
-							if j>13 then break end
+							lastBox = box
+							j = j + 1
+							wait(0.5) -- Längere Wartezeit zwischen den Boxen
+							if j > 13 then break end
 						end
 					end
 					if lastBox then
-						waiting=true
-						waitingTick=tick()
+						waiting = true
+						waitingTick = tick()
 					end
 				end
 			end
 			--smoothTP(oldcf)
 		end
 	end
-
 
 	if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
 		print("Alle Funktionen deaktiviert. Schleife wird gestoppt.")
