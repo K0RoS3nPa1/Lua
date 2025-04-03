@@ -15,7 +15,7 @@ local settings = {
 
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 
-assert(network, "failed to find network")
+
 -- GUI Info-Anzeige
 Rayfield:Notify({
     Title = "Info",
