@@ -654,7 +654,7 @@ local function startLoop()
 					end
 				end
 				wait(0.3)
-				if yy == 1.6 and realc < 3 then
+				if yy == 2.6 and realc < 3 then
 				    wait(0.5)
 				end
 				end
