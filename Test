@@ -151,7 +151,7 @@ local orderDict={["3540529228"]="Cheese",["3540530535"]="Sausage",["3540529917"]
 local cookingDict = {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
 local cookPtick=0
 local cookDtick=0
-local cookWarned=false
+local cookWarned=true
 local boxerWarned=false
 local function getOrders()
 	local orders={}
@@ -282,7 +282,7 @@ local function smoothTP2(cf)
     local cf0 = (cf - cf.p) + root.Position + Vector3.new(0, 0, 0)
     local diff = cf.p - root.Position
     local oldg = workspace.Gravity -- Speichere die aktuelle Schwerkraft
-    workspace.Gravity = 0 -- Deaktiviere die Schwerkraft
+    workspace.Gravity = 197 -- Deaktiviere die Schwerkraft
 
     local success, err = pcall(function()
         for i = 0, diff.Magnitude, settings.movespeed_at do
@@ -324,7 +324,7 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	end
 end
 local function tryCook()
-	for zz=1,38 do
+	for zz=1,28 do
 		local order = getOrders()[1]
 		local topping
 		if order=="Pepperoni" or order=="Sausage" then topping=order end
