@@ -80,7 +80,46 @@ do
 		end
 	end
 end
-
+local function toggleCashier(bool)
+	if bool~=nil then
+		doCashier=bool
+	else
+		doCashier = not doCashier
+	end
+	
+end
+local function toggleCook(bool)
+	if bool~=nil then
+		doCook=bool
+	else
+		doCook = not doCook
+	end
+	
+end
+local function toggleBoxer(bool)
+	if bool~=nil then
+		doBoxer=bool
+	else
+		doBoxer = not doBoxer
+	end
+	
+end
+local function toggleDelivery(bool)
+	if bool~=nil then
+		doDelivery=bool
+	else
+		doDelivery = not doDelivery
+	end
+	
+end
+local function toggleSupplier(bool)
+	if bool~=nil then
+		doSupplier=bool
+	else
+		doSupplier = not doSupplier
+	end
+	
+end
 
 --//subroutines
 local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
@@ -706,46 +745,7 @@ end
 
 local sectionSettings = window:CreateTab("Settings", 4483362458)
 
-local function toggleCashier(bool)
-	if bool~=nil then
-		doCashier=bool
-	else
-		doCashier = not doCashier
-	end
-	
-end
-local function toggleCook(bool)
-	if bool~=nil then
-		doCook=bool
-	else
-		doCook = not doCook
-	end
-	
-end
-local function toggleBoxer(bool)
-	if bool~=nil then
-		doBoxer=bool
-	else
-		doBoxer = not doBoxer
-	end
-	
-end
-local function toggleDelivery(bool)
-	if bool~=nil then
-		doDelivery=bool
-	else
-		doDelivery = not doDelivery
-	end
-	
-end
-local function toggleSupplier(bool)
-	if bool~=nil then
-		doSupplier=bool
-	else
-		doSupplier = not doSupplier
-	end
-	
-end
+
 -- Refill Einstellungen
 sectionSettings:CreateSlider({
     Name = "Refill At",
