@@ -293,7 +293,7 @@ local function smoothTP2(cf)
     end
 
     local oldGravity = workspace.Gravity
-    workspace.Gravity = Gravitysettings -- Setze die Schwerkraft auf benutzerdefinierte Werte
+    workspace.Gravity = 199 -- Setze die Schwerkraft auf benutzerdefinierte Werte
 
     -- Bewegungsschleife
     for i = 0, diff.Magnitude, settings.movespeed_at do
