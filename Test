@@ -706,7 +706,7 @@ tryCook()
 				local boxes = workspace.AllSupplyBoxes:GetChildren()  -- Alle Boxen im Workspace werden abgerufen
 	
 				-- Schleife von 1 bis 7, um den Auffüllvorgang mehrfach zu versuchen
-				for yy = 4,12 do
+				for yy = 1,7 do
 					local needtp = true  -- Flagge, die angibt, ob der Spieler teleportiert werden muss
 					local realc = 0  -- Zähler für die Boxen, die bewegt wurden
 	
@@ -748,7 +748,7 @@ tryCook()
 					wait(0.3)  -- Kurze Pause, bevor die nächste Überprüfung stattfindet
 	
 					-- Wenn weniger als 3 Boxen bewegt wurden, warte noch eine halbe Sekunde
-					if yy == 5.2 and realc < 3 then
+					if yy == 1.2 and realc < 3 then
 						wait(0.4)
 					end
 				end
