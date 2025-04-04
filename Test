@@ -33,7 +33,7 @@ local window = Rayfield:CreateWindow({
 })
 
 
-local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
+local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=false}
 local player = game:GetService("Players").LocalPlayer
 local ffc = game.FindFirstChild
 local RNG = Random.new()
@@ -410,7 +410,7 @@ sectionSettings:CreateToggle({
     Callback = function(bool)
         doCook = bool
 		processToggle("Cook", function()
-                for zz=1,58 do
+                for zz=1,28 do
 					local order = getOrders()[1]
 					local topping
 					if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -513,7 +513,7 @@ sectionSettings:CreateToggle({
 							local bar = o.Door.Meter.SurfaceGui.ProgressBar.Bar
 							if o.IsOpen.Value==false and (o.IsCooking.Value==false or (Vector3.new(bar.ImageColor3.r,bar.ImageColor3.g,bar.ImageColor3.b)-Vector3.new(.871,.518,.224)).magnitude>.1) then
 								didsomething=true
-								if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+								if settings.stay_in_kitchen and (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 								o.Door.ClickDetector.Detector:FireServer()
 								break
 							end
@@ -521,25 +521,25 @@ sectionSettings:CreateToggle({
 						--trash
 						if badD then
 							didsomething=true
-							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+							if settings.stay_in_kitchen and (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 							network:FireServer("UpdateProperty", badD, "CFrame", CFrame.new(RNG:NextNumber(28,30), 1.7, RNG:NextNumber(55,57)))
 						end
 						if trash and (trash.IsBurned.Value==false or getOvenNear(trash.Position)==nil or getOvenNear(trash.Position).IsOpen.Value) then
 							--closed oven breaks if you take burnt out of it
 							didsomething=true
-							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+							if settings.stay_in_kitchen and (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 							network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
 						end
 						if didsomething then wait(0.5) else break end
 					else
 						break
 					end
-				
+				end
                 print("Cook wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
-            end
+            
         end)
-
+	
 		
     end
 })
