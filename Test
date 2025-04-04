@@ -719,114 +719,129 @@ sectionSettings:CreateToggle({
     Flag = "doSupplier",
     Callback = function(bool)
         doSupplier = bool
-		updateSmoothTPState()
-		processToggle("Supplier", function()
+        updateSmoothTPState()
+        processToggle("Supplier", function()
             if doSupplier then
-				local refill=false
-				for s,c in pairs(supplyCounts) do
-					if c <= settings.refill_at then
-						refill=true
-						break
-					end
-				end
-				if refill then
-					local oldcf = root.CFrame
-					local waiting = false
-					local waitingTick = 1.8
-					local lastBox
-					while doSupplier do
-						--check if refill is done otherwise hit buttons
-						local fulfilled=true
-						local boxes = workspace.AllSupplyBoxes:GetChildren()
-						for yy=1,9 do
-						local needtp=true
-						local realc = 0
-						for _,btn in ipairs(supplyButtons) do
-							local s = bcolorToSupply[btn.BrickColor.Name]
-							if supplyCounts[s] < settings.refill_end then
-								local count = 0
-								if #boxes > 30 then
-									for i=1,#boxes do
-										local box = boxes[i]
-										if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
-											count=count+1
-										end
-									end
-								end
-								if count < 2 then
-									if needtp then
-										needtp=false
-										smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
-										wait(0.5)
-									end
-									if not doSupplier then break end
-									root.CFrame = btn.CFrame + Vector3.new(0,3,0)
-									wait(0.3)
-									realc=realc+1
-								end
-								fulfilled=false
-							end
-						end
-						wait(0.3)
-						if yy == 1.2 and realc < 3 then
-							wait(0.5)
-						end
-						end
-						if fulfilled or not (doSupplier) then
-							break
-						end
-						smoothTP(CFrame.new(8,12.4,-1020))
-						if not doSupplier then break end
-						--check if can finish waiting for boxes to move
-						if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
-							waiting=false
-							if lastBox.Position.X<42 then
-								--clear boxes if stuck
-								smoothTP(CFrame.new(20.5,8,-35))
-								wait(0.5)
-								local boxes = workspace.AllSupplyBoxes:GetChildren()
-								for i=1,#boxes do
-									local box = boxes[i]
-									if box.Anchored==false and box.Position.Z>-55 then
-										network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
-										wait()
-									end
-								end
-								wait(0.2)
-							end
-						end
-						if not waiting then
-							--move boxes
-							if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
-							wait(0.2)
-							lastBox=nil
-							local j=0
-							local boxes = workspace.AllSupplyBoxes:GetChildren()
-							for i=1,#boxes do
-								local box = boxes[i]
-								if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
-									box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
-									network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
-									lastBox=box
-									j=j+1
-									if j>13 then break end
-								end
-							end
-							if lastBox then
-								waiting=true
-								waitingTick=tick()
-							end
-						end
-					end
-					--smoothTP(oldcf)
-				end
-			end
-                print("Supplier wird ausgeführt...")
-                wait(2) -- Simuliere die Dauer des Prozesses
-				
+                local refill = false
+                for s, c in pairs(supplyCounts) do
+                    if c <= settings.refill_at then
+                        refill = true
+                        break
+                    end
+                end
+                if refill then
+                    local oldcf = root.CFrame
+                    local waiting = false
+                    local waitingTick = 1.8
+                    local lastBox
+                    while doSupplier do
+                        -- Überprüfe, ob alle Ressourcen den `refill_end`-Wert erreicht haben
+                        local fulfilled = true
+                        for s, c in pairs(supplyCounts) do
+                            if c < settings.refill_end then
+                                fulfilled = false
+                                break
+                            end
+                        end
+
+                        -- Beende den Prozess, wenn alle Ressourcen aufgefüllt sind
+                        if fulfilled then
+                            print("Alle Ressourcen sind aufgefüllt. Beende den Supplier-Prozess.")
+                            doSupplier = false
+                            updateSmoothTPState()
+                            break
+                        end
+
+                        -- Führe den Nachfüllprozess aus
+                        local boxes = workspace.AllSupplyBoxes:GetChildren()
+                        for yy = 1, 9 do
+                            local needtp = true
+                            local realc = 0
+                            for _, btn in ipairs(supplyButtons) do
+                                local s = bcolorToSupply[btn.BrickColor.Name]
+                                if supplyCounts[s] < settings.refill_end then
+                                    local count = 0
+                                    if #boxes > 30 then
+                                        for i = 1, #boxes do
+                                            local box = boxes[i]
+                                            if bcolorToSupply[box.BrickColor.Name] == s and box.Anchored == false and box.Position.Z < -940 then
+                                                count = count + 1
+                                            end
+                                        end
+                                    end
+                                    if count < 2 then
+                                        if needtp then
+                                            needtp = false
+                                            smoothTP(btn.CFrame + Vector3.new(0, 3, 2.5))
+                                            wait(0.5)
+                                        end
+                                        if not doSupplier then break end
+                                        root.CFrame = btn.CFrame + Vector3.new(0, 3, 0)
+                                        wait(0.3)
+                                        realc = realc + 1
+                                    end
+                                    fulfilled = false
+                                end
+                            end
+                            wait(0.3)
+                            if yy == 1.2 and realc < 3 then
+                                wait(0.5)
+                            end
+                        end
+
+                        -- Beende die Schleife, wenn alle Ressourcen erfüllt sind
+                        if fulfilled or not doSupplier then
+                            break
+                        end
+
+                        -- Bewege die Boxen
+                        smoothTP(CFrame.new(8, 12.4, -1020))
+                        if not doSupplier then break end
+                        if waiting and (lastBox.Position.X > 42 or tick() - waitingTick > 6) then
+                            waiting = false
+                            if lastBox.Position.X < 42 then
+                                -- Entferne feststeckende Boxen
+                                smoothTP(CFrame.new(20.5, 8, -35))
+                                wait(0.5)
+                                local boxes = workspace.AllSupplyBoxes:GetChildren()
+                                for i = 1, #boxes do
+                                    local box = boxes[i]
+                                    if box.Anchored == false and box.Position.Z > -55 then
+                                        network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0, 40), RNG:NextNumber(-10, -30), -70))
+                                        wait()
+                                    end
+                                end
+                                wait(0.2)
+                            end
+                        end
+                        if not waiting then
+                            -- Bewege die Boxen
+                            if root.Position.Z > -900 then smoothTP(CFrame.new(8, 12.4, -1020)) end
+                            wait(0.2)
+                            lastBox = nil
+                            local j = 0
+                            local boxes = workspace.AllSupplyBoxes:GetChildren()
+                            for i = 1, #boxes do
+                                local box = boxes[i]
+                                if box.Anchored == false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]] < settings.refill_end then
+                                    box.CFrame = CFrame.new(38 - 4.3 * math.floor(j / 2), 5, -7 - 5 * (j % 2))
+                                    network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
+                                    lastBox = box
+                                    j = j + 1
+                                    if j > 13 then break end
+                                end
+                            end
+                            if lastBox then
+                                waiting = true
+                                waitingTick = tick()
+                            end
+                        end
+                    end
+                end
+            end
+            print("Supplier wird ausgeführt...")
+            wait(2) -- Simuliere die Dauer des Prozesses
         end)
-		
-		
     end
 })
 
