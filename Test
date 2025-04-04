@@ -318,283 +318,12 @@ end
 
 
 -- Hauptschleife, die auf den Status von loopEnabled reagiert
-local loopEnabled = false
-local loopThread = nil -- Speichert den Thread der Schleife
-local Computer = workspace:FindFirstChild("Computer")
--- Funktion, um die Schleife zu starten
-local function startLoop()
-    if loopThread then return end -- Verhindere, dass mehrere Threads gestartet werden
-
-    loopThread = spawn(function()
-        while loopEnabled do
-			if humanoid.Health <= 0 then
-                print("Spieler ist tot. Schleife pausiert.")
-                loopEnabled = false
-                loopThread = nil
-                return
-            end
-	if humanoid and humanoid.Sit then
-		humanoid.Sit = false
-	end
-
-	if Computer and Computer.Parent == workspace then
-		Computer.Parent = nil -- Entfernt das Objekt aus Workspace
-	end
-
-	if RNG:NextInteger(1,20)==1 then
-        game:GetService("VirtualInputManager"):SendKeyEvent(true,"Z",false,game)
-        wait()
-        game:GetService("VirtualInputManager"):SendKeyEvent(false,"Z",false,game)
-	end
-	for zz=1,6 do
-		local c,order = FindFirstCustomer()
-		if doCashier and c and order then
-			local reg = 3
-			if c.Head.Position.X < 50 then
-			    reg = 2
-			elseif c.Head.Position.X < 70 then
-			    reg = 1
-			end
-			if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
-			network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
-			wait(0.4)
-		else
-			break
-		end
-	end
-	
 
 	
-	for zz=2,3 do
-		if doBoxer then
-			local didsomething = false
-			local boxP,boxD = FindBoxingFoods()
-			local closedBox,openBox,fullBox = FindBoxes()
-			if boxD and tick()-boxDtick>0.8 then
-				boxDtick=tick()
-				didsomething=true
-				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-				network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63,4.9,-1,-1,0,0,0,1,0,0,0,-1))
-			end
-			if fullBox then
-				if fullBox.Name=="BoxOpen" then
-					didsomething=true
-					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-					network:FireServer("CloseBox", fullBox)
-					--will be moved next loop
-				elseif tick()-boxPtick>0.8 then
-					didsomething=true
-					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-					network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2,4.4,RNG:NextNumber(-3,-2),-1,0,0,0,1,0,0,0,-1))
-					boxPtick=tick()
-				end
-			end
-			if closedBox and not openBox then
-				didsomething=true
-				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-				network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5,70.5),3.5,RNG:NextNumber(11,25)))
-				wait(0.3)
-				network:FireServer("OpenBox", closedBox)
-			end
-			if openBox and boxP then
-				didsomething=true
-				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
-				network:FireServer("UpdateProperty", boxP, "Anchored", true)
-				network:FireServer("UpdateProperty", openBox, "Anchored", true)
-				wait(0.4)
-				network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame+Vector3.new(0,-2,0))
-				wait(0.4)
-				network:FireServer("AssignPizzaToBox", openBox, boxP)
-			end
-			if didsomething then wait(0.7) else break end
-		else
-			break
-		end
-	end
-	if doDelivery then
-		local wstools = FindAllDeliveryTools(workspace)
-		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
-			--get tools
-			if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
-			for i=1,#wstools do
-				if wstools[i].Parent == workspace then
-					humanoid:EquipTool(wstools[i])
-					wait(0.2)
-				end
-			end
-			wait(0.8)
-			local t = FindAllDeliveryTools(character)
-    		for i=1,#t do
-    			t[i].Parent = player.Backpack
-    		end
-    		wait(0.1)
-    		if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
-    			character.RightHand.RightGrip:Destroy()
-    		end
-		end
-		local bptools = FindAllDeliveryTools(player.Backpack)
-		if #bptools >= settings.deliver_at and #bptools > 1 and tick()-delTick > 40 then
-			--deliver to houses
-			table.sort(bptools,function(a,b)
-				a,b=tostring(a),tostring(b)
-				if (a:sub(1,1)=="B" and b:sub(1,1)=="B") then
-					return a < b
-				end
-				return a > b
-			end)
-			local fatass=false
-			for i=1,#bptools do
-				if not doDelivery then
-					break
-				end
-				humanoid.Sit=false
-				local tool = bptools[i]
-				local giver = getHousePart(tool.Name)
-				local ogp = giver.Position
-				if giver then
-					if (giver.Position-root.Position).Magnitude > 9 then
-						smoothTP(giver.CFrame+Vector3.new(0,7,0))
-						if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
-							giver = getHousePart(tool.Name) or giver
-							smoothTP(giver.CFrame+Vector3.new(0,7,0))
-						end
-						pcall(function() tool.Parent = character end)
-						wait(1.6)
-						local t = FindAllDeliveryTools(character)
-                		for i=1,#t do
-                		    if t[i] ~= tool then
-                			    t[i].Parent = player.Backpack
-                			end
-                		end
-						wait(3)
-						fatass=false
-					else
-						if fatass then
-							wait(0.6)
-						else
-							wait(1.2)
-						end
-						pcall(function() tool.Parent = character end)
-						wait()
-						fatass=true
-					end
-				end
-			end
-			delTick = tick()
-		end
-	end
 	
-	if doSupplier then
-		local refill=false
-		for s,c in pairs(supplyCounts) do
-			if c <= settings.refill_at then
-				refill=true
-				break
-			end
-		end
-		if refill then
-			local oldcf = root.CFrame
-			local waiting = false
-			local waitingTick = 1.8
-			local lastBox
-			while doSupplier do
-				--check if refill is done otherwise hit buttons
-				local fulfilled=true
-				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy=1,9 do
-				local needtp=true
-				local realc = 0
-				for _,btn in ipairs(supplyButtons) do
-				    local s = bcolorToSupply[btn.BrickColor.Name]
-					if supplyCounts[s] < settings.refill_end then
-						local count = 0
-						if #boxes > 30 then
-							for i=1,#boxes do
-								local box = boxes[i]
-								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
-									count=count+1
-								end
-							end
-						end
-						if count < 2 then
-							if needtp then
-							    needtp=false
-								smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
-								wait(0.5)
-							end
-							if not doSupplier then break end
-							root.CFrame = btn.CFrame + Vector3.new(0,3,0)
-							wait(0.3)
-							realc=realc+1
-						end
-						fulfilled=false
-					end
-				end
-				wait(0.3)
-				if yy == 1.2 and realc < 3 then
-				    wait(0.5)
-				end
-				end
-				if fulfilled or not (doSupplier) then
-					break
-				end
-				smoothTP(CFrame.new(8,12.4,-1020))
-				if not doSupplier then break end
-				--check if can finish waiting for boxes to move
-				if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
-					waiting=false
-					if lastBox.Position.X<42 then
-						--clear boxes if stuck
-						smoothTP(CFrame.new(20.5,8,-35))
-						wait(0.5)
-						local boxes = workspace.AllSupplyBoxes:GetChildren()
-						for i=1,#boxes do
-							local box = boxes[i]
-							if box.Anchored==false and box.Position.Z>-55 then
-								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
-								wait()
-							end
-						end
-						wait(0.2)
-					end
-				end
-				if not waiting then
-					--move boxes
-					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
-					wait(0.2)
-					lastBox=nil
-					local j=0
-					local boxes = workspace.AllSupplyBoxes:GetChildren()
-					for i=1,#boxes do
-						local box = boxes[i]
-						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
-							box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
-							network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
-							lastBox=box
-							j=j+1
-							if j>13 then break end
-						end
-					end
-					if lastBox then
-						waiting=true
-						waitingTick=tick()
-					end
-				end
-			end
-			--smoothTP(oldcf)
-		end
-	end
+	
+	
 
-
-	if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
-		print("Alle Funktionen deaktiviert. Schleife wird gestoppt.")
-		loopEnabled = false
-		loopThread = nil -- Beende den Thread
-		return
-	end
-end
-end)
-end
 local sectionSettings = window:CreateTab("Settings", 4483362458)
 
 sectionSettings:CreateToggle({
@@ -620,10 +349,7 @@ sectionSettings:CreateToggle({
         Rayfield.Flags["doSupplier"]:Set(bool)
 
         -- Aktualisiere die Schleife
-        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
-        if loopEnabled then
-            startLoop()
-        end
+     
     end
 })
 
@@ -634,9 +360,22 @@ sectionSettings:CreateToggle({
     Flag = "doCashier",
     Callback = function(bool)
         doCashier = bool
-        print("Cashier-Toggle geändert:", bool)
-        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
-        if loopEnabled then startLoop() end
+        for zz=1,6 do
+			local c,order = FindFirstCustomer()
+			if doCashier and c and order then
+				local reg = 3
+				if c.Head.Position.X < 50 then
+					reg = 2
+				elseif c.Head.Position.X < 70 then
+					reg = 1
+				end
+				if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
+				network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
+				wait(0.4)
+			else
+				break
+			end
+		end
     end
 })
 
@@ -780,9 +519,52 @@ sectionSettings:CreateToggle({
     Flag = "doBoxer",
     Callback = function(bool)
         doBoxer = bool
-        print("Boxer-Toggle geändert:", bool)
-        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
-        if loopEnabled then startLoop() end
+		for zz=2,3 do
+			if doBoxer then
+				local didsomething = false
+				local boxP,boxD = FindBoxingFoods()
+				local closedBox,openBox,fullBox = FindBoxes()
+				if boxD and tick()-boxDtick>0.8 then
+					boxDtick=tick()
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+					network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63,4.9,-1,-1,0,0,0,1,0,0,0,-1))
+				end
+				if fullBox then
+					if fullBox.Name=="BoxOpen" then
+						didsomething=true
+						if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+						network:FireServer("CloseBox", fullBox)
+						--will be moved next loop
+					elseif tick()-boxPtick>0.8 then
+						didsomething=true
+						if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+						network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2,4.4,RNG:NextNumber(-3,-2),-1,0,0,0,1,0,0,0,-1))
+						boxPtick=tick()
+					end
+				end
+				if closedBox and not openBox then
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+					network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5,70.5),3.5,RNG:NextNumber(11,25)))
+					wait(0.3)
+					network:FireServer("OpenBox", closedBox)
+				end
+				if openBox and boxP then
+					didsomething=true
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
+					network:FireServer("UpdateProperty", boxP, "Anchored", true)
+					network:FireServer("UpdateProperty", openBox, "Anchored", true)
+					wait(0.4)
+					network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame+Vector3.new(0,-2,0))
+					wait(0.4)
+					network:FireServer("AssignPizzaToBox", openBox, boxP)
+				end
+				if didsomething then wait(0.7) else break end
+			else
+				break
+			end
+		end
     end
 })
 
@@ -792,9 +574,78 @@ sectionSettings:CreateToggle({
     Flag = "doDelivery",
     Callback = function(bool)
         doDelivery = bool
-        print("Delivery-Toggle geändert:", bool)
-        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
-        if loopEnabled then startLoop() end
+        if doDelivery then
+			local wstools = FindAllDeliveryTools(workspace)
+			if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
+				--get tools
+				if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
+				for i=1,#wstools do
+					if wstools[i].Parent == workspace then
+						humanoid:EquipTool(wstools[i])
+						wait(0.2)
+					end
+				end
+				wait(0.8)
+				local t = FindAllDeliveryTools(character)
+				for i=1,#t do
+					t[i].Parent = player.Backpack
+				end
+				wait(0.1)
+				if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
+					character.RightHand.RightGrip:Destroy()
+				end
+			end
+			local bptools = FindAllDeliveryTools(player.Backpack)
+			if #bptools >= settings.deliver_at and #bptools > 1 and tick()-delTick > 40 then
+				--deliver to houses
+				table.sort(bptools,function(a,b)
+					a,b=tostring(a),tostring(b)
+					if (a:sub(1,1)=="B" and b:sub(1,1)=="B") then
+						return a < b
+					end
+					return a > b
+				end)
+				local fatass=false
+				for i=1,#bptools do
+					if not doDelivery then
+						break
+					end
+					humanoid.Sit=false
+					local tool = bptools[i]
+					local giver = getHousePart(tool.Name)
+					local ogp = giver.Position
+					if giver then
+						if (giver.Position-root.Position).Magnitude > 9 then
+							smoothTP(giver.CFrame+Vector3.new(0,7,0))
+							if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
+								giver = getHousePart(tool.Name) or giver
+								smoothTP(giver.CFrame+Vector3.new(0,7,0))
+							end
+							pcall(function() tool.Parent = character end)
+							wait(1.6)
+							local t = FindAllDeliveryTools(character)
+							for i=1,#t do
+								if t[i] ~= tool then
+									t[i].Parent = player.Backpack
+								end
+							end
+							wait(3)
+							fatass=false
+						else
+							if fatass then
+								wait(0.6)
+							else
+								wait(1.2)
+							end
+							pcall(function() tool.Parent = character end)
+							wait()
+							fatass=true
+						end
+					end
+				end
+				delTick = tick()
+			end
+		end
     end
 })
 
@@ -804,9 +655,107 @@ sectionSettings:CreateToggle({
     Flag = "doSupplier",
     Callback = function(bool)
         doSupplier = bool
-        print("Supplier-Toggle geändert:", bool)
-        loopEnabled = doCashier or doCook or doBoxer or doDelivery or doSupplier
-        if loopEnabled then startLoop() end
+		if doSupplier then
+			local refill=false
+			for s,c in pairs(supplyCounts) do
+				if c <= settings.refill_at then
+					refill=true
+					break
+				end
+			end
+			if refill then
+				local oldcf = root.CFrame
+				local waiting = false
+				local waitingTick = 1.8
+				local lastBox
+				while doSupplier do
+					--check if refill is done otherwise hit buttons
+					local fulfilled=true
+					local boxes = workspace.AllSupplyBoxes:GetChildren()
+					for yy=1,9 do
+					local needtp=true
+					local realc = 0
+					for _,btn in ipairs(supplyButtons) do
+						local s = bcolorToSupply[btn.BrickColor.Name]
+						if supplyCounts[s] < settings.refill_end then
+							local count = 0
+							if #boxes > 30 then
+								for i=1,#boxes do
+									local box = boxes[i]
+									if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
+										count=count+1
+									end
+								end
+							end
+							if count < 2 then
+								if needtp then
+									needtp=false
+									smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
+									wait(0.5)
+								end
+								if not doSupplier then break end
+								root.CFrame = btn.CFrame + Vector3.new(0,3,0)
+								wait(0.3)
+								realc=realc+1
+							end
+							fulfilled=false
+						end
+					end
+					wait(0.3)
+					if yy == 1.2 and realc < 3 then
+						wait(0.5)
+					end
+					end
+					if fulfilled or not (doSupplier) then
+						break
+					end
+					smoothTP(CFrame.new(8,12.4,-1020))
+					if not doSupplier then break end
+					--check if can finish waiting for boxes to move
+					if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
+						waiting=false
+						if lastBox.Position.X<42 then
+							--clear boxes if stuck
+							smoothTP(CFrame.new(20.5,8,-35))
+							wait(0.5)
+							local boxes = workspace.AllSupplyBoxes:GetChildren()
+							for i=1,#boxes do
+								local box = boxes[i]
+								if box.Anchored==false and box.Position.Z>-55 then
+									network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
+									wait()
+								end
+							end
+							wait(0.2)
+						end
+					end
+					if not waiting then
+						--move boxes
+						if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
+						wait(0.2)
+						lastBox=nil
+						local j=0
+						local boxes = workspace.AllSupplyBoxes:GetChildren()
+						for i=1,#boxes do
+							local box = boxes[i]
+							if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
+								box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
+								network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
+								lastBox=box
+								j=j+1
+								if j>13 then break end
+							end
+						end
+						if lastBox then
+							waiting=true
+							waitingTick=tick()
+						end
+					end
+				end
+				--smoothTP(oldcf)
+			end
+		end
+		
     end
 })
 
