@@ -397,8 +397,9 @@ sectionSettings:CreateToggle({
     Callback = function(bool)
         doCashier = bool
 		updateSmoothTPState()
-		addToQueue("Cashier", function(done)
+		
             if doCashier then
+				addToQueue("Cashier", function(done)
 				for zz=1,6 do
 					local c,order = FindFirstCustomer()
 					if doCashier and c and order then
@@ -415,11 +416,12 @@ sectionSettings:CreateToggle({
 						break
 					end
 				end
-			end
+			
                 print("Cashier wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
 				done()
         end)
+	end
 	end
 })
 
@@ -430,8 +432,7 @@ sectionSettings:CreateToggle({
     Callback = function(bool)
         doCook = bool
 		updateSmoothTPState()
-		addToQueue("Cook", function(done)
-                for zz=1,28 do
+		
 					local order = getOrders()[1]
 					local topping
 					if order=="Pepperoni" or order=="Sausage" then topping=order end
@@ -455,6 +456,8 @@ sectionSettings:CreateToggle({
 						ovens[j], ovens[i] = ovens[i], ovens[j]
 					end
 					if doCook then
+						addToQueue("Cook", function(done)
+							for zz=1,28 do
 						local didsomething=false
 						--move final pizza
 						if cookP and tick()-cookPtick>0.8 then
@@ -552,16 +555,12 @@ sectionSettings:CreateToggle({
 							network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
 						end
 						if didsomething then wait(0.5) else break end
-					else
-						break
 					end
-				end
                 print("Cook wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
 				done()
         end)
-	
-		
+	end
     end
 })
 
@@ -572,9 +571,11 @@ sectionSettings:CreateToggle({
     Callback = function(bool)
         doBoxer = bool
 		updateSmoothTPState()
-		addToQueue("Boxer", function(done)
-            for zz=2,3 do
+		
+            
 				if doBoxer then
+					addToQueue("Boxer", function(done)
+					for zz=2,3 do
 					local didsomething = false
 					local boxP,boxD = FindBoxingFoods()
 					local closedBox,openBox,fullBox = FindBoxes()
@@ -614,16 +615,18 @@ sectionSettings:CreateToggle({
 						wait(0.4)
 						network:FireServer("AssignPizzaToBox", openBox, boxP)
 					end
-					if didsomething then wait(0.7) else break end
-				else
-					break
+					if didsomething then wait(0.7)
+					else 
+					break 
+
 				end
+				
 			end
                 print("Boxer wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
 				done()
         end)
-		
+	end
     end
 })
 
@@ -634,8 +637,9 @@ sectionSettings:CreateToggle({
     Callback = function(bool)
         doDelivery = bool
 		updateSmoothTPState()
-		addToQueue("Delivery", function(done)
+		
             if doDelivery then
+				addToQueue("Delivery", function(done)
 				local wstools = FindAllDeliveryTools(workspace)
 				if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
 					--get tools
@@ -706,12 +710,12 @@ sectionSettings:CreateToggle({
 					end
 					delTick = tick()
 				end
-			end
+			
                 print("Delivery wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
 				done()
         end)
-        
+	end
     end
 })
 
@@ -722,8 +726,9 @@ sectionSettings:CreateToggle({
     Callback = function(bool)
         doSupplier = bool
         updateSmoothTPState()
-        addToQueue("Supplier", function(done)
+        
 			if doSupplier then
+				addToQueue("Supplier", function(done)
 				local refill=false
 				for s,c in pairs(supplyCounts) do
 					if c <= settings.refill_at then
@@ -822,13 +827,15 @@ sectionSettings:CreateToggle({
 					end
 					--smoothTP(oldcf)
 				end
-			end
+		
+		
 		
 		
             print("Supplier wird ausgeführt...")
             wait(2) -- Simuliere die Dauer des Prozesses
 			done()
 		end)
+	end
     end
 })
 
