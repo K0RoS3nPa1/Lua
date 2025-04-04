@@ -292,8 +292,7 @@ local function smoothTP2(cf)
 	workspace.Gravity = oldg
 end
 -- Globale Variable zur Steuerung von smoothTP
-local enableSmoothTP = true
-
+local enableSmoothTP = true -- Standardmäßig aktiviert
 local function smoothTP(cf)
     if not enableSmoothTP then
         print("smoothTP ist deaktiviert.")
@@ -324,7 +323,15 @@ for _,o in ipairs(workspace.Ovens:GetChildren()) do
 		o.Bottom.CanTouch = false
 	end
 end
-
+local function updateSmoothTPState()
+    if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
+        enableSmoothTP = false
+        print("smoothTP wurde deaktiviert, da keine Prozesse aktiv sind.")
+    else
+        enableSmoothTP = true
+        print("smoothTP ist aktiviert, da ein Prozess aktiv ist.")
+    end
+end
 
 
 local isProcessing = false
@@ -367,7 +374,7 @@ sectionSettings:CreateToggle({
 
         -- Debugging-Ausgabe
         print("Alle Toggles geändert:", bool)
-
+		updateSmoothTPState()
         -- Aktualisiere die GUI-Toggles visuell
         Rayfield.Flags["doCashier"]:Set(bool)
         Rayfield.Flags["doCook"]:Set(bool)
@@ -387,6 +394,7 @@ sectionSettings:CreateToggle({
     Flag = "doCashier",
     Callback = function(bool)
         doCashier = bool
+		updateSmoothTPState()
 		processToggle("Cashier", function()
             if doCashier then
 				for zz=1,6 do
@@ -408,7 +416,7 @@ sectionSettings:CreateToggle({
 			end
                 print("Cashier wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
-				enableSmoothTP = false
+				
         end)
 	end
 })
@@ -419,6 +427,7 @@ sectionSettings:CreateToggle({
     Flag = "doCook",
     Callback = function(bool)
         doCook = bool
+		updateSmoothTPState()
 		processToggle("Cook", function()
                 for zz=1,28 do
 					local order = getOrders()[1]
@@ -560,6 +569,7 @@ sectionSettings:CreateToggle({
     Flag = "doBoxer",
     Callback = function(bool)
         doBoxer = bool
+		updateSmoothTPState()
 		processToggle("Boxer", function()
             for zz=2,3 do
 				if doBoxer then
@@ -609,7 +619,7 @@ sectionSettings:CreateToggle({
 			end
                 print("Boxer wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
-				enableSmoothTP = false
+				
         end)
 		
     end
@@ -621,6 +631,7 @@ sectionSettings:CreateToggle({
     Flag = "doDelivery",
     Callback = function(bool)
         doDelivery = bool
+		updateSmoothTPState()
 		processToggle("Delivery", function()
             if doDelivery then
 				local wstools = FindAllDeliveryTools(workspace)
@@ -696,7 +707,7 @@ sectionSettings:CreateToggle({
 			end
                 print("Delivery wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
-				enableSmoothTP = false
+				
         end)
         
     end
@@ -708,6 +719,7 @@ sectionSettings:CreateToggle({
     Flag = "doSupplier",
     Callback = function(bool)
         doSupplier = bool
+		updateSmoothTPState()
 		processToggle("Supplier", function()
             if doSupplier then
 				local refill=false
@@ -811,7 +823,7 @@ sectionSettings:CreateToggle({
 			end
                 print("Supplier wird ausgeführt...")
                 wait(2) -- Simuliere die Dauer des Prozesses
-				enableSmoothTP = false
+				
         end)
 		
 		
