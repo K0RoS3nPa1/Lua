@@ -306,6 +306,7 @@ local function smoothTP(cf)
             end
         end
     end
+	wait(1.2)
     smoothTP2(cf)
 end
 for _,o in ipairs(workspace.Ovens:GetChildren()) do
@@ -362,7 +363,7 @@ local function startLoop()
 		end
 	end
 	
-		for zz=1,38 do
+		for zz=1,58 do
 			local order = getOrders()[1]
 			local topping
 			if order=="Pepperoni" or order=="Sausage" then topping=order end
