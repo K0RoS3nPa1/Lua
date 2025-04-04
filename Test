@@ -292,12 +292,9 @@ local function smoothTP2(cf)
 	workspace.Gravity = oldg
 end
 -- Globale Variable zur Steuerung von smoothTP
-local enableSmoothTP = true -- Standardmäßig aktiviert
+-- Standardmäßig aktiviert
 local function smoothTP(cf)
-    if not enableSmoothTP then
-        print("smoothTP ist deaktiviert.")
-        return -- Beende die Funktion, wenn smoothTP deaktiviert ist
-    end
+  
 
     if (cf.p - root.Position).Magnitude > 97 then
         local btns = workspace.JobButtons:GetChildren()
@@ -340,33 +337,14 @@ local processQueue = {}
 local isProcessing = false
 
 -- Funktion zum Hinzufügen eines Prozesses zur Warteschlange
-local function addProcessToQueue(processName, processFunction)
-    table.insert(processQueue, { name = processName, callback = processFunction })
+local function addProcessToQueue(processName, processFunction, duration)
+    table.insert(processQueue, { 
+        name = processName, 
+        callback = processFunction, 
+        duration = duration or 0 -- Standardmäßig keine Begrenzung
+    })
 end
 
--- Funktion zum Verarbeiten der Warteschlange
-local function processNext()
-    if isProcessing or #processQueue == 0 then
-        return -- Verhindere, dass mehrere Prozesse gleichzeitig laufen
-    end
-
-    isProcessing = true
-    local currentProcess = table.remove(processQueue, 1) -- Hole den nächsten Prozess aus der Warteschlange
-
-    print("Starte Prozess:", currentProcess.name)
-    currentProcess.callback(function()
-        print("Prozess abgeschlossen:", currentProcess.name)
-        isProcessing = false
-        processNext() -- Starte den nächsten Prozess in der Warteschlange
-    end)
-end
-
--- Funktion zum Starten der Warteschlange
-local function startQueue()
-    if not isProcessing then
-        processNext()
-    end
-end
 
 addProcessToQueue("Cashier", function(done)
 	for zz=1,6 do
@@ -744,6 +722,44 @@ addProcessToQueue("Supplier", function(done)
 	end
 	done()
 end)
+
+-- Funktion zum Verarbeiten der Warteschlange
+local function processNext()
+    if isProcessing or #processQueue == 0 then
+        return -- Verhindere, dass mehrere Prozesse gleichzeitig laufen
+    end
+
+    isProcessing = true
+    local currentProcess = table.remove(processQueue, 1) -- Hole den nächsten Prozess aus der Warteschlange
+
+    print("Starte Prozess:", currentProcess.name)
+
+    -- Starte den Prozess mit einer maximalen Dauer
+    local processTimeout = false
+    if currentProcess.duration > 0 then
+        spawn(function()
+            wait(currentProcess.duration)
+            processTimeout = true
+        end)
+    end
+
+    currentProcess.callback(function()
+        if processTimeout then
+            print("Prozess abgebrochen (Zeitüberschreitung):", currentProcess.name)
+        else
+            print("Prozess abgeschlossen:", currentProcess.name)
+        end
+        isProcessing = false
+        processNext() -- Starte den nächsten Prozess in der Warteschlange
+    end)
+end
+
+-- Funktion zum Starten der Warteschlange
+local function startQueue()
+    if not isProcessing then
+        processNext()
+    end
+end
 
 startQueue()
 
