@@ -332,7 +332,7 @@ local function processToggle(toggleName, callback)
     callback()
 
     -- Warte, bis der Prozess abgeschlossen ist
-    wait(1) -- Passe die Wartezeit an die Dauer des Prozesses an
+    wait(4) -- Passe die Wartezeit an die Dauer des Prozesses an
 
     print("Prozess abgeschlossen:", toggleName)
     isProcessing = false -- Setze den Status zurück
