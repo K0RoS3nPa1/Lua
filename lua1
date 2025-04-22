@@ -201,7 +201,7 @@ markAsScriptUser()
 detectOtherScriptUsers()
 
 local ownerUserIds = {
-    123456789 -- DEINE USERID HIER
+    8348037696 -- DEINE USERID HIER
  }
  
  local function isOwner()
