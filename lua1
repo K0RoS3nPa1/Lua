@@ -12,7 +12,7 @@ local PlayerId = game.Players.LocalPlayer.UserId
 M.newInput("Chat bubble", "Prints your text for only bubble.", function(H)
     local Hider = H 
 
-  workspace.Main.Chatted:FireServer (Hider, 'all' )
+    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "ChatBubble")
 end)
 
 M.newInput("Chat bubble Spam", "Prints your text.", function(txt)
@@ -23,7 +23,7 @@ M.newInput("Chat bubble Spam", "Prints your text.", function(txt)
     if _G.Enabled == true then
     while _G.Enabled do
     wait(0.7)
-    workspace.Main.Chatted:FireServer (msg, 'all' )
+    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "ChatBubble")
     end
     end	
 end)
@@ -36,7 +36,7 @@ M.newInput("Chat Spam,", "Prints your text.", function(txt)
     if _G.Enabled == true then
     while _G.Enabled do
     wait(0.7)
-    workspace.Main.Chatted:FireServer (msg)
+    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
     end
     end	
 end)
@@ -49,7 +49,7 @@ M.newButton("Spam Stop", "", function(txt)
     if _G.Enabled == true then
     while _G.Enabled do
     wait(0.4)
-    game.Workspace.Main.Chatted:FireServer(msg)
+    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
     end
     end
 end)
