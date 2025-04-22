@@ -101,23 +101,22 @@ end)
 
 M.newToggle("Anti-Moderator", "", false, function(Enabled)
       local Players = game:GetService("Players")
-      local specificUsers = {
-         "leosteelo1", "Fixy_7676", "ahhdo", "Googly_Google3",
-         "3dCarrot", "overgroundfrom1848", "Phxntomation",
-         "Ashbashthesmash", "MicroscopicMay", "Dued1", "IIcyKoro"
+      local modUserIds = {
+         1240663944, -- Beispiel: leosteelo1
+         987654321, -- Beispiel: Fixy_7676
+         11223344,  -- usw...
+   
       }
       local connection
 
-      local function kickWithMessage(modName)
-         Players.LocalPlayer:Kick("⚠️ Moderator erkannt: " .. modName .. " – Du wurdest zur Sicherheit entfernt.")
-         gui = game.CoreGui.RobloxPromptGui.promptOverlay:WaitForChild("ErrorPrompt")  
-         gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..." 
-        end
+      local function kickWithMessage(userId, playerName)
+         Players.LocalPlayer:Kick("⚠️ Moderator erkannt (UserId: " .. userId .. ", Name: " .. playerName .. ") – Du wurdest zur Sicherheit entfernt.")
+      end
 
       local function checkForSpecificUsers(player)
-         for _, username in ipairs(specificUsers) do
-            if player.Name == username then
-               kickWithMessage(player.Name)
+         for _, id in ipairs(modUserIds) do
+            if player.UserId == id then
+               kickWithMessage(id, player.Name)
             end
          end
       end
@@ -134,7 +133,6 @@ M.newToggle("Anti-Moderator", "", false, function(Enabled)
             connection = nil
          end
       end
-
 end)
 
 
