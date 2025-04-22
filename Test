@@ -1,908 +1,421 @@
--- Lade Rayfield von der richtigen Quelle
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
 
-if not Rayfield then
-error("Rayfield konnte nicht geladen werden. Überprüfe die URL.")
-end
-
-local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
-
-
--- GUI Info-Anzeige
-Rayfield:Notify({
-    Title = "Info",
-    Content = "GUI wird geladen...",
-    Duration = 3
-})
-
--- Erstelle das Hauptfenster für Rayfield
-local window = Rayfield:CreateWindow({
-    Name = "Pizza Factory Mod",
-    LoadingTitle = "Lädt...",
-    LoadingSubtitle = "Bitte warten",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "PizzaFactorySettings",
-        FileName = "PizzaFactory"
-    },
-    Discord = {
-        Enabled = false,
-        Invite = ""
-    },
-    KeySystem = false
-})
+local window = DrRayLibrary:Load("Pizza Hub", "rbxassetid://89063524023843")
+local M = DrRayLibrary.newTab("Main", "rbxassetid://2795572800")
+local T = DrRayLibrary.newTab("Teleport's", "rbxassetid://6723742952")
+local S = DrRayLibrary.newTab("Script's", "rbxassetid://2795572800")
+local PlayerId = game.Players.LocalPlayer.UserId
 
 
-local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=false}
-local player = game:GetService("Players").LocalPlayer
-local ffc = game.FindFirstChild
-local RNG = Random.new()
-local network
-local character,root,humanoid
-do
-	local reg = (getreg or debug.getregistry)()
-	for i=1,#reg do
-		local f = reg[i]
-		if type(f)=="function" then
-		    for k,v in next,getupvalues(f) do
-				if typeof(v)=="Instance" then
-				    if v.Name=="CashOut" then
-						wait(0.2)
-					    setupvalue(f,k,{MouseButton1Click={wait=function()end,Wait=function()end}})
-				    elseif v.Name=="StickerName" then
-				        setupvalue(f,k,nil)
-				    end
-				end
-			end
-    		if tostring(getfenv(f)) .. tostring(script) == "Music" then
+--Main--
 
-    		    local consts = getconstants(f)
-    		    local loc=false
-		        for ci,c in next,consts do
-		            if c == "location changed" then
-		                loc=true
-		            elseif loc and c == "SendData" then
-		                setconstant(f,ci,"ExplodeString")
-		                break
-		            end
-		        end
-    		end
-		elseif type(f)=="table" and rawget(f,"FireServer") and rawget(f,"BindEvents") then
-			network = f
-		end
-	end
-end
+M.newInput("Chat bubble", "Prints your text for only bubble.", function(H)
+    local Hider = H 
 
-local supplyCounts = {TomatoSauce=99,Cheese=99,Sausage=99,Pepperoni=99,Dough=99,Box=99,Dew=99}
-for name in pairs(supplyCounts) do
-	local lbl = workspace.SupplyCounters.Model[name=="Dew" and "CounterMountainDew" or "Counter"..name].a.SG.Counter
-	supplyCounts[name]=tonumber(lbl.Text)
-	lbl.Changed:Connect(function()
-		supplyCounts[name]=tonumber(lbl.Text)
-	end)
-end
+  workspace.Main.Chatted:FireServer (Hider, 'all' )
+end)
 
-local function FindFirstCustomer()
+M.newInput("Chat bubble Spam", "Prints your text.", function(txt)
+	_G.Enabled = true 
+    local msg = txt 
+	   
+ 
+    if _G.Enabled == true then
+    while _G.Enabled do
+    wait(0.7)
+    workspace.Main.Chatted:FireServer (msg, 'all' )
+    end
+    end	
+end)
 
-	local children = workspace.Customers:GetChildren()
-	for i=1,#children do
-		local c = children[i] 
-		if ffc(c,"Head") and ffc(c,"Humanoid") and c.Head.CFrame.Z<102 and ffc(c.Head,"Dialog") and ffc(c.Head.Dialog,"Correct") and ((c.Humanoid.SeatPart and c.Humanoid.SeatPart.Anchored) or (c.Humanoid.SeatPart==nil and (c.Head.Velocity.Z^2)^.5<.0001)) then
-			local dialog = c.Head.Dialog.Correct.ResponseDialog or ''
-			local order = "MountainDew"
-			if dialog:sub(-30)=="instead." then
-				dialog = dialog:sub(-30)
-			end
-			if dialog:find("pepperoni",1,true) then
-				order = "PepperoniPizza"
-			elseif dialog:find("sausage",1,true) then
-				order = "SausagePizza"
-			elseif dialog:find("cheese",1,true) then
-				order = "CheesePizza"
-			end
-			return c,order
-		end
-	end
-end
+M.newInput("Chat Spam,", "Prints your text.", function(txt)
+	_G.Enabled = true 
+    local msg = txt 
+	   
+ 
+    if _G.Enabled == true then
+    while _G.Enabled do
+    wait(0.7)
+    workspace.Main.Chatted:FireServer (msg)
+    end
+    end	
+end)
 
-local boxPtick=0
-local boxDtick=0
-local function FindBoxes()
-	local c,o,f
-	local children = workspace.AllBox:GetChildren()
-	for i=1,#children do
-		local b = children[i]
-		if ffc(b,"HasPizzaInside") or ffc(b,"Pizza") then
-			if c==nil and b.Name=="BoxClosed" and b.Anchored==false and not b.HasPizzaInside.Value then
-				c=b
-			elseif o==nil and b.Name=="BoxOpen" and b.Anchored==false and not b.Pizza.Value then
-				o=b
-			elseif f==nil and (b.Name=="BoxOpen" and b.Pizza.Value) or (b.Name=="BoxClosed" and b.HasPizzaInside.Value) then
-				f=b
-			end
-			if c and o and f then
-				return c,o,f
-			end
-		end
-	end
-	return c,o,f
-end
-local function FindBoxingFoods()
-	local p,d
-	local children = workspace.BoxingRoom:GetChildren()
-	for i=1,#children do
-		local f = children[i]
-		if not f.Anchored then
-			if p==nil and f.Name=="Pizza" then
-				p=f
-			elseif d==nil and f.Name=="Dew" then
-				d=f
-			end
-			if p and d then
-				return p,d
-			end
-		end
-	end
-	return p,d
-end
+M.newButton("Spam Stop", "", function(txt)
+    _G.Enabled = false 
+    local msg = txt 
+       
+ 
+    if _G.Enabled == true then
+    while _G.Enabled do
+    wait(0.4)
+    game.Workspace.Main.Chatted:FireServer(msg)
+    end
+    end
+end)
 
-local orderDict={["3540529228"]="Cheese",["3540530535"]="Sausage",["3540529917"]="Pepperoni",["2512571151"]="Dew",["2512441325"]="Dew",["11874352009"]="Dew"}
-local cookingDict = {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
-local cookPtick=0
-local cookDtick=0
-local cookWarned=false
-local boxerWarned=false
-local function getOrders()
-	local orders={}
-	local tempCookingDict = {}
-	for i,v in pairs(cookingDict) do tempCookingDict[i]=v end
-	local children = workspace.Orders:GetChildren()
-	for i=1,#children do
-		local o = orderDict[children[i].SG.ImageLabel.Image:match("%d+$")]
-		if o then
-			if tempCookingDict[o]>0 then
-				--ignores oven pizzas, so new orders are priority
-				tempCookingDict[o]=tempCookingDict[o]-1
-			elseif (o=="Dew" and #workspace.AllMountainDew:GetChildren()>0) or (supplyCounts[o]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0) then
-				--need supplies
-				orders[#orders+1]=o
-			end
-		end
-	end
-	return orders
-end
-local function FindFirstDew()
-	local children = workspace.AllMountainDew:GetChildren()
-	for i=1,#children do
-		local d = children[i]
-		if (ffc(d,"IsBurned")==nil or d.IsBurned.Value==false) and not d.Anchored then
-			return d
-		end
-	end
-end
-local function FindBadDew()
-	local children = workspace.AllMountainDew:GetChildren()
-	for i=1,#children do
-		local d = children[i]
-		if (ffc(d,"IsBurned")==nil or d.IsBurned.Value==false) and d.Position.X > 53 and d.Position.Z > 50 and not d.Anchored then
-			return d
-		end
-	end
-end
-local function FindDoughAndWithout(str)
-	local goodraw,p,raw,trash
-	local children = workspace.AllDough:GetChildren()
-	for i = #children, 2, -1 do --shuffle
-		local j = RNG:NextInteger(1, i)
-		children[j], children[i] = children[i], children[j]
-	end
-	for i=1,#children do
-		local d = children[i]
-		if d.Anchored==false and #d:GetChildren()>9 then
-			if d.IsBurned.Value or d.HasBugs.Value or d.Cold.Value or (d.BrickColor.Name=="Bright orange" and ffc(d,"XBillboard")) then
-				if trash==nil and d.Position.Y > 0 and ((d.Position*Vector3.new(1,0,1))-Vector3.new(47.90, 0, 72.49)).Magnitude > 1 then
-					trash=d
-				end
-			elseif p==nil and d.BrickColor.Name=="Bright orange" then
-				p=d
-			elseif goodraw==nil and d.Position.X<55 and d.BrickColor.Name=="Brick yellow" and ((str and not ffc(d.SG.Frame,str)) or (str==nil and ffc(d.SG.Frame,"Sausage")==nil and ffc(d.SG.Frame,"Pepperoni")==nil)) then
-				--prefers flat
-				if d.Mesh.Scale.Y<1.1 then
-					goodraw=d
-				else
-					raw=d
-				end
-			end
-			if goodraw and p and trash then
-				return goodraw,p,trash
-			end
-		end
-	end
-	return goodraw or raw,p,trash
-end
-local function getOvenNear(pos)
-	local children = workspace.Ovens:GetChildren()
-	for i=1,#children do
-		if ffc(children[i],"Bottom") and (children[i].Bottom.Position-pos).magnitude < 1.5 then
-			return children[i]
-		end
-	end
-end
-local function getDoughNear(pos)
-	local children = workspace.AllDough:GetChildren()
-	for i=1,#children do
-		if (children[i].Position-pos).magnitude < 1.5 then
-			return children[i]
-		end
-	end
-end
-local function isFullyOpen(oven)
-	return oven.IsOpen.Value==true and (oven.Door.Meter.RotVelocity.Z^2)^.5<.0001
-end
+M.newToggle("Spam sounds", "", false, function(ab)
+    getgenv().hit=ab;while wait()do if getgenv().hit then for j,k in pairs(game.Workspace:GetDescendants())do if k:IsA("Sound")then k:Play()end end end end
+end)
 
-local bcolorToSupply = {["Dark orange"]="Sausage",["Bright blue"]="Pepperoni",["Bright yellow"]="Cheese",["Bright red"]="TomatoSauce",["Dark green"]="Dew",["Brick yellow"]="Dough",["Light stone grey"]="Box",["Really black"]="Dew",["Navy blue"]="Dew"}
-local supplyButtons = {}
-for i,v in ipairs(workspace.SupplyButtons:GetChildren()) do
-	supplyButtons[i] = v.Unpressed
-end
-table.sort(supplyButtons,function(a,b) return a.Position.X < b.Position.X end)
-local delTick = 0
-local function FindAllDeliveryTools(parent)
-	local t = {}
-	local children = parent:GetChildren()
-	for i=1,#children do
-		local v = children[i]
-		if v.ClassName=="Tool" and v.Name:match("^%u%d$") and ffc(v,"Handle") and ffc(v,"House") and (parent~=workspace or (v.Handle.Position-Vector3.new(54.45, 4.02, -16.56)).Magnitude < 30) then
-			t[#t+1] = v
-		end
-	end
-	return t
-end
-local function getHousePart(address)
-    local houses = workspace.Houses:GetChildren()
-    for i=1,#houses do
-        local h = houses[i]
-        if ffc(h,"Address") and h.Address.Value==address and ffc(h,"GivePizza",true) then
-            return ffc(h,"GivePizza",true)
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
+
+M.newToggle("Anti Teleports", "", false, function(state)
+    if state then
+        -- Modelle in ReplicatedStorage verschieben, falls sie existieren
+        if workspace:FindFirstChild("KrustyKrab") then
+            workspace.KrustyKrab.Parent = replicatedStorage
+        end
+        if workspace:FindFirstChild("Teleport to Party Island") then
+            workspace["Teleport to Party Island"].Parent = replicatedStorage
+        end
+    else
+        -- Modelle aus ReplicatedStorage zurück in Workspace verschieben
+        if replicatedStorage:FindFirstChild("KrustyKrab") then
+            replicatedStorage.KrustyKrab.Parent = workspace
+        end
+        if replicatedStorage:FindFirstChild("Teleport to Party Island") then
+            replicatedStorage["Teleport to Party Island"].Parent = workspace
         end
     end
-end
-local function onCharacterAdded(char)
-	if not char then return end
-	character=char
-	root = character:WaitForChild("HumanoidRootPart")
-	humanoid = character:WaitForChild("Humanoid")
-	humanoid:SetStateEnabled("FallingDown",false)
-end
-onCharacterAdded(player.Character or player.CharacterAdded:Wait())
-player.CharacterAdded:Connect(onCharacterAdded)
+end)
 
-local function smoothTP2(cf)
-	local cf0 = (cf-cf.p) + root.Position + Vector3.new(0,0,0)
-	local diff = cf.p - root.Position
-	local oldg = workspace.Gravity
-	workspace.Gravity = 197
-	for i=0,diff.Magnitude,settings.movespeed_at do
-		humanoid.Sit=false
-		root.CFrame = cf0 + diff.Unit * i
-		root.Velocity,root.RotVelocity=Vector3.new(),Vector3.new()
-		wait()
-	end
-	root.CFrame = cf
-	workspace.Gravity = oldg
-end
--- Globale Variable zur Steuerung von smoothTP
--- Standardmäßig aktiviert
-local function smoothTP(cf)
-  
 
-    if (cf.p - root.Position).Magnitude > 97 then
-        local btns = workspace.JobButtons:GetChildren()
-        if player:FindFirstChild("House") and player.House.Value then
-            btns[#btns + 1] = player.House.Value:FindFirstChild("Marker")
+
+M.newToggle("Anti-Oven Fire", "", false, function(y)
+    getgenv().heee=y;while true do wait(.40)if getgenv().heee then pcall(function()for j,k in pairs(game.Players:GetPlayers())do local g={[1]=k.Character.UpperTorso}workspace.GameService.ExtinguishFire:FireServer(unpack(g))for j,k in pairs(game.Workspace.AllDough:GetChildren())do local g={[1]=k}workspace.GameService.ExtinguishFire:FireServer(unpack(g))end end end)end end
+end)
+
+M.newToggle("Anti sit", "", false, function(sit)
+  	    local RunService = game:GetService("RunService")
+			function antiSit()
+			if game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Seated then 
+			game.Players.LocalPlayer.Character.Humanoid.Jump = sit
+			end
+			end
+			RunService:BindToRenderStep("tempBinding", 1000, antiSit)
+end)
+
+
+
+M.newToggle("Anti-Moderator", "", false, function(Enabled)
+      local Players = game:GetService("Players")
+      local specificUsers = {
+         "leosteelo1", "Fixy_7676", "ahhdo", "Googly_Google3",
+         "3dCarrot", "overgroundfrom1848", "Phxntomation",
+         "Ashbashthesmash", "MicroscopicMay", "Dued1", "IIcyKoro"
+      }
+      local connection
+
+      local function kickWithMessage(modName)
+         Players.LocalPlayer:Kick("⚠️ Moderator erkannt: " .. modName .. " – Du wurdest zur Sicherheit entfernt.")
+         gui = game.CoreGui.RobloxPromptGui.promptOverlay:WaitForChild("ErrorPrompt")  
+         gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..." 
         end
-        table.sort(btns, function(a, b)
-            return (a.Position - cf.p).Magnitude < (b.Position - cf.p).Magnitude
-        end)
-        if (btns[1].Position - cf.p).Magnitude < (cf.p - root.Position).Magnitude then
-            game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
-            wait(0.9)
-            if (cf.p - root.Position).Magnitude < 9 then
-                return
+
+      local function checkForSpecificUsers(player)
+         for _, username in ipairs(specificUsers) do
+            if player.Name == username then
+               kickWithMessage(player.Name)
+            end
+         end
+      end
+
+      if Enabled then
+         for _, player in ipairs(Players:GetPlayers()) do
+            checkForSpecificUsers(player)
+         end
+
+         connection = Players.PlayerAdded:Connect(checkForSpecificUsers)
+      else
+         if connection then
+            connection:Disconnect()
+            connection = nil
+         end
+      end
+
+end)
+
+
+M.newToggle("Break Leaderboard", "", false, function(z)
+    getgenv().nnnnnnnnnnnn=z;while true do wait()if getgenv().nnnnnnnnnnnn then pcall(function()game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cashier")game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cook")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Delivery")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Supplier")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","On Break")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cashier")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cook")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Delivery")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Supplier")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","On Break")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cook")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Delivery")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cook")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Delivery")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cashier")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Supplier")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","On Break")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cook")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Delivery")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Supplier")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","On Break")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Cook")wait(.02)game:GetService("ReplicatedStorage").PlayerChannel:FireServer("ChangeJob","Delivery")game.Players.LocalPlayer.Character.Pants:Destroy()game.Players.LocalPlayer.Character.Shirt:Destroy()end)end end
+end)
+
+M.newToggle("Kitchen destroyer", "", false, function(K)
+    _G.cookroomfucker = K -- change to false and re execute if you wanna turn it off 
+    local lp = game:GetService("Players").LocalPlayer
+    local remote
+    local ffc = game.FindFirstChild
+    
+    do
+        local reg = (getreg or debug.getregistry)()
+        for i=1,#reg do
+            local f = reg[i]
+            if type(f)=="table" and rawget(f,"FireServer") and rawget(f,"BindEvents") then
+                remote = f
             end
         end
     end
-    wait(1.2)
-    smoothTP2(cf)
-end
-for _,o in ipairs(workspace.Ovens:GetChildren()) do
-	if ffc(o,"Bottom") then
-		o.Bottom.CanTouch = false
-	end
-end
-local function updateSmoothTPState()
-    if not (doCashier or doCook or doBoxer or doDelivery or doSupplier) then
-        enableSmoothTP = false
-        print("smoothTP wurde deaktiviert, da keine Prozesse aktiv sind.")
-    else
-        enableSmoothTP = true
-        print("smoothTP ist aktiviert, da ein Prozess aktiv ist.")
+    
+    function moveThing(bmd, location)
+        remote:FireServer("UpdateProperty", bmd, "CFrame", location)
+        wait()
+        remote:FireServer("SquishDough", bmd)
     end
-end
-
-
-
-
-local processQueue = {}
-local isProcessing = false
-
--- Funktion zum Hinzufügen eines Prozesses zur Warteschlange
-local function addProcessToQueue(processName, processFunction, duration)
-    table.insert(processQueue, { 
-        name = processName, 
-        callback = processFunction, 
-        duration = duration or 0 -- Standardmäßig keine Begrenzung
-    })
-end
-
-
-addProcessToQueue("Cashier", function(done)
-	for zz=1,6 do
-		local c,order = FindFirstCustomer()
-		if doCashier and c and order then
-			local reg = 3
-			if c.Head.Position.X < 50 then
-			    reg = 2
-			elseif c.Head.Position.X < 70 then
-			    reg = 1
-			end
-			if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
-			network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
-			wait(0.4)
-		else
-			break
-		end
-	end
-done()
-end)
-
-addProcessToQueue("Cook", function(done)
-	for zz=1,38 do
-		local order = getOrders()[1]
-		local topping
-		if order=="Pepperoni" or order=="Sausage" then topping=order end
-		local cookD = FindFirstDew()
-		local badD = FindBadDew()
-		local raw,cookP,trash
-		if topping then
-			--pepperoni order avoids sausage dough and vice verca
-			raw,cookP,trash = FindDoughAndWithout(topping=="Pepperoni" and "Sausage" or "Pepperoni")
-		else
-			raw,cookP,trash = FindDoughAndWithout()
-		end
-		local ovens = workspace.Ovens:GetChildren()
-		for i=#ovens,1,-1 do
-		    if #ovens[i]:GetChildren() < 10 then
-		        table.remove(ovens,i)
-		    end
-		end
-		for i = #ovens, 2, -1 do --shuffle
-			local j = RNG:NextInteger(1, i)
-			ovens[j], ovens[i] = ovens[i], ovens[j]
-		end
-		if doCook then
-			local didsomething=false
-			--move final pizza
-			if cookP and tick()-cookPtick>0.8 then
-				local oven = getOvenNear(cookP.Position)
-				if oven==nil or oven.IsOpen.Value then
-					cookPtick=tick()
-					didsomething=true
-					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-					network:FireServer("UpdateProperty", cookP, "CFrame", CFrame.new(RNG:NextNumber(56,57),4.1,38))
-				end
-			end
-			if order then
-				if order=="Dew" and cookD and tick()-cookDtick>0.8 then
-					--move dew if ordered
-					cookDtick=tick()
-					didsomething=true
-					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-					network:FireServer("UpdateProperty", cookD, "CFrame", CFrame.new(53,4.68,36.5))
-				elseif order~="Dew" and raw and raw.Parent and supplyCounts[order]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0 then
-					--make pizza
-					if raw.Mesh.Scale.Y>1.5 then
-						if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-						didsomething=true
-						network:FireServer("UpdateProperty", raw, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
-						wait()
-						network:FireServer("SquishDough", raw)
-					else
-						--make sure it will have an oven
-						local oven
-						for _,o in ipairs(ovens) do
-							if isFullyOpen(o) then
-								local other = getDoughNear(o.Bottom.Position)
-								if other==nil or not (other.BrickColor.Name=="Bright orange" and ffc(other.SG.Frame,"TomatoSauce") and ffc(other.SG.Frame,"MeltedCheese")) then
-									if other then
-										--replace mistaken dough
-										didsomething=true
-										if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-										network:FireServer("UpdateProperty", other, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
-										wait(0.2)
-									end
-									oven=o
-									break
-								end
-							end
-						end
-						if oven and raw.Parent==workspace.AllDough then
-							--make
-							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-							didsomething=true
-							network:FireServer("AddIngredientToPizza", raw,"TomatoSauce")
-							network:FireServer("AddIngredientToPizza", raw,"Cheese")
-							network:FireServer("AddIngredientToPizza", raw,topping)
-							network:FireServer("UpdateProperty", raw, "CFrame", oven.Bottom.CFrame+Vector3.new(0,0.7,0))
-							oven.Door.ClickDetector.Detector:FireServer()
-							--mark as cooking
-							cookingDict[order]=cookingDict[order]+1
-							local revoked=false
-							spawn(function()
-								raw.AncestryChanged:Wait()
-								if not revoked then
-									cookingDict[order]=cookingDict[order]-1
-									revoked=true
-								end
-							end)
-							delay(40, function()
-								if not revoked then
-									cookingDict[order]=cookingDict[order]-1
-									revoked=true
-								end
-							end)
-						end
-					end
-				end
-			end
-			--open unnecessarily closed ovens
-			for _,o in ipairs(ovens) do
-				local bar = o.Door.Meter.SurfaceGui.ProgressBar.Bar
-				if o.IsOpen.Value==false and (o.IsCooking.Value==false or (Vector3.new(bar.ImageColor3.r,bar.ImageColor3.g,bar.ImageColor3.b)-Vector3.new(.871,.518,.224)).magnitude>.1) then
-					didsomething=true
-					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-					o.Door.ClickDetector.Detector:FireServer()
-					break
-				end
-			end
-			--trash
-			if badD then
-				didsomething=true
-				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-				network:FireServer("UpdateProperty", badD, "CFrame", CFrame.new(RNG:NextNumber(28,30), 1.7, RNG:NextNumber(55,57)))
-			end
-			if trash and (trash.IsBurned.Value==false or getOvenNear(trash.Position)==nil or getOvenNear(trash.Position).IsOpen.Value) then
-				--closed oven breaks if you take burnt out of it
-				didsomething=true
-				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-				network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
-			end
-			if didsomething then wait(0.5) else break end
-		else
-			break
-		end
-	end
-
-done()
-end)
-addProcessToQueue("Boxer", function(done)
-	for zz=2,3 do
-		if doBoxer then
-			local didsomething = false
-			local boxP,boxD = FindBoxingFoods()
-			local closedBox,openBox,fullBox = FindBoxes()
-			if boxD and tick()-boxDtick>0.8 then
-				boxDtick=tick()
-				didsomething=true
-				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-				network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63,4.9,-1,-1,0,0,0,1,0,0,0,-1))
-			end
-			if fullBox then
-				if fullBox.Name=="BoxOpen" then
-					didsomething=true
-					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-					network:FireServer("CloseBox", fullBox)
-					--will be moved next loop
-				elseif tick()-boxPtick>0.8 then
-					didsomething=true
-					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-					network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2,4.4,RNG:NextNumber(-3,-2),-1,0,0,0,1,0,0,0,-1))
-					boxPtick=tick()
-				end
-			end
-			if closedBox and not openBox then
-				didsomething=true
-				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
-				network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5,70.5),3.5,RNG:NextNumber(11,25)))
-				wait(0.3)
-				network:FireServer("OpenBox", closedBox)
-			end
-			if openBox and boxP then
-				didsomething=true
-				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
-				network:FireServer("UpdateProperty", boxP, "Anchored", true)
-				network:FireServer("UpdateProperty", openBox, "Anchored", true)
-				wait(0.4)
-				network:FireServer("UpdateProperty", boxP, "CFrame", openBox.CFrame+Vector3.new(0,-2,0))
-				wait(0.4)
-				network:FireServer("AssignPizzaToBox", openBox, boxP)
-			end
-			if didsomething then wait(0.7) else break end
-		else
-			break
-		end
-	end
-done()
-end)
-addProcessToQueue("Delivery", function(done)
-	if doDelivery then
-		local wstools = FindAllDeliveryTools(workspace)
-		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
-			--get tools
-			if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
-			for i=1,#wstools do
-				if wstools[i].Parent == workspace then
-					humanoid:EquipTool(wstools[i])
-					wait(0.2)
-				end
-			end
-			wait(0.8)
-			local t = FindAllDeliveryTools(character)
-    		for i=1,#t do
-    			t[i].Parent = player.Backpack
-    		end
-    		wait(0.1)
-    		if ffc(character,"RightHand") and ffc(character.RightHand,"RightGrip") then
-    			character.RightHand.RightGrip:Destroy()
-    		end
-		end
-		local bptools = FindAllDeliveryTools(player.Backpack)
-		if #bptools >= settings.deliver_at and #bptools > 1 and tick()-delTick > 40 then
-			--deliver to houses
-			table.sort(bptools,function(a,b)
-				a,b=tostring(a),tostring(b)
-				if (a:sub(1,1)=="B" and b:sub(1,1)=="B") then
-					return a < b
-				end
-				return a > b
-			end)
-			local fatass=false
-			for i=1,#bptools do
-				if not doDelivery then
-					break
-				end
-				humanoid.Sit=false
-				local tool = bptools[i]
-				local giver = getHousePart(tool.Name)
-				local ogp = giver.Position
-				if giver then
-					if (giver.Position-root.Position).Magnitude > 9 then
-						smoothTP(giver.CFrame+Vector3.new(0,7,0))
-						if giver.Parent==nil or (giver.Position-ogp).Magnitude>1 then
-							giver = getHousePart(tool.Name) or giver
-							smoothTP(giver.CFrame+Vector3.new(0,7,0))
-						end
-						pcall(function() tool.Parent = character end)
-						wait(1.6)
-						local t = FindAllDeliveryTools(character)
-                		for i=1,#t do
-                		    if t[i] ~= tool then
-                			    t[i].Parent = player.Backpack
-                			end
-                		end
-						wait(3)
-						fatass=false
-					else
-						if fatass then
-							wait(0.6)
-						else
-							wait(1.2)
-						end
-						pcall(function() tool.Parent = character end)
-						wait()
-						fatass=true
-					end
-				end
-			end
-			delTick = tick()
-		end
-	end
-done()
-end)
-addProcessToQueue("Supplier", function(done)
-	if doSupplier then
-		local refill=false
-		for s,c in pairs(supplyCounts) do
-			if c <= settings.refill_at then
-				refill=true
-				break
-			end
-		end
-		if refill then
-			local oldcf = root.CFrame
-			local waiting = false
-			local waitingTick = 1.8
-			local lastBox
-			while doSupplier do
-				--check if refill is done otherwise hit buttons
-				local fulfilled=true
-				local boxes = workspace.AllSupplyBoxes:GetChildren()
-				for yy=1,9 do
-				local needtp=true
-				local realc = 0
-				for _,btn in ipairs(supplyButtons) do
-				    local s = bcolorToSupply[btn.BrickColor.Name]
-					if supplyCounts[s] < settings.refill_end then
-						local count = 0
-						if #boxes > 30 then
-							for i=1,#boxes do
-								local box = boxes[i]
-								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
-									count=count+1
-								end
-							end
-						end
-						if count < 2 then
-							if needtp then
-							    needtp=false
-								smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
-								wait(0.5)
-							end
-							if not doSupplier then break end
-							root.CFrame = btn.CFrame + Vector3.new(0,3,0)
-							wait(0.3)
-							realc=realc+1
-						end
-						fulfilled=false
-					end
-				end
-				wait(0.3)
-				if yy == 1.2 and realc < 3 then
-				    wait(0.5)
-				end
-				end
-				if fulfilled or not (doSupplier) then
-					break
-				end
-				smoothTP(CFrame.new(8,12.4,-1020))
-				if not doSupplier then break end
-				--check if can finish waiting for boxes to move
-				if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
-					waiting=false
-					if lastBox.Position.X<42 then
-						--clear boxes if stuck
-						smoothTP(CFrame.new(20.5,8,-35))
-						wait(0.5)
-						local boxes = workspace.AllSupplyBoxes:GetChildren()
-						for i=1,#boxes do
-							local box = boxes[i]
-							if box.Anchored==false and box.Position.Z>-55 then
-								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
-								wait()
-							end
-						end
-						wait(0.2)
-					end
-				end
-				if not waiting then
-					--move boxes
-					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
-					wait(0.2)
-					lastBox=nil
-					local j=0
-					local boxes = workspace.AllSupplyBoxes:GetChildren()
-					for i=1,#boxes do
-						local box = boxes[i]
-						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
-							box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
-							network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
-							lastBox=box
-							j=j+1
-							if j>13 then break end
-						end
-					end
-					if lastBox then
-						waiting=true
-						waitingTick=tick()
-					end
-				end
-			end
-			--smoothTP(oldcf)
-		end
-	end
-	done()
-end)
-
--- Funktion zum Verarbeiten der Warteschlange
-local function processNext()
-    if isProcessing or #processQueue == 0 then
-        return -- Verhindere, dass mehrere Prozesse gleichzeitig laufen
+    
+    -- cook room fucker main script
+    
+    for i,v in pairs(workspace.AllSupplyBoxes:GetChildren()) do
+        v.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame
     end
-
-    isProcessing = true
-    local currentProcess = table.remove(processQueue, 1) -- Hole den nächsten Prozess aus der Warteschlange
-
-    print("Starte Prozess:", currentProcess.name)
-
-    -- Starte den Prozess mit einer maximalen Dauer
-    local processTimeout = false
-    if currentProcess.duration > 0 then
-        spawn(function()
-            wait(currentProcess.duration)
-            processTimeout = true
-        end)
-    end
-
-    currentProcess.callback(function()
-        if processTimeout then
-            print("Prozess abgebrochen (Zeitüberschreitung):", currentProcess.name)
-        else
-            print("Prozess abgeschlossen:", currentProcess.name)
+    wait()
+    
+    
+    spawn(function()
+        while _G.cookroomfucker and wait() do
+            spawn(function()
+                for i,v in pairs(workspace.AllDough:GetChildren()) do
+                    moveThing(v, CFrame.new(Random.new():NextNumber(22.6,51.6),Random.new():NextNumber(3.6,14.6),Random.new():NextNumber(55.5,70.5)))
+                end
+            end)
+            spawn(function()
+                for i,v in pairs(workspace.AllMountainDew:GetChildren()) do
+                    moveThing(v, CFrame.new(Random.new():NextNumber(22.6,51.6),Random.new():NextNumber(3.6,14.6),Random.new():NextNumber(55.5,70.5)))
+                end
+            end)
+            spawn(function()
+                for i,v in pairs(workspace.BoxingRoom:GetChildren()) do
+                    moveThing(v, CFrame.new(Random.new():NextNumber(22.6,51.6),Random.new():NextNumber(3.6,14.6),Random.new():NextNumber(55.5,70.5)))
+                end
+            end)
+            spawn(function()
+                for i,v in pairs(workspace.AllBox:GetChildren()) do
+                    moveThing(v, CFrame.new(Random.new():NextNumber(22.6,51.6),Random.new():NextNumber(3.6,14.6),Random.new():NextNumber(55.5,70.5)))
+                end
+            end)
+            spawn(function()
+                for i,v in pairs(workspace.AllSupplyBoxes:GetChildren()) do
+                    moveThing(v, CFrame.new(Random.new():NextNumber(22.6,51.6),Random.new():NextNumber(3.6,14.6),Random.new():NextNumber(55.5,70.5)))
+                end
+            end)
         end
-        isProcessing = false
-        processNext() -- Starte den nächsten Prozess in der Warteschlange
     end)
+    
+    spawn(function()
+        while _G.cookroomfucker and wait() do
+            for i,v in pairs(game:GetService("Workspace").Ovens:GetChildren()) do
+                v.Door.ClickDetector.Detector:FireServer()
+                wait(.15)
+            end
+        end
+    end)
+end)
+
+M.newToggle("UnAnchor Trees", "", false, function(A)
+    getgenv().nhekee=A;while true do wait(.50)if getgenv().nhekee then pcall(function()for j,k in pairs(game.Workspace.Trees:GetDescendants())do if k.Name=="Tree"or k.Name=="DeadTree"then workspace.Main.UprootTree:FireServer(k)end end end)end  end
+end)
+
+M.newToggle("UnAnchor Mailboxes", "", false, function(B)
+    getgenv().hekee=B;while true do wait(1)if getgenv().hekee then pcall(function()for j,k in pairs(game.Workspace.Houses:GetDescendants())do if k.Name=="Mailbox"and k.Parent:IsA("Model")then local g={[1]=k.Parent}workspace.Main.KnockMailbox:FireServer(unpack(g))end end end)end end
+end)
+
+M.newButton("Bring Trees Mailboxes", "", function()
+    if getgenv().nhekee or getgenv().hekee then local F={}local G={}for H,I in pairs(workspace:GetDescendants())do if game.Players.LocalPlayer.Character:FindFirstChild('Head')and I:IsA("BasePart"or"UnionOperation"or"Model")and I.Anchored==false and not I:IsDescendantOf(game.Players.LocalPlayer.Character)and I.Name=="Torso"==false and I.Name=="Head"==false and I.Name=="Right Arm"==false and I.Name=="Left Arm"==false and I.Name=="Right Leg"==false and I.Name=="Left Leg"==false and I.Name=="HumanoidRootPart"==false then for j,w in pairs(I:GetChildren())do if w:IsA("BodyPosition")or w:IsA("BodyGyro")then w:Destroy()end end;local J=Instance.new("BodyPosition")J.Parent=I;J.MaxForce=Vector3.new(math.huge,math.huge,math.huge)table.insert(F,J)if not table.find(G,I)then table.insert(G,I)end end end;for j,w in pairs(F)do w.Position=game.Players.LocalPlayer.Character.Head.Position end;wait(1)for j,k in pairs(G)do for j,w in pairs(k:GetChildren())do if w:IsA("BodyPosition")or w:IsA("BodyGyro")then w:Destroy()end end end;G={}else workspace.MessageService.Dialog.Dialog:Fire("Bring Script Warning","Enable UnAnchor Trees and UnAnchor Mailboxes","ok","",true,true)end 
+end)
+
+M.newButton("Spin Teleport Unanchored [E]", "", function()
+local N=game:GetService("UserInputService")local O=game:GetService("Players").LocalPlayer:GetMouse()local P=Instance.new("Folder",game:GetService("Workspace"))local Q=Instance.new("Part",P)local R=Instance.new("Attachment",Q)Q.Anchored=true;Q.CanCollide=false;Q.Transparency=1;local S=O.Hit+Vector3.new(0,5,0)local T=coroutine.create(function()settings().Physics.AllowSleep=false;while game:GetService("RunService").RenderStepped:Wait()do for H,U in next,game:GetService("Players"):GetPlayers()do if U~=game:GetService("Players").LocalPlayer then U.MaximumSimulationRadius=0;sethiddenproperty(U,"SimulationRadius",0)end end;game:GetService("Players").LocalPlayer.MaximumSimulationRadius=math.pow(math.huge,math.huge)setsimulationradius(math.huge)end end)coroutine.resume(T)local function V(k)if k:IsA("Part")and k.Anchored==false and k.Parent:FindFirstChild("Humanoid")==nil and k.Parent:FindFirstChild("Head")==nil and k.Name~="Handle"then O.TargetFilter=k;for H,W in next,k:GetChildren()do if W:IsA("BodyAngularVelocity")or W:IsA("BodyForce")or W:IsA("BodyGyro")or W:IsA("BodyPosition")or W:IsA("BodyThrust")or W:IsA("BodyVelocity")or W:IsA("RocketPropulsion")then W:Destroy()end end;if k:FindFirstChild("Attachment")then k:FindFirstChild("Attachment"):Destroy()end;if k:FindFirstChild("AlignPosition")then k:FindFirstChild("AlignPosition"):Destroy()end;if k:FindFirstChild("Torque")then k:FindFirstChild("Torque"):Destroy()end;k.CanCollide=false;local X=Instance.new("Torque",k)X.Torque=Vector3.new(100000,100000,100000)local Y=Instance.new("AlignPosition",k)local Z=Instance.new("Attachment",k)X.Attachment0=Z;Y.MaxForce=9999999999999999;Y.MaxVelocity=math.huge;Y.Responsiveness=200;Y.Attachment0=Z;Y.Attachment1=R end end;for H,k in next,game:GetService("Workspace"):GetDescendants()do V(k)end;game:GetService("Workspace").DescendantAdded:Connect(function(k)V(k)end)N.InputBegan:Connect(function(_,a0)if _.KeyCode==Enum.KeyCode.E and not a0 then S=O.Hit+Vector3.new(0,5,0)end end)spawn(function()while game:GetService("RunService").RenderStepped:Wait()do R.WorldCFrame=S  
+end
+end)
+end)
+
+
+M.newSlider("WalkSpeed", "16 is normal", 1000, false, function(W)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = W
+end)
+
+M.newSlider("Jumppower", "50 is normal", 1000, false, function(J)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = J
+end)
+
+
+--[Teleports]--
+
+-- Funktion, um den Spieler anhand des Benutzernamens oder Display-Namens zu teleportieren
+function teleportToPlayer(targetName)
+    local player = game.Players.LocalPlayer
+    local targetPlayer = nil
+
+    -- Versuche, den Spieler anhand des Benutzernamens oder Display-Namens zu finden (unvollständig)
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Name:lower():sub(1, #targetName) == targetName:lower() or p.DisplayName:lower():sub(1, #targetName) == targetName:lower() then
+            targetPlayer = p
+            break
+        end
+    end
+
+    -- Wenn der Spieler gefunden wurde
+    if targetPlayer then
+        local character = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local playerCharacter = player.Character or player.CharacterAdded:Wait()
+        local playerHumanoidRootPart = playerCharacter:WaitForChild("HumanoidRootPart")
+        
+        -- Teleportiere den Spieler zum Zielspieler
+        playerHumanoidRootPart.CFrame = humanoidRootPart.CFrame
+        print("Erfolgreich zu " .. targetPlayer.Name .. " teleportiert!")
+    else
+        print("Spieler mit dem Namen " .. targetName .. " wurde nicht gefunden!")
+    end
 end
 
--- Funktion zum Starten der Warteschlange
-local function startQueue()
-    if not isProcessing then
-        processNext()
+-- Beispiel für die Verwendung eines TextBox-Inputs (z.B. aus einem GUI-Element):
+T.newInput("Goto Player", "", function(tp)
+    -- Wenn der Benutzer den Namen eingibt, teleportiere zu diesem Spieler
+    teleportToPlayer(tp)
+end)
+
+
+
+
+T.newDropdown("Teleport to area", "", {"None","Spawn","Manager","Cashier","Cook","Boxer","Delivery","Supplier"}, function(Option)
+    -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    -- Option ist jetzt eine einfache Zeichenkette, keine Tabelle mehr
+    if Option == "None" then
+        -- Nichts tun, wenn "None" ausgewählt wird
+        elseif Option == "Spawn" then
+            humanoidRootPart.CFrame = CFrame.new(49, 3, 198)
+        elseif Option == "Manager" then
+            humanoidRootPart.CFrame = CFrame.new(37, 4, 3)
+         elseif Option == "Cashier" then
+            humanoidRootPart.CFrame = CFrame.new(48, 4, 80)
+         elseif Option == "Cook" then
+            humanoidRootPart.CFrame = CFrame.new(42, 4, 61)
+        elseif Option == "Boxer" then
+            humanoidRootPart.CFrame = CFrame.new(55, 4, 31)
+        elseif Option == "Delivery" then
+            humanoidRootPart.CFrame = CFrame.new(64, 4, -17)
+        elseif Option == "Supplier" then
+            humanoidRootPart.CFrame = CFrame.new(8, 13, -1020)
     end
-end
+end)
 
-startQueue()
+T.newDropdown("Teleport to houses", "", {"None","Home","A1","A2","A3","B1","B2","B3","B4","B5","B6","C1","C2","C3"}, function(Option)
+    -- Die Funktion, die ausgeführt wird, wenn die Auswahl geändert wird
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local sectionSettings = window:CreateTab("Settings", 4483362458)
-
-sectionSettings:CreateToggle({
-    Name = "Alle Aktivieren",
-    CurrentValue = false, -- Standardmäßig deaktiviert
-    Flag = "allEnabled",
-    Callback = function(bool)
-        -- Setze alle anderen Toggles auf den gleichen Wert wie "Alle Aktivieren"
-        doCashier = bool
-        doCook = bool
-        doBoxer = bool
-        doDelivery = bool
-        doSupplier = bool
-
-        -- Debugging-Ausgabe
-        print("Alle Toggles geändert:", bool)
-		updateSmoothTPState()
-        -- Aktualisiere die GUI-Toggles visuell
-        Rayfield.Flags["doCashier"]:Set(bool)
-        Rayfield.Flags["doCook"]:Set(bool)
-        Rayfield.Flags["doBoxer"]:Set(bool)
-        Rayfield.Flags["doDelivery"]:Set(bool)
-        Rayfield.Flags["doSupplier"]:Set(bool)
-
-        -- Aktualisiere die Schleife
-     
+    -- Option ist jetzt eine einfache Zeichenkette, keine Tabelle mehr
+    if Option == "None" then
+        -- Nichts tun, wenn "None" ausgewählt wird
+    elseif Option == "Home" then
+        local args = {
+            [1] = "TeleportHome"
+        }
+        game:GetService("ReplicatedStorage").PlayerChannel:FireServer(unpack(args))
+    elseif Option == "A1" then
+        humanoidRootPart.CFrame = CFrame.new(190, 3, -474)
+    elseif Option == "A2" then
+        humanoidRootPart.CFrame = CFrame.new(188, 3, -652)
+    elseif Option == "A3" then
+        humanoidRootPart.CFrame = CFrame.new(187, 3, -823)
+    elseif Option == "B1" then
+        humanoidRootPart.CFrame = CFrame.new(-21, 3, -432)
+    elseif Option == "B2" then
+        humanoidRootPart.CFrame = CFrame.new(24, 3, -481)
+    elseif Option == "B3" then
+        humanoidRootPart.CFrame = CFrame.new(-20, 3, -612)
+    elseif Option == "B4" then
+        humanoidRootPart.CFrame = CFrame.new(24, 3, -663)
+    elseif Option == "B5" then
+        humanoidRootPart.CFrame = CFrame.new(-20, 3, -800)
+    elseif Option == "B6" then
+        humanoidRootPart.CFrame = CFrame.new(23, 3, -836)
+    elseif Option == "C1" then
+        humanoidRootPart.CFrame = CFrame.new(-184, 3, -444)
+    elseif Option == "C2" then
+        humanoidRootPart.CFrame = CFrame.new(-186, 3, -612)
+    elseif Option == "C3" then
+        humanoidRootPart.CFrame = CFrame.new(-185, 3, -792)
     end
-})
+end)
 
--- Einzelne Toggles
-sectionSettings:CreateToggle({
-    Name = "Cashier Aktivieren",
-    CurrentValue = doCashier,
-    Flag = "doCashier",
-    Callback = function(bool)
-        doCashier = bool
-		updateSmoothTPState()
-		
-	end
-})
 
-sectionSettings:CreateToggle({
-    Name = "Cook Aktivieren",
-    CurrentValue = doCook,
-    Flag = "doCook",
-    Callback = function(bool)
-        doCook = bool
-		updateSmoothTPState()
 
+
+T.newDropdown("Teleport to islands", "", {"None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island"}, function(Option)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    local Island
+
+    local offset = Vector3.new(0, 20, 0) -- Der Offset, um den Spieler etwas höher zu teleportieren
+
+    -- Überprüfen, ob das Modell existiert und Teleportiere den Spieler zu seinem Mittelpunkt
+    if Option == "None" then
+        -- Nichts tun, wenn "None" ausgewählt wird
+    elseif Option == "Pirate Island" then
+        local model = workspace:FindFirstChild("Island")  -- Überprüfen, ob das Modell existiert
+        if model then
+            local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
+            Island = CFrame.new(modelPosition + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
+        else
+            print("Pirate Island nicht gefunden!")
+        end
+    elseif Option == "Stone Island" then
+        local model = workspace:FindFirstChild("Island1")  -- Überprüfen, ob das Modell existiert
+        if model then
+            local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
+            Island = CFrame.new(modelPosition + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
+        else
+            print("Stone Island nicht gefunden!")
+        end
+    elseif Option == "Sand Island" then
+        local model = workspace:FindFirstChild("Island2")  -- Überprüfen, ob das Modell existiert
+        if model then
+            local modelPosition = model:GetModelCFrame().Position  -- Berechnet die Position des Modells (Mittelpunkt)
+            Island = CFrame.new(modelPosition + offset)  -- Setzt die Position auf den Mittelpunkt des Modells
+        else
+            print("Sand Island nicht gefunden!")
+        end
+    elseif Option == "Teleport to Party Island" then
+        -- Direktes Teleportieren zu den angegebenen Koordinaten
+        humanoidRootPart.CFrame = CFrame.new(88, 1, -315)
     end
-})
 
-sectionSettings:CreateToggle({
-    Name = "Boxer Aktivieren",
-    CurrentValue = doBoxer,
-    Flag = "doBoxer",
-    Callback = function(bool)
-        doBoxer = bool
-		updateSmoothTPState()
-	
+    -- Teleportiere den Spieler, wenn Island gesetzt wurde
+    if Island then
+        humanoidRootPart.CFrame = Island  -- Teleportiere den Spieler zum Mittelpunkt des Modells
     end
-})
-
-sectionSettings:CreateToggle({
-    Name = "Delivery Aktivieren",
-    CurrentValue = doDelivery,
-    Flag = "doDelivery",
-    Callback = function(bool)
-        doDelivery = bool
-		updateSmoothTPState()
-		
-       
-    end
-})
-
-sectionSettings:CreateToggle({
-    Name = "Supplier Aktivieren",
-    CurrentValue = doSupplier,
-    Flag = "doSupplier",
-    Callback = function(bool)
-        doSupplier = bool
-        updateSmoothTPState()
-     
-    end
-})
-
--- Refill Einstellungen
-sectionSettings:CreateSlider({
-    Name = "Refill At",
-    Range = { 0, 99 },
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_at,
-    Flag = "refill_at",
-    Callback = function(value)
-        settings.refill_at = value
-    end
-})
-
-sectionSettings:CreateSlider({
-    Name = "Refill End",
-    Range = { 0, 99 },
-    Increment = 1,
-    Suffix = "%",
-    CurrentValue = settings.refill_end,
-    Flag = "refill_end",
-    Callback = function(value)
-        settings.refill_end = value
-    end
-})
-sectionSettings:CreateSlider({
-    Name = "Deliver at",
-    Range = { 0, 50 },
-    Increment = 1,
-    Suffix = "Deliver at",
-    CurrentValue = settings.deliver_at,
-    Flag = "deliver_at",
-    Callback = function(value)
-        settings.deliver_at = value -- This should be within the Callback function
-    end
-})
-sectionSettings:CreateSlider({
-    Name = "Movespeed",
-    Range = { 0, 50 },
-    Increment = 0,
-    Suffix = "Speed",
-    CurrentValue = settings.movespeed_at,
-    Flag = "movespeed_at",
-    Callback = function(value)
-        settings.movespeed_at = value -- This should be within the Callback function
-    end
-})
+end)
 
 
--- Warte-Schleife, damit das GUI nicht sofort geschlossen wird
-wait(5) -- Wartezeit kann angepasst werden
--- Info-Anzeige beim Schließen
-Rayfield:Notify({
-Title = "Beendet",
-Content = "Das GUI wurde geschlossen.",
-Duration = 3
-})
+
+
+
+
+
+
+
+
+--[Scripts]--
+
+S.newButton("Autofarm", "pls use alts!", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2'))()
+end)
+
+S.newButton("Work at a pizza place", "Hussien", function()
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
+end)
+
+S.newButton("infinite yield", "", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end)
 
