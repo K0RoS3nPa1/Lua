@@ -82,6 +82,15 @@ do
 	end
 end
 assert(network,"failed to find network")
+
+-- Paycheck dauerhaft abholen
+spawn(function()
+	while wait() do -- alle 10 Sekunden
+		pcall(function()
+			workspace.Main.GivePaycheck:FireServer("Paycheck")
+		end)
+	end
+end)
 --//gui
 Create = function(class,parent,props)
 	local new = Instance.new(class)
