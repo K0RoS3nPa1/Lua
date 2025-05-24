@@ -360,15 +360,21 @@ local function ffc(inst, name)
 	return inst:FindFirstChild(name)
 end
 
--- 🍕 Pizza Slicer Tool verwenden (Pizza reinlegen)
-local function UsePizzaSlicer()
-	local remote = ReplicatedStorage:WaitForChild("Pizza Slicer"):WaitForChild("ClickDetector"):WaitForChild("Detector")
-	remote:FireServer()
+-- 1. Schublade öffnen
+local function OpenDrawer()
+	local drawerRemote = workspace:WaitForChild("Drawer"):WaitForChild("ClickDetector"):WaitForChild("Detector")
+	drawerRemote:FireServer()
 end
 
--- 🔪 Pizza schneiden, bevor geschlossen wird
+-- 2. Pizza Slicer holen
+local function UsePizzaSlicer()
+	local slicerRemote = ReplicatedStorage:WaitForChild("Pizza Slicer"):WaitForChild("ClickDetector"):WaitForChild("Detector")
+	slicerRemote:FireServer()
+end
+
+-- 3. Pizza schneiden
 local function CutPizza(boxOpen)
-	local remote = ReplicatedStorage:WaitForChild("Communication"):WaitForChild("Events"):WaitForChild("") -- <== HIER Namen eintragen
+	local remote = ReplicatedStorage:WaitForChild("Communication"):WaitForChild("Events"):WaitForChild("RemoteName") -- 🔁 ANPASSEN!
 	if remote and boxOpen then
 		local args = {
 			boxOpen,
@@ -378,36 +384,40 @@ local function CutPizza(boxOpen)
 	end
 end
 
--- 📦 Boxen finden mit Remotes eingebaut
+-- 📦 Hauptfunktion – Logik minimal verändert
 local function FindBoxes()
 	local c, o, f
 	local children = workspace.AllBox:GetChildren()
+
 	for i = 1, #children do
 		local b = children[i]
 		if ffc(b, "HasPizzaInside") or ffc(b, "Pizza") then
-			-- Leere geschlossene Box für späteres Schließen
+
+			-- Leere geschlossene Box
 			if c == nil and b.Name == "BoxClosed" and not b.Anchored and not b.HasPizzaInside.Value then
 				c = b
 
-			-- Leere offene Box → Pizza reinlegen
+			-- Leere offene Box -> alle Schritte in Reihenfolge ausführen
 			elseif o == nil and b.Name == "BoxOpen" and not b.Anchored and not b.Pizza.Value then
+				OpenDrawer()
 				UsePizzaSlicer()
 				o = b
 
-			-- Pizza ist drin → jetzt schneiden (vor dem Schließen)
+			-- Box mit Pizza -> schneiden
 			elseif f == nil and ((b.Name == "BoxOpen" and b.Pizza.Value) or (b.Name == "BoxClosed" and b.HasPizzaInside.Value)) then
 				CutPizza(b)
 				f = b
 			end
 
-			-- Sobald alle gefunden → zurückgeben
 			if c and o and f then
 				return c, o, f
 			end
 		end
 	end
+
 	return c, o, f
 end
+
 
 local function FindBoxingFoods()
 	local p,d
