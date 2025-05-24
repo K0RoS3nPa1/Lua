@@ -85,7 +85,7 @@ assert(network,"failed to find network")
 
 -- Paycheck dauerhaft abholen
 spawn(function()
-	while wait(10) do -- alle 10 Sekunden
+	while wait() do -- alle 10 Sekunden
 		pcall(function()
 			workspace.Main.GivePaycheck:FireServer("Paycheck")
 		end)
