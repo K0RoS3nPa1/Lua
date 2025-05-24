@@ -56,7 +56,7 @@ do
 		if type(f)=="function" then
 			for k,v in next,getupvalues(f) do
 				if typeof(v)=="Instance" then
-					if v.Name=="CashOut" then
+					if v.Name=="Paycheck" then
 						workspace.Main.GivePaycheck:FireServer("Paycheck")
 						setupvalue(f,k,nil)
 					elseif v.Name=="StickerName" then
