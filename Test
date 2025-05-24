@@ -353,43 +353,6 @@ end
 
 local boxPtick=0
 local boxDtick=0
-
--- Neue Remote für Box vor dem Schließen
-local function FireBoxRemote(box)
-	-- Ensure 'game' and 'workspace' are available (Roblox environment)
-	if not game or not workspace then return end
-
-	-- Suche die passende Remote im ReplicatedStorage
-	local comm = game:GetService("ReplicatedStorage"):FindFirstChild("Communication")
-	if not comm then return end
-	local events = comm:FindFirstChild("Events")
-	if not events then return end
-
-	-- Suche die passende Event-Remote (hier als Beispiel "BoxPreClose", bitte ggf. anpassen)
-	local remote = nil
-	for _, child in ipairs(events:GetChildren()) do
-		if child:IsA("RemoteEvent") and child.Name:lower():find("box") then
-			remote = child
-			break
-		end
-	end
-	if not remote then return end
-
-	-- Versuche die Nummer automatisch zu erkennen
-	local nummer = nil
-	if box and box:FindFirstChild("BoxId") then
-		nummer = box.BoxId.Value
-	else
-		-- Fallback: Suche nach einer Zahl im Namen
-		local num = tostring(box and box.Name or ""):match("%d+")
-		if num then nummer = tonumber(num) end
-	end
-	if not nummer then return end
-
-	local args = {box, nummer}
-	remote:FireServer(table.unpack(args))
-end
-
 local function FindBoxes()
 	local c,o,f
 	local children = workspace.AllBox:GetChildren()
@@ -410,7 +373,6 @@ local function FindBoxes()
 	end
 	return c,o,f
 end
-
 local function FindBoxingFoods()
 	local p,d
 	local children = workspace.BoxingRoom:GetChildren()
@@ -430,8 +392,36 @@ local function FindBoxingFoods()
 	return p,d
 end
 
+-- Neuer RemoteEvent vor dem Schließen der Pizza-Box
+local function FireCustomBoxEvent(box)
+	-- Versucht die PizzaId automatisch zu erkennen
+	local pizzaId = nil
+	if box and box:FindFirstChild("Pizza") and box.Pizza.Value then
+		local pizza = box.Pizza.Value
+		if pizza:FindFirstChild("PizzaId") then
+			pizzaId = pizza.PizzaId.Value
+		elseif pizza:FindFirstChild("ID") then
+			pizzaId = pizza.ID.Value
+		end
+	end
+	if pizzaId then
+		local args = {
+			box,
+			pizzaId
+		}
+		local comm = game:GetService("ReplicatedStorage"):FindFirstChild("Communication")
+		if comm and comm:FindFirstChild("Events") then
+			-- Trage hier den Namen des RemoteEvents ein, z.B. "BoxClosedEvent"
+			local remote = comm.Events:FindFirstChild("BoxClosedEvent")
+			if remote then
+				remote:FireServer(unpack(args))
+			end
+		end
+	end
+end
+
 local orderDict={["3540529228"]="Cheese",["3540530535"]="Sausage",["3540529917"]="Pepperoni",["2512571151"]="Dew",["2512441325"]="Dew",["11874352009"]="Dew"}
-local cookingDict = {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
+local cooking {Cheese=0,Sausage=0,Pepperoni=0,Dew=0}
 local cookPtick=0
 local cookDtick=0
 local cookWarned=false
@@ -447,7 +437,7 @@ local function getOrders()
 			if tempCookingDict[o]>0 then
 				--ignores oven pizzas, so new orders are priority
 				tempCookingDict[o]=tempCookingDict[o]-1
-			elseif (o=="Dew" and #workspace.AllMountainDew:GetChildren()>0) or (supplyCounts[o]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0) then
+			elseif (o=="Dew" and #workspace.AllMountainDew:GetChildren()>0) or (supplyCounts[o0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0) then
 				--need supplies
 				orders[#orders+1]=o
 			end
