@@ -353,71 +353,63 @@ end
 
 local boxPtick=0
 local boxDtick=0
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local workspace = game:GetService("Workspace")
 
-local function ffc(inst, name)
-	return inst:FindFirstChild(name)
-end
+-- Neue Remote für Box vor dem Schließen
+local function FireBoxRemote(box)
+	-- Ensure 'game' and 'workspace' are available (Roblox environment)
+	if not game or not workspace then return end
 
--- 1. Schublade öffnen
-local function OpenDrawer()
-	local drawerRemote = workspace:WaitForChild("Drawer"):WaitForChild("ClickDetector"):WaitForChild("Detector")
-	drawerRemote:FireServer()
-end
+	-- Suche die passende Remote im ReplicatedStorage
+	local comm = game:GetService("ReplicatedStorage"):FindFirstChild("Communication")
+	if not comm then return end
+	local events = comm:FindFirstChild("Events")
+	if not events then return end
 
--- 2. Pizza Slicer holen
-local function UsePizzaSlicer()
-	local slicerRemote = ReplicatedStorage:WaitForChild("Pizza Slicer"):WaitForChild("ClickDetector"):WaitForChild("Detector")
-	slicerRemote:FireServer()
-end
-
--- 3. Pizza schneiden
-local function CutPizza(boxOpen)
-	local remote = ReplicatedStorage:WaitForChild("Communication"):WaitForChild("Events"):WaitForChild("RemoteName") -- 🔁 ANPASSEN!
-	if remote and boxOpen then
-		local args = {
-			boxOpen,
-			20357
-		}
-		remote:FireServer(unpack(args))
+	-- Suche die passende Event-Remote (hier als Beispiel "BoxPreClose", bitte ggf. anpassen)
+	local remote = nil
+	for _, child in ipairs(events:GetChildren()) do
+		if child:IsA("RemoteEvent") and child.Name:lower():find("box") then
+			remote = child
+			break
+		end
 	end
+	if not remote then return end
+
+	-- Versuche die Nummer automatisch zu erkennen
+	local nummer = nil
+	if box and box:FindFirstChild("BoxId") then
+		nummer = box.BoxId.Value
+	else
+		-- Fallback: Suche nach einer Zahl im Namen
+		local num = tostring(box and box.Name or ""):match("%d+")
+		if num then nummer = tonumber(num) end
+	end
+	if not nummer then return end
+
+	local args = {box, nummer}
+	remote:FireServer(table.unpack(args))
 end
 
--- 📦 Hauptfunktion – Logik minimal verändert
 local function FindBoxes()
-	local c, o, f
+	local c,o,f
 	local children = workspace.AllBox:GetChildren()
-
-	for i = 1, #children do
+	for i=1,#children do
 		local b = children[i]
-		if ffc(b, "HasPizzaInside") or ffc(b, "Pizza") then
-
-			-- Leere geschlossene Box
-			if c == nil and b.Name == "BoxClosed" and not b.Anchored and not b.HasPizzaInside.Value then
-				c = b
-
-			-- Leere offene Box -> alle Schritte in Reihenfolge ausführen
-			elseif o == nil and b.Name == "BoxOpen" and not b.Anchored and not b.Pizza.Value then
-				OpenDrawer()
-				UsePizzaSlicer()
-				o = b
-
-			-- Box mit Pizza -> schneiden
-			elseif f == nil and ((b.Name == "BoxOpen" and b.Pizza.Value) or (b.Name == "BoxClosed" and b.HasPizzaInside.Value)) then
-				CutPizza(b)
-				f = b
+		if ffc(b,"HasPizzaInside") or ffc(b,"Pizza") then
+			if c==nil and b.Name=="BoxClosed" and b.Anchored==false and not b.HasPizzaInside.Value then
+				c=b
+			elseif o==nil and b.Name=="BoxOpen" and b.Anchored==false and not b.Pizza.Value then
+				o=b
+			elseif f==nil and (b.Name=="BoxOpen" and b.Pizza.Value) or (b.Name=="BoxClosed" and b.HasPizzaInside.Value) then
+				f=b
 			end
-
 			if c and o and f then
-				return c, o, f
+				return c,o,f
 			end
 		end
 	end
-
-	return c, o, f
+	return c,o,f
 end
-
 
 local function FindBoxingFoods()
 	local p,d
