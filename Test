@@ -86,7 +86,6 @@ spawn(function()
 		pcall(function()
 			workspace.Main.GivePaycheck:FireServer("Paycheck")
 		end)
-		wait(10) -- alle 10 Sekunden, anpassen falls nötig
 	end
 end)
 --//gui
