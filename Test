@@ -1,3 +1,15 @@
+
+-- Game-ID Whitelist (nur hier läuft das Script)
+local allowedGames = {
+    [1234567890] = true, -- << ersetze durch deine GameId(s)
+    [9876543210] = true
+}
+
+if not allowedGames[game.PlaceId] then
+    return -- Script wird nicht geladen, wenn nicht erlaubt
+end
+
+
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
@@ -39,6 +51,30 @@ corner.CornerRadius = UDim.new(0, 20)
 corner.Parent = mainFrame
 
 TweenService:Create(mainFrame, TweenInfo.new(0.5), { BackgroundTransparency = 0.2 }):Play()
+
+-- ✨ Particle Effekt hinter dem Frame (optional visuell cool)
+local particlePart = Instance.new("Part")
+particlePart.Anchored = true
+particlePart.CanCollide = false
+particlePart.Transparency = 1
+particlePart.Size = Vector3.new(1,1,1)
+particlePart.CFrame = workspace.CurrentCamera.CFrame + Vector3.new(0, 0, -5)
+particlePart.Parent = workspace
+
+local particleEmitter = Instance.new("ParticleEmitter")
+particleEmitter.Texture = "rbxassetid://296874871" -- Funken
+particleEmitter.LightEmission = 1
+particleEmitter.Rate = 20
+particleEmitter.Lifetime = NumberRange.new(1, 2)
+particleEmitter.Speed = NumberRange.new(0.5, 1)
+particleEmitter.SpreadAngle = Vector2.new(360, 360)
+particleEmitter.Size = NumberSequence.new(0.1)
+particleEmitter.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 0.3),
+	NumberSequenceKeypoint.new(1, 1)
+})
+particleEmitter.Parent = particlePart
+
 
 -- 🖼️ Icon links
 local icon = Instance.new("ImageLabel")
@@ -122,4 +158,6 @@ task.spawn(function()
 	task.wait(0.5)
 	gui:Destroy()
 	blur:Destroy()
+	particlePart:Destroy()
+
 end)
