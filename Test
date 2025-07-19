@@ -14,9 +14,15 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- ✅ Blur-Effekt
+-- Blur-Effekt
 local blur = Instance.new("BlurEffect")
 blur.Size = 0
+blur.Name = "LoadingScreenBlur"
 blur.Parent = Lighting
+
+-- Erst starker Blur, dann etwas reduzieren
+TweenService:Create(blur, TweenInfo.new(0.5), { Size = 24 }):Play()
+task.wait(1)
 TweenService:Create(blur, TweenInfo.new(0.5), { Size = 15 }):Play()
 
 -- ✅ Lade-Sound
@@ -55,6 +61,20 @@ icon.Parent = frame
 local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 15)
 iconCorner.Parent = icon
+
+-- Glow-Effekt fürs Icon
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.5
+stroke.Transparency = 0.4
+stroke.Color = Color3.fromRGB(0, 170, 255)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = icon
+
+-- Rotation-Animation
+RunService.RenderStepped:Connect(function()
+	icon.Rotation = icon.Rotation + 0.25
+end)
+
 
 -- ✅ Status-Text
 local loadingText = Instance.new("TextLabel")
@@ -136,13 +156,16 @@ end)
 -- ✅ Lade-Animation
 -- ...existing code...
 task.spawn(function()
-    local steps = 100           -- Mehr Schritte = flüssiger & langsamer
-    local waitTime = 0.03       -- Weniger = schneller, mehr = langsamer
-    for i = 1, steps do
-        task.wait(waitTime)
-        barFill.Size = UDim2.new(i / steps, 0, 1, 0)
-        loadingText.Text = "Script wird geladen" .. string.rep(".", (math.floor(i / 10) % 4))
-    end
+	for i = 1, 50 do
+		task.wait(0.05)
+		local tween = TweenService:Create(progressFill, TweenInfo.new(0.04), {
+			Size = UDim2.new(i / 50, 0, 1, 0)
+		})
+		tween:Play()
+
+		loadingText.Text = "Script wird geladen" .. string.rep(".", i % 4)
+	end
+
 
     -- Fade-Out
     pulseConnection:Disconnect()
@@ -162,4 +185,3 @@ task.spawn(function()
     end
 end)
 -- ...existing code...
-
