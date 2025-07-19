@@ -125,6 +125,8 @@ particleContainer.Position = UDim2.new(0, 0, 0, 0)
 particleContainer.BackgroundTransparency = 1
 particleContainer.Parent = mainFrame
 
+local TweenService = game:GetService("TweenService")
+
 local function createParticle()
     local p = Instance.new("Frame")
     p.Size = UDim2.new(0, 6, 0, 6)
@@ -137,61 +139,84 @@ local function createParticle()
     p.Position = UDim2.new(math.random(), 0, 1, 0)
     p.Parent = particleContainer
 
-    local tweenUp = TweenService:Create(p, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(p.Position.X.Scale, 0, 0, -20), BackgroundTransparency = 1})
+    local tweenUp = TweenService:Create(p, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(p.Position.X.Scale, 0, 0, -20),
+        BackgroundTransparency = 1
+    })
     tweenUp:Play()
     tweenUp.Completed:Connect(function()
         p:Destroy()
     end)
 end
 
--- Lade-Sound (einfacher Ton)
+-- Lade-Sound (einfacher Klick/Tick Sound)
 local sound = Instance.new("Sound")
-sound.SoundId = "rbxassetid://1843523027" -- einfacher Klick/Tick Sound
+sound.SoundId = "rbxassetid://1843523027"
 sound.Volume = 0.5
 sound.Parent = gui
 sound:Play()
 
--- Smooth Fade-In Funktion
-local function fadeIn(frame, time)
-    frame.BackgroundTransparency = 1
-    local tween = TweenService:Create(frame, TweenInfo.new(time), {BackgroundTransparency = 0.3})
+-- Fade-In Tween Funktion für Frames
+local function fadeIn(instance, duration, goalTransparency)
+    goalTransparency = goalTransparency or 0
+    local properties = {}
+    if instance:IsA("GuiObject") then
+        if instance.BackgroundTransparency ~= nil then
+            properties.BackgroundTransparency = goalTransparency
+        end
+        if instance.TextTransparency ~= nil then
+            properties.TextTransparency = goalTransparency
+        end
+        if instance.ImageTransparency ~= nil then
+            properties.ImageTransparency = goalTransparency
+        end
+    end
+    local tween = TweenService:Create(instance, TweenInfo.new(duration), properties)
     tween:Play()
-    tween.Completed:Wait()
+    return tween
 end
 
--- Smooth Fade-Out Funktion
-local function fadeOut(frame, time)
-    local tween = TweenService:Create(frame, TweenInfo.new(time), {BackgroundTransparency = 1})
+-- Fade-Out Tween Funktion für Frames
+local function fadeOut(instance, duration)
+    local properties = {}
+    if instance:IsA("GuiObject") then
+        if instance.BackgroundTransparency ~= nil then
+            properties.BackgroundTransparency = 1
+        end
+        if instance.TextTransparency ~= nil then
+            properties.TextTransparency = 1
+        end
+        if instance.ImageTransparency ~= nil then
+            properties.ImageTransparency = 1
+        end
+    end
+    local tween = TweenService:Create(instance, TweenInfo.new(duration), properties)
     tween:Play()
-    tween.Completed:Wait()
+    return tween
 end
 
--- Initial Alpha und Transparenz für Fade-In aller Elemente
-gui.Enabled = true
-gui:GetPropertyChangedSignal("Enabled"):Wait()
-mainFrame.BackgroundTransparency = 1
-shadowFrame.BackgroundTransparency = 1
-loadingText.TextTransparency = 1
-infoText.TextTransparency = 1
-image.ImageTransparency = 1
-progressBarBg.BackgroundTransparency = 1
-progressBarFill.BackgroundTransparency = 1
-particleContainer.BackgroundTransparency = 1
-shine.BackgroundTransparency = 1
+-- Setze Anfangs-Transparenz auf 1 (unsichtbar)
+local guiElements = {mainFrame, shadowFrame, loadingText, infoText, image, progressBarBg, progressBarFill, shine, particleContainer}
+for _, element in pairs(guiElements) do
+    if element:IsA("GuiObject") then
+        if element.BackgroundTransparency ~= nil then
+            element.BackgroundTransparency = 1
+        end
+        if element.TextTransparency ~= nil then
+            element.TextTransparency = 1
+        end
+        if element.ImageTransparency ~= nil then
+            element.ImageTransparency = 1
+        end
+    end
+end
 
--- Fade-In aller Elemente mit Tween
-local tweenInInfo = TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-TweenService:Create(mainFrame, tweenInInfo, {BackgroundTransparency = 0.3}):Play()
-TweenService:Create(shadowFrame, tweenInInfo, {BackgroundTransparency = 0.7}):Play()
-TweenService:Create(loadingText, tweenInInfo, {TextTransparency = 0}):Play()
-TweenService:Create(infoText, tweenInInfo, {TextTransparency = 0}):Play()
-TweenService:Create(image, tweenInInfo, {ImageTransparency = 0}):Play()
-TweenService:Create(progressBarBg, tweenInInfo, {BackgroundTransparency = 0}):Play()
-TweenService:Create(progressBarFill, tweenInInfo, {BackgroundTransparency = 0}):Play()
-TweenService:Create(shine, tweenInInfo, {BackgroundTransparency = 0.7}):Play()
-TweenService:Create(particleContainer, tweenInInfo, {BackgroundTransparency = 0}):Play()
+-- Fade-In alle GUI Elemente gleichzeitig
+for _, element in pairs(guiElements) do
+    fadeIn(element, 0.7)
+end
 
--- Shine Animation (loop)
+-- Shine Animation (endlos)
 local shineTweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
 local shineTween = TweenService:Create(shine, shineTweenInfo, {Position = UDim2.new(1.3, 0, 0, 0)})
 shineTween:Play()
@@ -200,8 +225,43 @@ shineTween:Play()
 local pulseTime = 0
 local pulseConnection
 pulseConnection = RunService.RenderStepped:Connect(function(dt)
-    pulseTime = pulseTime + dt * 2
+    pulseTime = pulseTime + dt * 3
     local scale = 1 + 0.02 * math.sin(pulseTime)
-    local alpha = 0.7 + 0.3 * math.sin(pulseTime)
-    loadingText.TextColor3 = Color3.new(1,1,1):Lerp(Color3.fromRGB(100, 200, 255
+    local colorShift = 0.2 + 0.8 * (0.5 + 0.5 * math.sin(pulseTime))
+    loadingText.TextColor3 = Color3.fromRGB(255 * colorShift, 255 * colorShift, 255 * colorShift)
+    loadingText.TextStrokeTransparency = 1 - colorShift * 0.5
+    loadingText.Size = UDim2.new(1, -130, 0.5, 0) * scale
+    image.Size = UDim2.new(0, 80, 0, 80) * scale
 
+    -- Partikel periodisch erzeugen
+    if math.random() < 0.1 then
+        createParticle()
+    end
+end)
+
+-- Simuliere Ladefortschritt
+local progress = 0
+local progressIncrement = 0.005
+local progressComplete = false
+
+while not progressComplete do
+    progress = math.clamp(progress + progressIncrement, 0, 1)
+    progressBarFill.Size = UDim2.new(progress, 0, 1, 0)
+    wait(0.03)
+    if progress >= 1 then
+        progressComplete = true
+    end
+end
+
+-- Lade abgeschlossen, Fade-Out starten
+pulseConnection:Disconnect()
+for _, element in pairs(guiElements) do
+    fadeOut(element, 0.7)
+end
+
+-- Blur entfernen
+TweenService:Create(blur, TweenInfo.new(0.7), {Size = 0}):Play()
+
+wait(0.8)
+blur:Destroy()
+gui:Destroy()
