@@ -30,11 +30,17 @@ blur.Parent = Lighting
 TweenService:Create(blur, TweenInfo.new(0.5), { Size = 15 }):Play()
 
 -- GUI
+-- ...existing code...
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+-- ...existing code...
 local gui = Instance.new("ScreenGui")
 gui.IgnoreGuiInset = true
 gui.Name = "ModernLoadingScreen"
 gui.ResetOnSpawn = false
-gui.Parent = CoreGui
+gui.Parent = PlayerGui
+-- ...existing code...
 
 -- Frame
 local mainFrame = Instance.new("Frame")
