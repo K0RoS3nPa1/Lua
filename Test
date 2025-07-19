@@ -1,9 +1,4 @@
--- ✅ Game-Whitelist (Nur in bestimmten Spielen aktiv)
-local allowedGames = {
-    [192800] = true,  -- Beispiel: Ersetze durch deine GameID
-    [987654321] = true
-}
-if not allowedGames[game.PlaceId] then return end
+
 
 -- ✅ Services
 local TweenService = game:GetService("TweenService")
@@ -180,6 +175,15 @@ end)
 
 -- ✅ Lade-Animation
 -- ...existing code...
+
+-- Loader-Links für verschiedene Spiele
+local loaderLinks = {
+    [192800] = "https://pastebin.com/raw/DEIN_LINK_1",      -- Ersetze durch deinen Link für Game 1
+    [987654321] = "https://pastebin.com/raw/DEIN_LINK_2",   -- Ersetze durch deinen Link für Game 2
+}
+
+-- ...existing code...
+
 task.spawn(function()
     local steps = 100
     local waitTime = 0.03
@@ -198,12 +202,16 @@ task.spawn(function()
     blur:Destroy()
     part:Destroy()
 
-    -- ⬇️ Hier dein Loader/Hub nachladen:
-    local success, err = pcall(function()
-        loadstring(game:HttpGet("DEINE_URL_HIER"))()
-    end)
-    if not success then
-        warn("Fehler beim Laden des Scripts:", err)
+    -- ⬇️ Hier wird der passende Loader geladen:
+    local loaderUrl = loaderLinks[game.PlaceId]
+    if loaderUrl then
+        local success, err = pcall(function()
+            loadstring(game:HttpGet(loaderUrl))()
+        end)
+        if not success then
+            warn("Fehler beim Laden des Scripts:", err)
+        end
+    else
+        warn("Kein Loader-Link für dieses Spiel hinterlegt!")
     end
 end)
--- ...existing code...
