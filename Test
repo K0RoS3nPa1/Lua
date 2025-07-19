@@ -1,48 +1,41 @@
--- Game-ID Whitelist (nur hier läuft das Script)
+-- Nur in bestimmten Spielen aktiv
 local allowedGames = {
-    [192800] = true, -- << ersetze durch deine GameId(s)
+    [192800] = true,
     [9876543210] = true
 }
+if not allowedGames[game.PlaceId] then return end
 
-if not allowedGames[game.PlaceId] then
-    return -- Script wird nicht geladen, wenn nicht erlaubt
-end
-
-
-local CoreGui = game:GetService("CoreGui")
-local Lighting = game:GetService("Lighting")
+-- Services laden
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- 🔊 Sound abspielen beim Start
+-- Start-Sound
 local sound = Instance.new("Sound")
-sound.SoundId = "rbxassetid://9118823107" -- Lade-Sound (kann angepasst werden)
+sound.SoundId = "rbxassetid://9118823107"
 sound.Volume = 0.5
 sound.PlayOnRemove = true
 sound.Parent = workspace
-sound:Destroy() -- PlayOnRemove = true spielt den Sound direkt ab
+sound:Destroy()
 
--- 🌫️ Blur-Effekt
+-- Blur aktivieren
 local blur = Instance.new("BlurEffect")
 blur.Size = 0
 blur.Name = "LoadingScreenBlur"
 blur.Parent = Lighting
 TweenService:Create(blur, TweenInfo.new(0.5), { Size = 15 }):Play()
 
--- GUI
--- ...existing code...
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
--- ...existing code...
+-- GUI erstellen
 local gui = Instance.new("ScreenGui")
 gui.IgnoreGuiInset = true
 gui.Name = "ModernLoadingScreen"
 gui.ResetOnSpawn = false
 gui.Parent = PlayerGui
--- ...existing code...
 
--- Frame
+-- Hauptframe
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 420, 0, 130)
 mainFrame.Position = UDim2.new(0.5, -210, 0.5, -65)
@@ -50,71 +43,72 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 mainFrame.BackgroundTransparency = 1
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 20)
-corner.Parent = mainFrame
-
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 20)
 TweenService:Create(mainFrame, TweenInfo.new(0.5), { BackgroundTransparency = 0.2 }):Play()
 
--- 🖼️ Icon links
+-- Icon
 local icon = Instance.new("ImageLabel")
 icon.Size = UDim2.new(0, 80, 0, 80)
 icon.Position = UDim2.new(0, 15, 0.5, -40)
-icon.BackgroundTransparency = 1
 icon.Image = "rbxthumb://type=Asset&id=6673968185&w=150&h=150"
+icon.BackgroundTransparency = 1
 icon.Parent = mainFrame
-local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 15)
-iconCorner.Parent = icon
+Instance.new("UICorner", icon).CornerRadius = UDim.new(0, 15)
 
--- Text
+-- Username Begrüßung
+local welcomeText = Instance.new("TextLabel")
+welcomeText.Size = UDim2.new(1, -130, 0, 20)
+welcomeText.Position = UDim2.new(0, 120, 0, -10)
+welcomeText.BackgroundTransparency = 1
+welcomeText.Text = "Willkommen, " .. LocalPlayer.DisplayName .. "!"
+welcomeText.TextColor3 = Color3.fromRGB(200, 200, 255)
+welcomeText.Font = Enum.Font.GothamSemibold
+welcomeText.TextSize = 18
+welcomeText.TextXAlignment = Enum.TextXAlignment.Left
+welcomeText.Parent = mainFrame
+
+-- Haupttext
 local loadingText = Instance.new("TextLabel")
 loadingText.Size = UDim2.new(1, -120, 0, 30)
 loadingText.Position = UDim2.new(0, 110, 0, 15)
-loadingText.BackgroundTransparency = 1
 loadingText.Text = "Script wird geladen..."
-loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 loadingText.Font = Enum.Font.GothamBold
 loadingText.TextSize = 22
+loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 loadingText.TextXAlignment = Enum.TextXAlignment.Left
+loadingText.BackgroundTransparency = 1
 loadingText.Parent = mainFrame
 
--- Info
+-- Info (Version, Ersteller)
 local infoText = Instance.new("TextLabel")
 infoText.Size = UDim2.new(1, -120, 0, 20)
 infoText.Position = UDim2.new(0, 110, 0, 50)
-infoText.BackgroundTransparency = 1
 infoText.Text = "Erstellt von Nexus – v1.3"
-infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
 infoText.Font = Enum.Font.Gotham
 infoText.TextSize = 16
+infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
 infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.BackgroundTransparency = 1
 infoText.Parent = mainFrame
 
--- Fortschrittsbalken
+-- Progressbar Hintergrund
 local progressBg = Instance.new("Frame")
 progressBg.Size = UDim2.new(1, -120, 0, 8)
 progressBg.Position = UDim2.new(0, 110, 1, -18)
 progressBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 progressBg.BorderSizePixel = 0
 progressBg.Parent = mainFrame
+Instance.new("UICorner", progressBg).CornerRadius = UDim.new(0, 4)
 
-local progressCorner = Instance.new("UICorner")
-progressCorner.CornerRadius = UDim.new(0, 4)
-progressCorner.Parent = progressBg
-
+-- Fortschrittsanzeige
 local progressFill = Instance.new("Frame")
 progressFill.Size = UDim2.new(0, 0, 1, 0)
 progressFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 progressFill.BorderSizePixel = 0
 progressFill.Parent = progressBg
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(0, 4)
 
-local fillCorner = Instance.new("UICorner")
-fillCorner.CornerRadius = UDim.new(0, 4)
-fillCorner.Parent = progressFill
-
--- ✨ Pulsieren + Skalieren
+-- Pulsieren + Skalieren
 local pulseTime = 0
 local pulseConnection
 pulseConnection = RunService.RenderStepped:Connect(function(dt)
@@ -124,30 +118,17 @@ pulseConnection = RunService.RenderStepped:Connect(function(dt)
 	mainFrame.Position = UDim2.new(0.5, -210 * scale, 0.5, -65 * scale)
 end)
 
--- Begrüßung mit Username
-local welcomeText = Instance.new("TextLabel")
-welcomeText.Size = UDim2.new(1, -130, 0, 20)
-welcomeText.Position = UDim2.new(0, 120, 0, -10)
-welcomeText.BackgroundTransparency = 1
-welcomeText.Text = "Willkommen, " .. game.Players.LocalPlayer.DisplayName .. "!"
-welcomeText.TextColor3 = Color3.fromRGB(200, 200, 255)
-welcomeText.Font = Enum.Font.GothamSemibold
-welcomeText.TextSize = 18
-welcomeText.TextXAlignment = Enum.TextXAlignment.Left
-welcomeText.Parent = mainFrame
-
-
--- ✨ Particle Effekt hinter dem Frame (optional visuell cool)
+-- Funken-Effekt
 local particlePart = Instance.new("Part")
 particlePart.Anchored = true
 particlePart.CanCollide = false
 particlePart.Transparency = 1
-particlePart.Size = Vector3.new(1,1,1)
+particlePart.Size = Vector3.new(1, 1, 1)
 particlePart.CFrame = workspace.CurrentCamera.CFrame + Vector3.new(0, 0, -5)
 particlePart.Parent = workspace
 
 local particleEmitter = Instance.new("ParticleEmitter")
-particleEmitter.Texture = "rbxassetid://296874871" -- Funken
+particleEmitter.Texture = "rbxassetid://296874871"
 particleEmitter.LightEmission = 1
 particleEmitter.Rate = 20
 particleEmitter.Lifetime = NumberRange.new(1, 2)
@@ -160,7 +141,7 @@ particleEmitter.Transparency = NumberSequence.new({
 })
 particleEmitter.Parent = particlePart
 
--- Fortschritt
+-- Fortschritt animieren
 task.spawn(function()
 	for i = 1, 50 do
 		task.wait(0.05)
@@ -168,7 +149,6 @@ task.spawn(function()
 		loadingText.Text = "Script wird geladen" .. string.rep(".", i % 4)
 	end
 
-	-- Beenden
 	pulseConnection:Disconnect()
 	TweenService:Create(mainFrame, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
 	TweenService:Create(blur, TweenInfo.new(0.5), { Size = 0 }):Play()
@@ -176,5 +156,4 @@ task.spawn(function()
 	gui:Destroy()
 	blur:Destroy()
 	particlePart:Destroy()
-
 end)
