@@ -1,6 +1,6 @@
 -- Game-ID Whitelist (nur hier läuft das Script)
 local allowedGames = {
-    [1234567890] = true, -- << ersetze durch deine GameId(s)
+    [192800] = true, -- << ersetze durch deine GameId(s)
     [9876543210] = true
 }
 
