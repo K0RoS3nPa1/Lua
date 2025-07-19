@@ -136,10 +136,12 @@ end)
 -- ✅ Lade-Animation
 -- ...existing code...
 task.spawn(function()
-    for i = 1, 50 do
-        task.wait(0.05)
-        barFill.Size = UDim2.new(i / 50, 0, 1, 0)
-        loadingText.Text = "Script wird geladen" .. string.rep(".", i % 4)
+    local steps = 100           -- Mehr Schritte = flüssiger & langsamer
+    local waitTime = 0.03       -- Weniger = schneller, mehr = langsamer
+    for i = 1, steps do
+        task.wait(waitTime)
+        barFill.Size = UDim2.new(i / steps, 0, 1, 0)
+        loadingText.Text = "Script wird geladen" .. string.rep(".", (math.floor(i / 10) % 4))
     end
 
     -- Fade-Out
@@ -159,3 +161,5 @@ task.spawn(function()
         warn("Fehler beim Laden des Scripts:", err)
     end
 end)
+-- ...existing code...
+
