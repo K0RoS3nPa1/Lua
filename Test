@@ -55,19 +55,19 @@ local loadingText = Instance.new("TextLabel")
 loadingText.Size = UDim2.new(1, -130, 0.5, 0)
 loadingText.Position = UDim2.new(0, 120, 0, 10)
 loadingText.BackgroundTransparency = 1
-loadingText.Text = " Script wird geladen..."
+loadingText.Text = "Script wird geladen..."
 loadingText.TextColor3 = Color3.new(1, 1, 1)
 loadingText.Font = Enum.Font.GothamBold
 loadingText.TextSize = 20
 loadingText.TextXAlignment = Enum.TextXAlignment.Left
 loadingText.Parent = mainFrame
 
--- Zusatztext: "Erstellt von Nexus – v1.3"
+-- Zusatztext: "Erstellt von Nexus – v1.3" (ohne Emoji, etwas höher)
 local infoText = Instance.new("TextLabel")
 infoText.Size = UDim2.new(1, -130, 0.5, 0)
-infoText.Position = UDim2.new(0, 120, 0.5, 10)
+infoText.Position = UDim2.new(0, 120, 0.5, 0)
 infoText.BackgroundTransparency = 1
-infoText.Text = " Erstellt von Nexus – v1.3"
+infoText.Text = "Erstellt von Nexus – v1.3"
 infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
 infoText.Font = Enum.Font.Gotham
 infoText.TextSize = 16
@@ -112,7 +112,7 @@ task.spawn(function()
     local steps = 50
     for i = 1, steps do
         task.wait(0.06)
-        loadingText.Text = " Script wird geladen" .. string.rep(".", (i % 4))
+        loadingText.Text = "Script wird geladen" .. string.rep(".", (i % 4))
         progressBarFill.Size = UDim2.new(i / steps, 0, 1, 0)
     end
 
