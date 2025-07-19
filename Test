@@ -1,4 +1,3 @@
-
 -- Game-ID Whitelist (nur hier läuft das Script)
 local allowedGames = {
     [1234567890] = true, -- << ersetze durch deine GameId(s)
@@ -113,7 +112,7 @@ fillCorner.Parent = progressFill
 local pulseTime = 0
 local pulseConnection
 pulseConnection = RunService.RenderStepped:Connect(function(dt)
-	pulseTime += dt * 2
+	pulseTime = dt * 2
 	local scale = 1 + 0.005 * math.sin(pulseTime)
 	mainFrame.Size = UDim2.new(0, 420 * scale, 0, 130 * scale)
 	mainFrame.Position = UDim2.new(0.5, -210 * scale, 0.5, -65 * scale)
