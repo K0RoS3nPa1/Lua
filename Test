@@ -1,1 +1,126 @@
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
 
+-- Blur Effekt hinzufügen
+local blur = Instance.new("BlurEffect")
+blur.Size = 15
+blur.Name = "LoadingScreenBlur"
+blur.Parent = Lighting
+
+-- GUI erstellen
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.Name = "ModernLoadingScreen"
+gui.Parent = CoreGui
+
+-- Schatten-Frame (etwas größer, dunkel, hinter mainFrame)
+local shadowFrame = Instance.new("Frame")
+shadowFrame.Size = UDim2.new(0, 440, 0, 140)
+shadowFrame.Position = UDim2.new(0.5, -220, 0.5, -70)
+shadowFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+shadowFrame.BorderSizePixel = 0
+shadowFrame.BackgroundTransparency = 0.7
+shadowFrame.AnchorPoint = Vector2.new(0, 0)
+shadowFrame.Parent = gui
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0, 25)
+shadowCorner.Parent = shadowFrame
+
+-- Haupt-Container
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 420, 0, 120)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -60)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0.3
+mainFrame.BorderSizePixel = 0
+mainFrame.AnchorPoint = Vector2.new(0, 0)
+mainFrame.Parent = gui
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 20)
+uiCorner.Parent = mainFrame
+
+-- Bild (links)
+local image = Instance.new("ImageLabel")
+image.Size = UDim2.new(0, 80, 0, 80)
+image.Position = UDim2.new(0, 20, 0.5, -40)
+image.BackgroundTransparency = 1
+image.Image = "rbxthumb://type=Asset&id=6673968185&w=150&h=150"
+image.Parent = mainFrame
+local imageCorner = Instance.new("UICorner")
+imageCorner.CornerRadius = UDim.new(0, 15)
+imageCorner.Parent = image
+
+-- Haupttext: "Script wird geladen..."
+local loadingText = Instance.new("TextLabel")
+loadingText.Size = UDim2.new(1, -130, 0.5, 0)
+loadingText.Position = UDim2.new(0, 120, 0, 10)
+loadingText.BackgroundTransparency = 1
+loadingText.Text = "🔄 Script wird geladen..."
+loadingText.TextColor3 = Color3.new(1, 1, 1)
+loadingText.Font = Enum.Font.GothamBold
+loadingText.TextSize = 20
+loadingText.TextXAlignment = Enum.TextXAlignment.Left
+loadingText.Parent = mainFrame
+
+-- Zusatztext: "Erstellt von Nexus – v1.3"
+local infoText = Instance.new("TextLabel")
+infoText.Size = UDim2.new(1, -130, 0.5, 0)
+infoText.Position = UDim2.new(0, 120, 0.5, -5)
+infoText.BackgroundTransparency = 1
+infoText.Text = "🧑‍💻 Erstellt von Nexus – v1.3"
+infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
+infoText.Font = Enum.Font.Gotham
+infoText.TextSize = 16
+infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.Parent = mainFrame
+
+-- Progress Bar Hintergrund
+local progressBarBg = Instance.new("Frame")
+progressBarBg.Size = UDim2.new(0, 280, 0, 15)
+progressBarBg.Position = UDim2.new(0, 120, 1, -30)
+progressBarBg.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+progressBarBg.BorderSizePixel = 0
+progressBarBg.AnchorPoint = Vector2.new(0, 1)
+progressBarBg.Parent = mainFrame
+local progressBarBgCorner = Instance.new("UICorner")
+progressBarBgCorner.CornerRadius = UDim.new(0, 10)
+progressBarBgCorner.Parent = progressBarBg
+
+-- Progress Bar Füllung
+local progressBarFill = Instance.new("Frame")
+progressBarFill.Size = UDim2.new(0, 0, 1, 0) -- Start leer
+progressBarFill.Position = UDim2.new(0, 0, 0, 0)
+progressBarFill.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+progressBarFill.BorderSizePixel = 0
+progressBarFill.Parent = progressBarBg
+local progressBarFillCorner = Instance.new("UICorner")
+progressBarFillCorner.CornerRadius = UDim.new(0, 10)
+progressBarFillCorner.Parent = progressBarFill
+
+-- Pulsierende Animation für den Text
+local RunService = game:GetService("RunService")
+local pulseTime = 0
+local pulseConnection
+pulseConnection = RunService.RenderStepped:Connect(function(dt)
+    pulseTime = pulseTime + dt * 2 -- Pulsationsgeschwindigkeit
+    local alpha = 0.7 + 0.3 * math.sin(pulseTime)
+    loadingText.TextColor3 = Color3.new(1,1,1):Lerp(Color3.fromRGB(100, 200, 255), alpha)
+end)
+
+-- Lade-Animation mit Progress Bar füllen
+task.spawn(function()
+    local steps = 50
+    for i = 1, steps do
+        task.wait(0.06)
+        loadingText.Text = "🔄 Script wird geladen" .. string.rep(".", (i % 4))
+        progressBarFill.Size = UDim2.new(i / steps, 0, 1, 0)
+    end
+
+    -- Animation stoppen
+    pulseConnection:Disconnect()
+
+    -- GUI entfernen
+    gui:Destroy()
+    blur:Destroy()
+    shadowFrame:Destroy()
+end)
