@@ -56,18 +56,6 @@ local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 15)
 iconCorner.Parent = icon
 
--- ✅ Begrüßung mit Username
-local welcome = Instance.new("TextLabel")
-welcome.Size = UDim2.new(1, -120, 0, 20)
-welcome.Position = UDim2.new(0, 110, 0, -10)
-welcome.BackgroundTransparency = 1
-welcome.Text = "Willkommen, " .. LocalPlayer.DisplayName .. "!"
-welcome.TextColor3 = Color3.fromRGB(200, 200, 255)
-welcome.Font = Enum.Font.GothamSemibold
-welcome.TextSize = 18
-welcome.TextXAlignment = Enum.TextXAlignment.Left
-welcome.Parent = frame
-
 -- ✅ Status-Text
 local loadingText = Instance.new("TextLabel")
 loadingText.Size = UDim2.new(1, -120, 0, 25)
