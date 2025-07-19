@@ -1,119 +1,72 @@
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
-local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
-local blur = Instance.new("BlurEffect")
+local RunService = game:GetService("RunService")
 
-blur.Size = 15
+-- 🔊 Sound abspielen beim Start
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://9118823107" -- Lade-Sound (kann angepasst werden)
+sound.Volume = 0.5
+sound.PlayOnRemove = true
+sound.Parent = workspace
+sound:Destroy() -- PlayOnRemove = true spielt den Sound direkt ab
+
+-- 🌫️ Blur-Effekt
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
 blur.Name = "LoadingScreenBlur"
 blur.Parent = Lighting
+TweenService:Create(blur, TweenInfo.new(0.5), { Size = 15 }):Play()
 
+-- GUI
 local gui = Instance.new("ScreenGui")
 gui.IgnoreGuiInset = true
 gui.Name = "ModernLoadingScreen"
+gui.ResetOnSpawn = false
 gui.Parent = CoreGui
-gui.BackgroundTransparency = 1
 
--- Fade-In Tween für GUI Hintergrund (optional, falls du willst)
-local fadeInTween = TweenService:Create(gui, TweenInfo.new(1), {BackgroundTransparency = 0})
-fadeInTween:Play()
-
-local shadowFrame = Instance.new("Frame")
-shadowFrame.Size = UDim2.new(0, 440, 0, 140)
-shadowFrame.Position = UDim2.new(0.5, -220, 0.5, -70)
-shadowFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-shadowFrame.BorderSizePixel = 0
-shadowFrame.BackgroundTransparency = 0.7
-shadowFrame.AnchorPoint = Vector2.new(0, 0)
-shadowFrame.Parent = gui
-
-local shadowCorner = Instance.new("UICorner")
-shadowCorner.CornerRadius = UDim.new(0, 25)
-shadowCorner.Parent = shadowFrame
-
--- Shine Effekt (Glow Animation mit Frame und Tween)
-local shine = Instance.new("Frame")
-shine.Size = UDim2.new(0, 80, 1, 0)
-shine.BackgroundColor3 = Color3.fromRGB(180, 180, 255)
-shine.AnchorPoint = Vector2.new(0, 0)
-shine.BackgroundTransparency = 0.7
-shine.Rotation = 45
-shine.Position = UDim2.new(-1, 0, 0, 0)
-shine.Parent = shadowFrame
-
-local shineTweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
-local shineTween = TweenService:Create(shine, shineTweenInfo, {Position = UDim2.new(1, 0, 0, 0)})
-shineTween:Play()
-
+-- Frame
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 420, 0, 120)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -60)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.BackgroundTransparency = 0.3
+mainFrame.Size = UDim2.new(0, 420, 0, 130)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -65)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.BackgroundTransparency = 1
 mainFrame.BorderSizePixel = 0
-mainFrame.AnchorPoint = Vector2.new(0, 0)
 mainFrame.Parent = gui
 
-local uiCorner = Instance.new("UICorner")
-uiCorner.CornerRadius = UDim.new(0, 20)
-uiCorner.Parent = mainFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 20)
+corner.Parent = mainFrame
 
-local image = Instance.new("ImageLabel")
-image.Size = UDim2.new(0, 80, 0, 80)
-image.Position = UDim2.new(0, 20, 0.5, -40)
-image.BackgroundTransparency = 1
-image.Image = "rbxthumb://type=Asset&id=6673968185&w=150&h=150"
-image.Parent = mainFrame
+TweenService:Create(mainFrame, TweenInfo.new(0.5), { BackgroundTransparency = 0.2 }):Play()
 
-local imageCorner = Instance.new("UICorner")
-imageCorner.CornerRadius = UDim.new(0, 15)
-imageCorner.Parent = image
+-- 🖼️ Icon links
+local icon = Instance.new("ImageLabel")
+icon.Size = UDim2.new(0, 80, 0, 80)
+icon.Position = UDim2.new(0, 15, 0.5, -40)
+icon.BackgroundTransparency = 1
+icon.Image = "rbxthumb://type=Asset&id=6673968185&w=150&h=150"
+icon.Parent = mainFrame
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0, 15)
+iconCorner.Parent = icon
 
--- Pulsieren Animation (Skalierung)
-local pulseScale = 0
-RunService:BindToRenderStep("ImagePulse", Enum.RenderPriority.Character.Value, function(dt)
-    pulseScale = pulseScale + dt * 3
-    local scale = 1 + 0.05 * math.sin(pulseScale)
-    image.Size = UDim2.new(0, 80 * scale, 0, 80 * scale)
-    image.Position = UDim2.new(0, 20 - (80 * (scale - 1) / 2), 0.5, -40 - (80 * (scale - 1) / 2))
-end)
-
+-- Text
 local loadingText = Instance.new("TextLabel")
-loadingText.Size = UDim2.new(1, -130, 0.5, 0)
-loadingText.Position = UDim2.new(0, 120, 0, 10)
+loadingText.Size = UDim2.new(1, -120, 0, 30)
+loadingText.Position = UDim2.new(0, 110, 0, 15)
 loadingText.BackgroundTransparency = 1
 loadingText.Text = "Script wird geladen..."
-loadingText.TextColor3 = Color3.new(1, 1, 1)
+loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 loadingText.Font = Enum.Font.GothamBold
-loadingText.TextSize = 20
+loadingText.TextSize = 22
 loadingText.TextXAlignment = Enum.TextXAlignment.Left
 loadingText.Parent = mainFrame
 
--- Glänzende (Shine) Animation auf Text mit Tween
-local shineLabel = Instance.new("Frame")
-shineLabel.Size = UDim2.new(0, 40, 1, 0)
-shineLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-shineLabel.BackgroundTransparency = 0.7
-shineLabel.Rotation = 45
-shineLabel.Position = UDim2.new(-0.2, 0, 0, 0)
-shineLabel.Parent = loadingText
-
-local shineTween = TweenService:Create(shineLabel, TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Position = UDim2.new(1.2, 0, 0, 0)})
-shineTween:Play()
-
--- Pulsieren Textfarbe
-local pulseTime = 0
-local pulseConnection
-pulseConnection = RunService.RenderStepped:Connect(function(dt)
-    pulseTime = pulseTime + dt * 2
-    local alpha = 0.7 + 0.3 * math.sin(pulseTime)
-    loadingText.TextColor3 = Color3.new(1,1,1):Lerp(Color3.fromRGB(100, 200, 255), alpha)
-end)
-
+-- Info
 local infoText = Instance.new("TextLabel")
-infoText.Size = UDim2.new(1, -130, 0.5, 0)
-infoText.Position = UDim2.new(0, 120, 0.45, 0)
+infoText.Size = UDim2.new(1, -120, 0, 20)
+infoText.Position = UDim2.new(0, 110, 0, 50)
 infoText.BackgroundTransparency = 1
 infoText.Text = "Erstellt von Nexus – v1.3"
 infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -122,78 +75,51 @@ infoText.TextSize = 16
 infoText.TextXAlignment = Enum.TextXAlignment.Left
 infoText.Parent = mainFrame
 
-local progressBarBg = Instance.new("Frame")
-progressBarBg.Size = UDim2.new(0, 280, 0, 8)
-progressBarBg.Position = UDim2.new(0, 120, 1, -10)
-progressBarBg.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-progressBarBg.BorderSizePixel = 0
-progressBarBg.AnchorPoint = Vector2.new(0, 1)
-progressBarBg.Parent = mainFrame
+-- Fortschrittsbalken
+local progressBg = Instance.new("Frame")
+progressBg.Size = UDim2.new(1, -120, 0, 8)
+progressBg.Position = UDim2.new(0, 110, 1, -18)
+progressBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+progressBg.BorderSizePixel = 0
+progressBg.Parent = mainFrame
 
-local progressBarBgCorner = Instance.new("UICorner")
-progressBarBgCorner.CornerRadius = UDim.new(0, 5)
-progressBarBgCorner.Parent = progressBarBg
+local progressCorner = Instance.new("UICorner")
+progressCorner.CornerRadius = UDim.new(0, 4)
+progressCorner.Parent = progressBg
 
-local progressBarFill = Instance.new("Frame")
-progressBarFill.Size = UDim2.new(0, 0, 1, 0)
-progressBarFill.Position = UDim2.new(0, 0, 0, 0)
-progressBarFill.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-progressBarFill.BorderSizePixel = 0
-progressBarFill.Parent = progressBarBg
+local progressFill = Instance.new("Frame")
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+progressFill.BorderSizePixel = 0
+progressFill.Parent = progressBg
 
-local progressBarFillCorner = Instance.new("UICorner")
-progressBarFillCorner.CornerRadius = UDim.new(0, 5)
-progressBarFillCorner.Parent = progressBarFill
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 4)
+fillCorner.Parent = progressFill
 
-local function setProgress(value)
-    local tween = TweenService:Create(progressBarFill, TweenInfo.new(0.1), {Size = UDim2.new(value, 0, 1, 0)})
-    tween:Play()
-end
-
-local particleEmitter = Instance.new("ParticleEmitter")
-particleEmitter.Rate = 5
-particleEmitter.Lifetime = NumberRange.new(1, 2)
-particleEmitter.Speed = NumberRange.new(5, 10)
-particleEmitter.Rotation = NumberRange.new(0, 360)
-particleEmitter.RotSpeed = NumberRange.new(-90, 90)
-particleEmitter.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0)})
-particleEmitter.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
-particleEmitter.LightEmission = 1
-particleEmitter.Texture = "rbxassetid://243660364" -- kleines Funkel-Sprite
-particleEmitter.Parent = mainFrame
-
-local soundStart = Instance.new("Sound")
-soundStart.SoundId = "rbxassetid://1837635013" -- Beispiel: Lade-Sound
-soundStart.Volume = 0.5
-soundStart.Parent = mainFrame
-
-local soundEnd = Instance.new("Sound")
-soundEnd.SoundId = "rbxassetid://1837635065" -- Beispiel: Fertig-Sound
-soundEnd.Volume = 0.5
-soundEnd.Parent = mainFrame
-
-soundStart:Play()
-
-task.spawn(function()
-    local steps = 50
-    for i = 1, steps do
-        task.wait(0.06)
-        loadingText.Text = "Script wird geladen" .. string.rep(".", (i % 4))
-        setProgress(i / steps)
-    end
-
-    pulseConnection:Disconnect()
-
-    soundEnd:Play()
-
-    -- Fade-Out Tween für GUI
-    local fadeOutTween = TweenService:Create(gui, TweenInfo.new(1), {BackgroundTransparency = 1})
-    fadeOutTween:Play()
-    fadeOutTween.Completed:Wait()
-
-    gui:Destroy()
-    blur:Destroy()
-    shadowFrame:Destroy()
+-- ✨ Pulsieren + Skalieren
+local pulseTime = 0
+local pulseConnection
+pulseConnection = RunService.RenderStepped:Connect(function(dt)
+	pulseTime += dt * 2
+	local scale = 1 + 0.005 * math.sin(pulseTime)
+	mainFrame.Size = UDim2.new(0, 420 * scale, 0, 130 * scale)
+	mainFrame.Position = UDim2.new(0.5, -210 * scale, 0.5, -65 * scale)
 end)
 
+-- Fortschritt
+task.spawn(function()
+	for i = 1, 50 do
+		task.wait(0.05)
+		progressFill.Size = UDim2.new(i / 50, 0, 1, 0)
+		loadingText.Text = "Script wird geladen" .. string.rep(".", i % 4)
+	end
 
+	-- Beenden
+	pulseConnection:Disconnect()
+	TweenService:Create(mainFrame, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+	TweenService:Create(blur, TweenInfo.new(0.5), { Size = 0 }):Play()
+	task.wait(0.5)
+	gui:Destroy()
+	blur:Destroy()
+end)
