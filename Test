@@ -103,7 +103,7 @@ infoText.Parent = frame
 
 -- ✅ Kleines Icon rechts oben
 local smallIcon = Instance.new("ImageLabel")
-smallIcon.Size = UDim2.new(0, 32, 0, 32) -- Größe des kleinen Icons
+smallIcon.Size = UDim2.new(0, 52, 0, 52) -- Größe des kleinen Icons
 smallIcon.Position = UDim2.new(1, -40, 0, 8) -- Rechts oben, etwas Abstand zum Rand
 smallIcon.AnchorPoint = Vector2.new(0, 0)
 smallIcon.BackgroundTransparency = 1
@@ -205,3 +205,4 @@ task.spawn(function()
     end
 end)
 -- ...existing code...
+
