@@ -53,9 +53,9 @@ TweenService:Create(frame, TweenInfo.new(0.4), { BackgroundTransparency = 0.2 })
 
 -- ✅ Icon (links)
 local icon = Instance.new("ImageLabel")
-icon.Size = UDim2.new(0, 70, 0, 70)
+icon.Size = UDim2.new(0, 80, 0, 80)
 icon.Position = UDim2.new(0, 15, 0.5, -40)
-icon.Image = "rbxthumb://type=Asset&id=1694098177&w=150&h=150"
+icon.Image = "rbxthumb://type=Asset&id=6673968185&w=150&h=150"
 icon.BackgroundTransparency = 1
 icon.Parent = frame
 local iconCorner = Instance.new("UICorner")
@@ -81,7 +81,7 @@ local loadingText = Instance.new("TextLabel")
 loadingText.Size = UDim2.new(1, -120, 0, 25)
 loadingText.Position = UDim2.new(0, 110, 0, 15)
 loadingText.BackgroundTransparency = 1
-loadingText.Text = "Check game..."
+loadingText.Text = "Script wird geladen..."
 loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 loadingText.Font = Enum.Font.GothamBold
 loadingText.TextSize = 22
@@ -93,13 +93,36 @@ local infoText = Instance.new("TextLabel")
 infoText.Size = UDim2.new(1, -120, 0, 20)
 infoText.Position = UDim2.new(0, 110, 0, 50)
 infoText.BackgroundTransparency = 1
-infoText.Text = "Pizza Hub by Ryuko"
+infoText.Text = "Erstellt von Nexus – v1.3"
 infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
 infoText.Font = Enum.Font.Gotham
 infoText.TextSize = 16
 infoText.TextXAlignment = Enum.TextXAlignment.Left
 infoText.Parent = frame
+-- ...existing code...
 
+-- ✅ Kleines Icon rechts oben
+local smallIcon = Instance.new("ImageLabel")
+smallIcon.Size = UDim2.new(0, 32, 0, 32) -- Größe des kleinen Icons
+smallIcon.Position = UDim2.new(1, -40, 0, 8) -- Rechts oben, etwas Abstand zum Rand
+smallIcon.AnchorPoint = Vector2.new(0, 0)
+smallIcon.BackgroundTransparency = 1
+smallIcon.Image = "rbxthumb://type=Asset&id=7517163169&w=150&h=150" -- Passe die ID ggf. an
+smallIcon.Parent = frame
+
+local smallIconCorner = Instance.new("UICorner")
+smallIconCorner.CornerRadius = UDim.new(0, 8)
+smallIconCorner.Parent = smallIcon
+
+-- Optional: Glow-Effekt fürs kleine Icon
+local smallStroke = Instance.new("UIStroke")
+smallStroke.Thickness = 1
+smallStroke.Transparency = 0.5
+smallStroke.Color = Color3.fromRGB(0, 170, 255)
+smallStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+smallStroke.Parent = smallIcon
+
+-- ...existing code...
 -- ✅ Fortschrittsbalken
 -- ...existing code...
 local barBG = Instance.new("Frame")
@@ -121,7 +144,6 @@ local barFillCorner = Instance.new("UICorner")
 barFillCorner.CornerRadius = UDim.new(0, 8)
 barFillCorner.Parent = barFill
 -- ...existing code...
-
 -- ✅ Partikel (optional, hinter Kamera)
 local part = Instance.new("Part")
 part.Size = Vector3.new(1,1,1)
@@ -162,7 +184,7 @@ task.spawn(function()
     for i = 1, steps do
         task.wait(waitTime)
         barFill.Size = UDim2.new(i / steps, 0, 1, 0)
-        loadingText.Text = "Check game" .. string.rep(".", (math.floor(i / 10) % 4))
+        loadingText.Text = "Script wird geladen" .. string.rep(".", (math.floor(i / 10) % 4))
     end
 
     -- Fade-Out
@@ -183,4 +205,3 @@ task.spawn(function()
     end
 end)
 -- ...existing code...
-
