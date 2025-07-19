@@ -147,10 +147,10 @@ emitter.Parent = part
 -- ✅ Pulsierende Skalierung
 local pulseTime = 0
 local pulseConnection = RunService.RenderStepped:Connect(function(dt)
-	pulseTime += dt * 2
+	pulseTime = pulseTime + dt * 2
 	local scale = 1 + 0.005 * math.sin(pulseTime)
-	frame.Size = UDim2.new(0, 420 * scale, 0, 130 * scale)
-	frame.Position = UDim2.new(0.5, -210 * scale, 0.5, -65 * scale)
+	mainFrame.Size = UDim2.new(0, 420 * scale, 0, 130 * scale)
+	mainFrame.Position = UDim2.new(0.5, -210 * scale, 0.5, -65 * scale)
 end)
 
 -- ✅ Lade-Animation
