@@ -1,22 +1,213 @@
-local WhitelistedUsers = loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/Liste"))()
 
-function isWhitelisted(user)
-    for i, v in ipairs(WhitelistedUsers) do
-        if v == user then
-            return false
-        end
+
+-- ✅ Services
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- ✅ Blur-Effekt
+-- Blur-Effekt
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Name = "LoadingScreenBlur"
+blur.Parent = Lighting
+
+-- Erst starker Blur, dann etwas reduzieren
+TweenService:Create(blur, TweenInfo.new(0.5), { Size = 24 }):Play()
+task.wait(1)
+TweenService:Create(blur, TweenInfo.new(0.5), { Size = 15 }):Play()
+
+-- ✅ Lade-Sound
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://9118823107"
+sound.Volume = 1
+sound.PlayOnRemove = true
+sound.Parent = workspace
+sound:Destroy()  -- PlayOnRemove = true spielt ihn sofort ab
+
+-- ✅ GUI-Setup
+local gui = Instance.new("ScreenGui")
+gui.Name = "LoadingScreen"
+gui.IgnoreGuiInset = true
+pcall(function() gui.Parent = CoreGui end) -- Exploit-kompatibel
+
+-- ✅ Hauptframe
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 420, 0, 130)
+frame.Position = UDim2.new(0.5, -210, 0.5, -65)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BackgroundTransparency = 1
+frame.Parent = gui
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 20)
+corner.Parent = frame
+TweenService:Create(frame, TweenInfo.new(0.4), { BackgroundTransparency = 0.2 }):Play()
+
+-- ✅ Icon (links)
+local icon = Instance.new("ImageLabel")
+icon.Size = UDim2.new(0, 80, 0, 80)
+icon.Position = UDim2.new(0, 15, 0.5, -40)
+icon.Image = "rbxthumb://type=Asset&id=7517163169&w=150&h=150"
+icon.BackgroundTransparency = 1
+icon.Parent = frame
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0, 15)
+iconCorner.Parent = icon
+
+-- Glow-Effekt fürs Icon
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.5
+stroke.Transparency = 0.4
+stroke.Color = Color3.fromRGB(0, 170, 255)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = icon
+
+
+
+-- ✅ Status-Text
+local loadingText = Instance.new("TextLabel")
+loadingText.Size = UDim2.new(1, -120, 0, 25)
+loadingText.Position = UDim2.new(0, 110, 0, 15)
+loadingText.BackgroundTransparency = 1
+loadingText.Text = "Check Game..."
+loadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+loadingText.Font = Enum.Font.GothamBold
+loadingText.TextSize = 22
+loadingText.TextXAlignment = Enum.TextXAlignment.Left
+loadingText.Parent = frame
+
+-- ✅ Info (Version + Autor)
+local infoText = Instance.new("TextLabel")
+infoText.Size = UDim2.new(1, -120, 0, 20)
+infoText.Position = UDim2.new(0, 110, 0, 50)
+infoText.BackgroundTransparency = 1
+infoText.Text = "Pizza Hub by Ryuko"
+infoText.TextColor3 = Color3.fromRGB(180, 180, 180)
+infoText.Font = Enum.Font.Gotham
+infoText.TextSize = 16
+infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.Parent = frame
+
+-- ✅ Kleines Icon rechts oben
+local smallIcon = Instance.new("ImageLabel")
+smallIcon.Size = UDim2.new(0, 62, 0, 62) -- Größe des kleinen Icons (z.B. 72x72)
+smallIcon.Position = UDim2.new(1, -100, 0, 8) -- Passe ggf. X-Position an, damit es nicht am Rand klebt
+smallIcon.AnchorPoint = Vector2.new(0, 0)
+smallIcon.BackgroundTransparency = 1
+smallIcon.Image = "rbxthumb://type=Asset&id=13895454131&w=150&h=150"
+smallIcon.Parent = frame
+
+local smallIconCorner = Instance.new("UICorner")
+smallIconCorner.CornerRadius = UDim.new(0, 16) -- Eckenradius anpassen für größere Größe
+smallIconCorner.Parent = smallIcon
+
+-- Optional: Glow-Effekt fürs kleine Icon
+local smallStroke = Instance.new("UIStroke")
+smallStroke.Thickness = 1
+smallStroke.Transparency = 0.5
+smallStroke.Color = Color3.fromRGB(0, 170, 255)
+smallStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+smallStroke.Parent = smallIcon
+
+
+-- Rotation-Animation NUR für das kleine Icon
+RunService.RenderStepped:Connect(function()
+    smallIcon.Rotation = smallIcon.Rotation + 0.25
+end)
+
+
+-- ✅ Fortschrittsbalken
+
+local barBG = Instance.new("Frame")
+barBG.Size = UDim2.new(1, -120, 0, 10) -- Höhe von 8 auf 16 erhöht
+barBG.Position = UDim2.new(0, 110, 1, -40) -- von -18 auf -40 (weiter nach oben)
+barBG.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+barBG.BorderSizePixel = 0
+barBG.Parent = frame
+local barBGCorner = Instance.new("UICorner")
+barBGCorner.CornerRadius = UDim.new(0, 8) -- Eckenradius an neue Höhe angepasst
+barBGCorner.Parent = barBG
+
+local barFill = Instance.new("Frame")
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+barFill.BorderSizePixel = 0
+barFill.Parent = barBG
+local barFillCorner = Instance.new("UICorner")
+barFillCorner.CornerRadius = UDim.new(0, 8)
+barFillCorner.Parent = barFill
+
+-- ✅ Partikel (optional, hinter Kamera)
+local part = Instance.new("Part")
+part.Size = Vector3.new(1,1,1)
+part.Anchored = true
+part.CanCollide = false
+part.Transparency = 1
+part.CFrame = workspace.CurrentCamera.CFrame + Vector3.new(0, 0, -5)
+part.Parent = workspace
+
+local emitter = Instance.new("ParticleEmitter")
+emitter.Texture = "rbxassetid://296874871"
+emitter.LightEmission = 1
+emitter.Rate = 20
+emitter.Lifetime = NumberRange.new(1, 2)
+emitter.Speed = NumberRange.new(0.5, 1)
+emitter.SpreadAngle = Vector2.new(360, 360)
+emitter.Size = NumberSequence.new(0.1)
+emitter.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 0.3),
+	NumberSequenceKeypoint.new(1, 1)
+})
+emitter.Parent = part
+
+-- ✅ Pulsierende Skalierung
+local pulseTime = 0
+local pulseConnection = RunService.RenderStepped:Connect(function(dt)
+	pulseTime = pulseTime + dt * 2
+	local scale = 1 + 0.005 * math.sin(pulseTime)
+	mainFrame.Size = UDim2.new(0, 420 * scale, 0, 130 * scale)
+	mainFrame.Position = UDim2.new(0.5, -210 * scale, 0.5, -65 * scale)
+end)
+
+-- ✅ Lade-Animation
+
+-- Loader-Links für verschiedene Spiele
+local loaderLinks = {
+    [192800] = "https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua1",      -- Ersetze durch deinen Link für Game 1
+    }
+
+
+task.spawn(function()
+    local steps = 100
+    local waitTime = 0.03
+    for i = 1, steps do
+        task.wait(waitTime)
+        barFill.Size = UDim2.new(i / steps, 0, 1, 0)
+        loadingText.Text = "Check game" .. string.rep(".", (math.floor(i / 10) % 4))
     end
-    return true
-end
 
-if isWhitelisted(game.Players.LocalPlayer.UserId) then
-loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua1"))()
-   ---game.Players.LocalPlayer:Kick("\nYour are banned from script Owner!!!")
-   ---gui = game.CoreGui.RobloxPromptGui.promptOverlay:WaitForChild("ErrorPrompt")  
-   ---gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..." 
-    
-else 
-   game.Players.LocalPlayer:Kick("\nYour are banned from script Owner!!!")
-   gui = game.CoreGui.RobloxPromptGui.promptOverlay:WaitForChild("ErrorPrompt")  
-   gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..." 
-end
+    -- Fade-Out
+    pulseConnection:Disconnect()
+    TweenService:Create(frame, TweenInfo.new(0.4), { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(blur, TweenInfo.new(0.4), { Size = 0 }):Play()
+    task.wait(0.4)
+    gui:Destroy()
+    blur:Destroy()
+    part:Destroy()
+
+    -- ⬇️ Hier wird der passende Loader geladen:
+    local loaderUrl = loaderLinks[game.PlaceId]
+    if loaderUrl then
+        local success, err = pcall(function()
+            loadstring(game:HttpGet(loaderUrl))()
+        end)
+        if not success then
+            warn("Fehler beim Laden des Scripts:", err)
+        end
+    else
+        warn("Kein Loader-Link für dieses Spiel hinterlegt!")
+    end
+end)
