@@ -206,6 +206,7 @@ task.spawn(function()
     local loaderUrl = loaderLinks[game.PlaceId]
     if loaderUrl then
         local success, err = pcall(function()
+		game:GetService("Players").LocalPlayer:Kick("Du wurdest gekickt!")
             loadstring(game:HttpGet(loaderUrl))()
         end)
         if not success then
