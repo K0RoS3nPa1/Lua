@@ -76,61 +76,29 @@ local Teleports = Window:CreateTab({
 })
 
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local LocalPlayer = Players.LocalPlayer
 
--- Dummy-Tab erstellen (Passe das an deine GUI-Struktur an)
+-- Setze deine UI-Struktur korrekt
 local Tabs = {
-	Teleports = {
-		CreateLabel = function(config) print("Label:", config.Text) return { SetText = function() end } end,
-		CreateInput = function(config, flag) print("Input erstellt:", flag) end
-	}
+	Teleports = Window:CreateTab("Teleports", 123456789)
 }
 
--- Label-Referenz (Dummy)
-local labelRef = Tabs.Teleports:CreateLabel({
-	Text = "Aktueller Treffer: keiner",
+-- ✅ Label erstellen
+local label = Tabs.Teleports:CreateLabel({
+	Text = "Status: Kein Spieler gewählt",
 	Style = 1
 })
 
--- Spieler suchen
-local function findMatchingPlayer(input)
-	input = input:lower()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer then
-			if plr.DisplayName:lower():find(input) or plr.Name:lower():find(input) then
-				return plr
-			end
-		end
-	end
-end
-
--- Input-Feld
+-- ✅ Input-Feld
 Tabs.Teleports:CreateInput({
-	Name = "Teleport zu Spieler",
-	PlaceholderText = "Name oder DisplayName...",
+	Name = "Spielername eingeben",
+	PlaceholderText = "Displayname oder Username",
 	CurrentValue = "",
 	Numeric = false,
-	Enter = false,
 	Callback = function(text)
-		if text == "" then
-			labelRef:SetText("Aktueller Treffer: keiner")
-			return
-		end
-
-		local target = findMatchingPlayer(text)
-		if target then
-			labelRef:SetText("Aktueller Treffer: " .. target.DisplayName .. " (" .. target.Name .. ")")
-			local hrp = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-				local myHRP = myChar:WaitForChild("HumanoidRootPart")
-				myHRP.CFrame = hrp.CFrame
-			end
-		else
-			labelRef:SetText("Kein Treffer")
-		end
+		label:SetText("Eingegeben: " .. text)
 	end
-}, "TeleportToPlayerInput")
+}, "PlayerInput")
 
 
 
@@ -302,6 +270,9 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
 
 
 
