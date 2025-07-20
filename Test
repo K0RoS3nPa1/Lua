@@ -47,7 +47,8 @@ Window:CreateHomeTab({
 		"CODex",
 		"Delta"
 	},
-	Icon = 0
+    DiscordInvite = "", -- Replace with your actual Discord invite link
+	Icon = 1
 })
 
 local Main = Window:CreateTab({
@@ -114,6 +115,8 @@ local ConfigTab = Window:CreateTab({
 })
 
 ConfigTab:BuildConfigSection()
+
+
 
 
 
