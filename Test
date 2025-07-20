@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.1"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -77,9 +77,13 @@ local selectedPlayerName = ""
 -- Input-Feld für die Spieler-Auswahl
 Traget:CreateInput({
 	Name = "Type Player Username",
+	Description = nil,
 	PlaceholderText = "Enter Player Username",
-	CurrentValue = "",
-	Callback = function(username)
+	CurrentValue = "", -- the current text
+	Numeric = false, -- When true, the user may only type numbers in the box (Example walkspeed)
+	MaxCharacters = nil, -- if a number, the textbox length cannot exceed the number
+	Enter = false, -- When true, the callback will only be executed when the user presses enter.
+    	Callback = function(username)
 		username = tostring(username or "")
 		getgenv().SelectedPlayer = username
 		selectedPlayerName = username
@@ -1022,6 +1026,9 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
 
 
 
