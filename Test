@@ -75,6 +75,184 @@ local Teleports = Window:CreateTab({
     ShowTitle = true
 }) 
 
+
+local player = game.Players.LocalPlayer
+local displayToUsername = {}
+
+-- Holt die Spielernamen für das Dropdown
+local function getPlayerDisplayNames()
+    local entries = { "None" }
+    displayToUsername = {}
+
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            local display = string.format("%s (%s)", p.DisplayName, p.Name)
+            table.insert(entries, display)
+            displayToUsername[display] = p.Name
+        end
+    end
+
+    table.sort(entries)
+    return entries
+end
+
+-- Teleportiert zu ausgewähltem Spieler
+local function teleportToPlayerDisplay(displayName)
+    local username = displayToUsername[displayName]
+    if not username then return end
+
+    local target = game.Players:FindFirstChild(username)
+    if target and target.Character then
+        local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local myChar = player.Character or player.CharacterAdded:Wait()
+            local myHRP = myChar:WaitForChild("HumanoidRootPart")
+            myHRP.CFrame = hrp.CFrame
+        end
+    end
+end
+
+-- Erstellt das Dropdown im Luna-Stil
+local playerDropdown
+playerDropdown = Teleports:CreateDropdown({
+    Name = "Teleport to player",
+    Description = nil,
+    Options = getPlayerDisplayNames(),
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+        if option == "None" then return end
+        if not displayToUsername[option] then return end
+        teleportToPlayerDisplay(option)
+    end
+}, "TeleportToPlayer")
+
+-- Aktualisiert das Dropdown, wenn Spieler joinen/leaven
+local function updateDropdown()
+    local newOptions = getPlayerDisplayNames()
+    playerDropdown:SetOptions(newOptions)
+    local current = playerDropdown.CurrentOption and playerDropdown.CurrentOption[1] or "None"
+    if not table.find(newOptions, current) then
+        playerDropdown:SetOption({ "None" })
+    end
+end
+
+game.Players.PlayerAdded:Connect(updateDropdown)
+game.Players.PlayerRemoving:Connect(updateDropdown)
+
+task.spawn(function()
+    while true do
+        task.wait(5)
+        updateDropdown()
+    end
+end)
+
+-- Bereichsteleport Dropdown
+Teleports:CreateDropdown({
+    Name = "Teleport to area",
+    Description = nil,
+    Options = { "None", "Spawn", "Manager", "Cashier", "Cook", "Boxer", "Delivery", "Supplier" },
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local locations = {
+            Spawn = Vector3.new(49, 3, 198),
+            Manager = Vector3.new(37, 4, 3),
+            Cashier = Vector3.new(48, 4, 80),
+            Cook = Vector3.new(42, 4, 61),
+            Boxer = Vector3.new(55, 4, 31),
+            Delivery = Vector3.new(64, 4, -17),
+            Supplier = Vector3.new(8, 13, -1020)
+        }
+
+        if locations[option] then
+            hrp.CFrame = CFrame.new(locations[option])
+        end
+    end
+}, "TeleportArea")
+
+
+-- Haus-Teleport Dropdown
+Teleports:CreateDropdown({
+    Name = "Teleport to house",
+    Description = nil,
+    Options = { "None", "Home", "A1", "A2", "A3", "B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3" },
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local coords = {
+            A1 = Vector3.new(190, 3, -474),
+            A2 = Vector3.new(188, 3, -652),
+            A3 = Vector3.new(187, 3, -823),
+            B1 = Vector3.new(-21, 3, -432),
+            B2 = Vector3.new(24, 3, -481),
+            B3 = Vector3.new(-20, 3, -612),
+            B4 = Vector3.new(24, 3, -663),
+            B5 = Vector3.new(-20, 3, -800),
+            B6 = Vector3.new(23, 3, -836),
+            C1 = Vector3.new(-184, 3, -444),
+            C2 = Vector3.new(-186, 3, -612),
+            C3 = Vector3.new(-185, 3, -792)
+        }
+
+        if option == "Home" then
+            game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportHome")
+        elseif coords[option] then
+            hrp.CFrame = CFrame.new(coords[option])
+        end
+    end
+}, "TeleportHouse")
+
+
+-- Insel-Teleport Dropdown
+local player = game.Players.LocalPlayer
+
+local islandOptions = { "None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island" }
+local islandModelName = {
+    ["Pirate Island"] = "Island",
+    ["Stone Island"] = "Island1",
+    ["Sand Island"] = "Island2"
+}
+
+Teleports:CreateDropdown({
+    Name = "Teleport to island",
+    Description = nil,
+    Options = islandOptions,
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+        if islandModelName[option] then
+            local model = workspace:FindFirstChild(islandModelName[option])
+            if model and model:IsA("Model") then
+                local targetCFrame = model:GetPivot() + Vector3.new(0, 20, 0)
+                _G.teleportTo(targetCFrame)
+            end
+        elseif option == "Teleport to Party Island" then
+            _G.teleportTo(Vector3.new(88, 1, -315))
+        end
+    end
+}, "TeleportIslands")
+
+
+
+
+
 local Scripts = Window:CreateTab({
     Name = "Scripts",
     Icon = "code",
@@ -138,7 +316,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
