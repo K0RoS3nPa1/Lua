@@ -74,19 +74,25 @@ local Teleports = Window:CreateTab({
     ImageSource = "Material",
     ShowTitle = true
 })
- 
--- Services
+
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
--- GUI Framework: angenommen du nutzt eine Luna-kompatible UI
--- Beispiel: Tabs.Teleports, passe ggf. an
-local Teleports = Tabs.Teleports
+-- Dummy-Tab erstellen (Passe das an deine GUI-Struktur an)
+local Tabs = {
+	Teleports = {
+		CreateLabel = function(config) print("Label:", config.Text) return { SetText = function() end } end,
+		CreateInput = function(config, flag) print("Input erstellt:", flag) end
+	}
+}
 
--- Globale Referenzen
-local labelRef
+-- Label-Referenz (Dummy)
+local labelRef = Tabs.Teleports:CreateLabel({
+	Text = "Aktueller Treffer: keiner",
+	Style = 1
+})
 
--- Spieler anhand von Teil-Name finden (DisplayName oder Username)
+-- Spieler suchen
 local function findMatchingPlayer(input)
 	input = input:lower()
 	for _, plr in ipairs(Players:GetPlayers()) do
@@ -96,35 +102,17 @@ local function findMatchingPlayer(input)
 			end
 		end
 	end
-	return nil
 end
 
--- Teleportieren zum Spieler
-local function teleportTo(target)
-	if not target or not target.Character then return end
-	local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-	if not targetHRP then return end
-
-	local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-	local myHRP = myChar:WaitForChild("HumanoidRootPart")
-	myHRP.CFrame = targetHRP.CFrame
-end
-
--- Label erstellen
-labelRef = Teleports:CreateLabel({
-	Text = "Aktueller Treffer: keiner",
-	Style = 1
-})
-
--- Input-Feld erstellen
-Teleports:CreateInput({
+-- Input-Feld
+Tabs.Teleports:CreateInput({
 	Name = "Teleport zu Spieler",
 	PlaceholderText = "Name oder DisplayName...",
 	CurrentValue = "",
 	Numeric = false,
-	Enter = false, -- Live-Update
+	Enter = false,
 	Callback = function(text)
-		if not text or text == "" then
+		if text == "" then
 			labelRef:SetText("Aktueller Treffer: keiner")
 			return
 		end
@@ -132,9 +120,14 @@ Teleports:CreateInput({
 		local target = findMatchingPlayer(text)
 		if target then
 			labelRef:SetText("Aktueller Treffer: " .. target.DisplayName .. " (" .. target.Name .. ")")
-			teleportTo(target)
+			local hrp = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+				local myHRP = myChar:WaitForChild("HumanoidRootPart")
+				myHRP.CFrame = hrp.CFrame
+			end
 		else
-			labelRef:SetText("Kein Treffer für: " .. text)
+			labelRef:SetText("Kein Treffer")
 		end
 	end
 }, "TeleportToPlayerInput")
@@ -309,3 +302,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
