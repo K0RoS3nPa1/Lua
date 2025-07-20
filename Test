@@ -333,17 +333,23 @@ Traget:CreateToggle({
 
 		if Enabled then
 			task.spawn(function()
-				while getgenv().nhekee do
-					task.wait(1)
-					local Players = game:GetService("Players")
-					local selectedName = getgenv().SelectedPlayer
-					local target = selectedName and Players:FindFirstChild(selectedName)
-					local torso = target and target.Character and (
-						target.Character:FindFirstChild("HumanoidRootPart") or
-						target.Character:FindFirstChild("Torso")
-					)
+	while getgenv().nhekee do
+    task.wait(1)
+    local Players = game:GetService("Players")
+    local selectedName = getgenv().SelectedPlayer
+    local target = selectedName and Players:FindFirstChild(selectedName)
+    local torso = target and target.Character and (
+        target.Character:FindFirstChild("HumanoidRootPart") or
+        target.Character:FindFirstChild("Torso")
+    )
 
-					if not torso then continue end
+    if torso then
+        -- Restlicher Code, der mit torso arbeitet
+    else
+        task.wait() -- Pause, wenn kein torso da ist
+    end
+
+
 
 					for _, part in pairs(workspace:GetDescendants()) do
 						if (part:IsA("BasePart") or part:IsA("UnionOperation"))
@@ -820,50 +826,50 @@ Traget:CreateToggle({
             end
 
             getgenv().SnowballThread = task.spawn(function()
-                while getgenv().SnowballThrowingEnabled do
-                    local backpack = LocalPlayer:FindFirstChild("Backpack")
-                    local character = LocalPlayer.Character
-                    if not backpack or not character then
-                        task.wait()
-                        continue
-                    end
-
-                    -- Entferne alle vorhandenen Snowballs im Backpack und Charakter
-                    for _, tool in ipairs(backpack:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            tool:Destroy()
-                        end
-                    end
-                    for _, tool in ipairs(character:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            tool:Destroy()
-                        end
-                    end
-
-                    -- Gib dem Spieler 7 Snowballs
-                    for i = 1, 7 do
-                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185)
-                        task.wait(0.1)
-                    end
-
-                    repeat task.wait() until #(backpack:GetChildren()) >= 7
-
-                    -- Ziehe die Snowballs ins Charakterinventar und wirf sie auf Ziel
-                    for _, tool in ipairs(backpack:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            tool.Parent = character
-                            task.wait(0.1)
-                            local clickEvent = tool:FindFirstChild("Clicked")
-                            if clickEvent then
-                                clickEvent:FireServer(getTargetPosition())
-                            end
-                            task.wait(0.1)
-                        end
-                    end
-
-                    task.wait(0.5)
+    while getgenv().SnowballThrowingEnabled do
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        local character = LocalPlayer.Character
+        if not backpack or not character then
+            task.wait()
+        else
+            -- Entferne alle vorhandenen Snowballs im Backpack und Charakter
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "Snowball" then
+                    tool:Destroy()
                 end
-            end)
+            end
+            for _, tool in ipairs(character:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "Snowball" then
+                    tool:Destroy()
+                end
+            end
+
+            -- Gib dem Spieler 7 Snowballs
+            for i = 1, 7 do
+                ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185)
+                task.wait(0.1)
+            end
+
+            repeat task.wait() until #(backpack:GetChildren()) >= 7
+
+            -- Ziehe die Snowballs ins Charakterinventar und wirf sie auf Ziel
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "Snowball" then
+                    tool.Parent = character
+                    task.wait(0.1)
+                    local clickEvent = tool:FindFirstChild("Clicked")
+                    if clickEvent then
+                        clickEvent:FireServer(getTargetPosition())
+                    end
+                    task.wait(0.1)
+                end
+            end
+
+            task.wait(0.5)
+        end
+    end
+end)
+
         else
             getgenv().SnowballThrowingEnabled = false
             PizzaHub:Notification({
