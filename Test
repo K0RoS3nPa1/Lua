@@ -31,34 +31,35 @@ local Window = PizzaHub:CreateWindow({
     MinimizeKey = Enum.KeyCode.Tab -- Used when theres no MinimizeKeybind
 })
 
--- Services
 local UIS = game:GetService("UserInputService")
-local CG = game:GetService("CoreGui")
 local camera = workspace.CurrentCamera
+local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
--- Erstelle das runde, mobile GUI
+-- Neues GUI
 local buttonGui = Instance.new("ScreenGui")
 buttonGui.Name = "MobileMinimizeButton"
 buttonGui.ResetOnSpawn = false
-buttonGui.Parent = CG
+buttonGui.IgnoreGuiInset = true
+buttonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+buttonGui.Parent = playerGui -- ❗ NICHT CoreGui → PlayerGui zeigt immer korrekt
 
 -- Runder Button
 local button = Instance.new("ImageButton")
 button.Size = UDim2.new(0, 60, 0, 60)
 button.Position = UDim2.new(0, 300, 0, 300)
 button.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
-button.Image = "rbxassetid://6034996695" -- Beispiel-Icon
+button.Image = "rbxassetid://6034996695"
 button.BackgroundTransparency = 0
 button.AnchorPoint = Vector2.new(0, 0)
 button.ZIndex = 10
+button.Name = "MinimizeTrigger"
 button.Parent = buttonGui
 
--- Runde Form
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(1, 0)
 corner.Parent = button
 
--- Drag-System (korrekt)
+-- Drag-Funktion (springt nicht)
 local dragging = false
 local dragOffset
 
@@ -90,7 +91,7 @@ UIS.InputChanged:Connect(function(input)
 	end
 end)
 
--- ✅ Klick = Tab simulieren → Fluent erkennt das automatisch (MinimizeKey = Tab)
+-- Klick-Funktion: MinimizeKey (Tab)
 button.MouseButton1Click:Connect(function()
 	for _, connection in ipairs(getconnections(UIS.InputBegan)) do
 		pcall(function()
