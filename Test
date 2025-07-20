@@ -75,11 +75,12 @@ local Teleports = Window:CreateTab({
     ShowTitle = true
 }) 
 
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Spielerliste mit passenden Namen abrufen
+local suggestionLabel -- wird gleich gesetzt
+
+-- Spieler-Vorschläge suchen
 local function findMatchingPlayers(input)
 	input = input:lower()
 	local matches = {}
@@ -93,7 +94,7 @@ local function findMatchingPlayers(input)
 	return matches
 end
 
--- Teleport-Funktion
+-- Teleport zu Spieler
 local function teleportToPlayer(p)
 	if p and p.Character then
 		local hrp = p.Character:FindFirstChild("HumanoidRootPart")
@@ -105,33 +106,45 @@ local function teleportToPlayer(p)
 	end
 end
 
--- Input mit Autovervollständigung bei Enter
-Teleports:CreateInput({ 
+-- 🔤 Eingabefeld mit Autovervollständigung bei Enter
+Teleports:CreateInput({
 	Name = "Teleport zu Spieler",
 	Description = "Teilnamen eingeben – Username oder DisplayName",
-	PlaceholderText = nil,
+	PlaceholderText = "z. B. Max oder MaxThePlayer",
 	CurrentValue = "",
 	Numeric = false,
 	MaxCharacters = nil,
 	Enter = true,
 	Callback = function(text)
-		if text and text ~= "" then
-			local matches = findMatchingPlayers(text)
-			if #matches == 1 then
-				-- Nur ein Match → automatisch teleportieren
-				teleportToPlayer(matches[1])
-			elseif #matches > 1 then
-				-- Mehrere Matches → Liste ausgeben
-				warn("Mehrere Spieler gefunden: ")
-				for _, match in ipairs(matches) do
-					print(match.DisplayName .. " (" .. match.Name .. ")")
-				end
+		local matches = findMatchingPlayers(text)
+		
+		-- 📍 Live-Vorschlag aktualisieren
+		if suggestionLabel then
+			if #matches == 0 then
+				suggestionLabel:SetText("❌ Kein Spieler gefunden")
+				suggestionLabel:SetStyle(3) -- rot
+			elseif #matches == 1 then
+				local p = matches[1]
+				suggestionLabel:SetText("✅ Gefunden: " .. p.DisplayName .. " (" .. p.Name .. ")")
+				suggestionLabel:SetStyle(2) -- grün
 			else
-				warn("Kein Spieler gefunden.")
+				suggestionLabel:SetText("🔍 " .. #matches .. " Spieler gefunden")
+				suggestionLabel:SetStyle(1) -- neutral
 			end
+		end
+
+		-- Bei genau einem Treffer: teleportieren
+		if #matches == 1 then
+			teleportToPlayer(matches[1])
 		end
 	end
 }, "Input_TeleportAutoComplete")
+
+-- 🏷️ Label darunter für Live-Anzeige
+suggestionLabel = Teleports:CreateLabel({
+	Text = "Bitte Namen eingeben …",
+	Style = 1 -- neutraler Stil
+})
 
 
 -- Bereichsteleport Dropdown
