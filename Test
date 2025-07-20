@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.1.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -96,7 +96,7 @@ Traget:CreateInput({
     Name = "Type Player Username",
     Description = nil,
     PlaceholderText = "Enter Player Username",
-    CurrentValue = "",
+    CurrentValue = nil,
     Numeric = false,
     MaxCharacters = nil,
     Enter = true,  -- wichtig: Callback nur bei Enter-Taste (Bestätigung)
