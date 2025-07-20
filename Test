@@ -84,7 +84,6 @@ liveLabel = Teleports:CreateLabel({
 	Style = 1
 })
 
--- Spieler anhand von Eingabe finden
 local function findPlayerByPartialName(input)
 	if typeof(input) ~= "string" then return nil end
 	input = input:lower()
@@ -102,7 +101,6 @@ local function findPlayerByPartialName(input)
 	return nil
 end
 
--- Input-Feld erstellen
 Teleports:CreateInput({
 	Name = "Teleport zu Spieler",
 	Description = "Gib Name oder Displayname ein",
@@ -112,23 +110,24 @@ Teleports:CreateInput({
 	Enter = false,
 	Callback = function(text)
 		if typeof(text) ~= "string" then
-			liveLabel:SetText("Ungültige Eingabe")
+			liveLabel.Text = "Ungültige Eingabe"
 			return
 		end
 
 		if text == "" then
-			liveLabel:SetText("Aktueller Treffer: keiner")
+			liveLabel.Text = "Aktueller Treffer: keiner"
 			return
 		end
 
 		local match = findPlayerByPartialName(text)
 		if match then
-			liveLabel:SetText("Aktueller Treffer: " .. match.DisplayName .. " (" .. match.Name .. ")")
+			liveLabel.Text = "Aktueller Treffer: " .. match.DisplayName .. " (" .. match.Name .. ")"
 		else
-			liveLabel:SetText("Kein Treffer für: " .. text)
+			liveLabel.Text = "Kein Treffer für: " .. text
 		end
 	end
 }, "Input_TeleportLive")
+
 
 
 
@@ -299,11 +298,3 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
-
-
-
-
-
-
