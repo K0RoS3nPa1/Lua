@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.1"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -68,45 +68,32 @@ local tragettab = Window:CreateTab({
     ShowTitle = true
 }) 
 
-local playerInputElement
+-- Globaler Spielername
+getgenv().SelectedPlayer = ""
 
-playerInputElement = tragettab:CreateInput({
+-- Custom Variable zum direkten Speichern
+local selectedPlayerName = ""
+
+-- Input-Feld für die Spieler-Auswahl
+tragettab:CreateInput({
 	Name = "Type Player Username",
-	Description = nil,
 	PlaceholderText = "Enter Player Username",
 	CurrentValue = "",
-	Numeric = false,
-	MaxCharacters = nil,
-	Enter = false,
 	Callback = function(username)
-		getgenv().SelectedPlayer = tostring(username or "")
+		username = tostring(username or "")
+		getgenv().SelectedPlayer = username
+		selectedPlayerName = username
+
 		PizzaHub:Notification({
 			Title = "Player Selected",
 			Icon = "person_search",
 			ImageSource = "Material",
-			Content = "You selected: " .. tostring(username or "")
+			Content = "You selected: " .. username
 		})
 	end
-}, "SelectedPlayerInput")
+})
 
--- Funktion zum Setzen des Input-Feldes (falls die Library das zulässt)
-function SetPlayerInput(value)
-	value = tostring(value or "")
-	if playerInputElement then
-		if typeof(playerInputElement.Set) == "function" then
-			playerInputElement:Set(value)
-		elseif typeof(playerInputElement.SetValue) == "function" then
-			playerInputElement:SetValue(value)
-		else
-			warn("[SetPlayerInput] Set-Methode für Input-Feld ist nicht verfügbar.")
-		end
-	else
-		warn("[SetPlayerInput] playerInputElement ist nil.")
-	end
-end
-
-
-
+-- Button: Spieler per Mausklick auswählen
 tragettab:CreateButton({
 	Name = "Mouse Button To Choose",
 	Description = "Click a player to select them via tool",
@@ -117,7 +104,7 @@ tragettab:CreateButton({
 		local selectTool = Instance.new("Tool")
 		selectTool.Name = "Player Selector"
 		selectTool.RequiresHandle = false
-		selectTool.TextureId = "rbxassetid://114058734028941"
+		selectTool.TextureId = "rbxassetid://114058734028941" -- Beispielicon
 
 		selectTool.Activated:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
@@ -126,11 +113,8 @@ tragettab:CreateButton({
 				local model = target:FindFirstAncestorOfClass("Model")
 				if model and Players:FindFirstChild(model.Name) then
 					local selectedName = model.Name
-					if playerInputElement and playerInputElement.Set then
-						playerInputElement:Set(selectedName)
-					elseif playerInputElement and playerInputElement.SetValue then
-						playerInputElement:SetValue(selectedName)
-					end
+					getgenv().SelectedPlayer = selectedName
+					selectedPlayerName = selectedName
 
 					PizzaHub:Notification({
 						Title = "Player Selected",
@@ -1038,10 +1022,3 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
-
-
-
-
-
