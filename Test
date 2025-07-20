@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.1"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -157,7 +157,7 @@ local function getTargetPlayer()
 	end
 end
 
-tragettab:CreateToggle({
+Traget:CreateToggle({
 	Name = "Fling",
 	Description = "Flings target player by spinning your character",
 	CurrentValue = false,
@@ -270,7 +270,7 @@ tragettab:CreateToggle({
 }, "ToggleFlingPlayer")
 
 
-tragettab:CreateToggle({
+Traget:CreateToggle({
 	Name = "Tree Fling",
 	Description = "Uproots trees and flings them toward the selected player",
 	CurrentValue = false,
@@ -359,7 +359,7 @@ tragettab:CreateToggle({
 	end
 }, "ToggleTreeFling")
 
-tragettab:CreateButton({
+Traget:CreateButton({
 	Name = "Goto Player",
 	Description = "Teleportiere dich zum ausgewählten Spieler",
 	Callback = function()
