@@ -3,7 +3,7 @@ local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
-	Subtitle = version, -- A Gray Subtitle next To the main title.
+	Subtitle = nil, -- A Gray Subtitle next To the main title.
 	LogoID = nil, -- The Asset ID of your logo. Set to nil if you do not have a logo for Luna to use.
 	LoadingEnabled = false, -- Whether to enable the loading animation. Set to false if you do not want the loading screen or have your own custom one.
 	LoadingTitle = "Luna Interface Suite", -- Header for loading screen
@@ -33,7 +33,6 @@ local Window = PizzaHub:CreateWindow({
 
 Window:CreateHomeTab({
 	SupportedExecutors = {
-		"Synapse X",
 		"Krnl",
 		"ProtoSmasher",
 		"Fluxus",
@@ -55,45 +54,59 @@ Window:CreateHomeTab({
 	Icon = 2
 })
 
+local main = Window:CreateTab({
+	Name = "main",
+	Icon = "view_in_ar",
+	ImageSource = "Material",
+	ShowTitle = true -- This will determine whether the big header text in the tab will show
+})
+
+local Anti = Window:CreateTab({
+    Name = "Example Script",
+    Icon = "code",
+    ImageSource = "Material",
+    ShowTitle = true
+}) 
+
+local Teleports = Window:CreateTab({
+    Name = "Teleports",
+    Icon = "code",
+    ImageSource = "Material",
+    ShowTitle = true
+}) 
 
 local Scripts = Window:CreateTab({
     Name = "Scripts",
-    Icon = "scroll-text",
-    ImageSource = "lucide",
+    Icon = "code",
+    ImageSource = "Material",
     ShowTitle = true
 })
 
-Scripts:CreateLabel({
-	Text = "Auto farm ban risk. Use alt account!",
-	Style = 3
-})
 
-Scripts:CreateButton({
-	Name = "Autofarm",
-	Description = nil,
-	Callback = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2"))()
-	end
-})
 
---config tab
 
-local ThemeTab = Window:CreateTab({
-	Name = "Theme Tab",
+
+
+local Theme = Window:CreateTab({
+	Name = "Theme",
 	Icon = "palette",
 	ImageSource = "Material",
 	ShowTitle = true
 })
-ThemeTab:BuildThemeSection()
+Theme:BuildThemeSection()
 
-local ConfigTab = Window:CreateTab({
-	Name = "Config Tab",
+local Settings = Window:CreateTab({
+	Name = "Settings",
 	Icon = "settings",
 	ImageSource = "Material",
 	ShowTitle = true
 })
 
-ConfigTab:BuildConfigSection()
+Settings:BuildConfigSection()
+
+
+
+
 
 
 
