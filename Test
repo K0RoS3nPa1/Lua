@@ -76,81 +76,63 @@ local Teleports = Window:CreateTab({
 }) 
 
 
-local player = game.Players.LocalPlayer
-local displayToUsername = {}
-local playerDropdown
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- Holt aktuelle Spieler
-local function getPlayerDisplayNames()
-	local entries = { "None" }
-	displayToUsername = {}
-
-	for _, p in ipairs(game.Players:GetPlayers()) do
-		if p ~= player then
-			local display = string.format("%s (%s)", p.DisplayName, p.Name)
-			table.insert(entries, display)
-			displayToUsername[display] = p.Name
+-- Spielerliste mit passenden Namen abrufen
+local function findMatchingPlayers(input)
+	input = input:lower()
+	local matches = {}
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer then
+			if p.Name:lower():find(input) or p.DisplayName:lower():find(input) then
+				table.insert(matches, p)
+			end
 		end
 	end
-
-	table.sort(entries)
-	return entries
+	return matches
 end
 
--- Teleportiert zu ausgewähltem Spieler
-local function teleportToPlayerDisplay(displayName)
-	local username = displayToUsername[displayName]
-	if not username then return end
-
-	local target = game.Players:FindFirstChild(username)
-	if target and target.Character then
-		local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+-- Teleport-Funktion
+local function teleportToPlayer(p)
+	if p and p.Character then
+		local hrp = p.Character:FindFirstChild("HumanoidRootPart")
 		if hrp then
-			local myChar = player.Character or player.CharacterAdded:Wait()
+			local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 			local myHRP = myChar:WaitForChild("HumanoidRootPart")
 			myHRP.CFrame = hrp.CFrame
 		end
 	end
 end
 
--- Erstellt ein Dropdown neu
-local function recreateDropdown()
-	-- Wenn Dropdown schon existiert: löschen
-	if playerDropdown and playerDropdown.Destroy then
-		playerDropdown:Destroy()
-	end
-
-	local options = getPlayerDisplayNames()
-
-	playerDropdown = Teleports:CreateDropdown({
-		Name = "Teleport to player",
-		Description = nil,
-		Options = options,
-		CurrentOption = { "None" },
-		MultipleOptions = false,
-		SpecialType = nil,
-		Callback = function(option)
-			if typeof(option) == "table" then option = option[1] end
-			if not option or option == "None" then return end
-			teleportToPlayerDisplay(option)
+-- Input mit Autovervollständigung bei Enter
+Teleports:CreateInput({ 
+	Name = "Teleport zu Spieler",
+	Description = "Teilnamen eingeben – Username oder DisplayName",
+	PlaceholderText = nil,
+	CurrentValue = "",
+	Numeric = false,
+	MaxCharacters = nil,
+	Enter = true,
+	Callback = function(text)
+		if text and text ~= "" then
+			local matches = findMatchingPlayers(text)
+			if #matches == 1 then
+				-- Nur ein Match → automatisch teleportieren
+				teleportToPlayer(matches[1])
+			elseif #matches > 1 then
+				-- Mehrere Matches → Liste ausgeben
+				warn("Mehrere Spieler gefunden: ")
+				for _, match in ipairs(matches) do
+					print(match.DisplayName .. " (" .. match.Name .. ")")
+				end
+			else
+				warn("Kein Spieler gefunden.")
+			end
 		end
-	}, "TeleportToPlayer")
-end
-
--- Bei Spieler-Änderung vollständig neu erstellen
-game.Players.PlayerAdded:Connect(recreateDropdown)
-game.Players.PlayerRemoving:Connect(recreateDropdown)
-
--- Regelmäßig neu erstellen (Failsafe)
-task.spawn(function()
-	while true do
-		task.wait(5)
-		recreateDropdown()
 	end
-end)
+}, "Input_TeleportAutoComplete")
 
--- Initial aufrufen
-recreateDropdown()
 
 -- Bereichsteleport Dropdown
 Teleports:CreateDropdown({
@@ -320,77 +302,6 @@ local Settings = Window:CreateTab({
 
 Settings:BuildConfigSection()
 
-
-
-
-
-
-
-
-
-local Scripts = Window:CreateTab({
-    Name = "Scripts",
-    Icon = "code",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-
-Scripts:CreateLabel({
-	Text = "Warning, use this Farm whit alt account, this is ban risk on main account",
-	Style = 3
-})
-
-Scripts:CreateButton({
-	Name = "Auto Farm",
-	Description = nil,
-	Callback = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2"))()
-	end
-})
-
-Scripts:CreateButton({
-    Name = "Pizza hub 2.0",
-    Description = "by AFP",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/ImARandom44/AFP/refs/heads/main/Source"))()
-    end
-})
-
-Scripts:CreateButton({
-    Name = "Hussien",
-    Description = nil,
-    Callback = function()
-        loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
-    end
-})
-
-Scripts:CreateButton({
-    Name = "invinite yield",
-    Description = nil,
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-
-    end
-})
-
-
-local Theme = Window:CreateTab({
-	Name = "Theme",
-	Icon = "palette",
-	ImageSource = "Material",
-	ShowTitle = true
-})
-Theme:BuildThemeSection()
-
-local Settings = Window:CreateTab({
-	Name = "Settings",
-	Icon = "settings",
-	ImageSource = "Material",
-	ShowTitle = true
-})
-
-Settings:BuildConfigSection()
 
 
 
