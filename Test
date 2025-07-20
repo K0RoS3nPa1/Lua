@@ -2,7 +2,7 @@ local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebu
 local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
-	Name = "Pizza Hub Window", -- This Is Title Of Your Window
+	Name = "Pizza Hub", -- This Is Title Of Your Window
 	Subtitle = version , -- A Gray Subtitle next To the main title.
 	LogoID = nil, -- The Asset ID of your logo. Set to nil if you do not have a logo for Luna to use.
 	LoadingEnabled = false, -- Whether to enable the loading animation. Set to false if you do not want the loading screen or have your own custom one.
@@ -36,12 +36,8 @@ Window:CreateHomeTab({
 		"Krnl",
 		"ProtoSmasher",
 		"Fluxus",
-		"Script-Ware",
-		"EasyExploits",
 		"Electron",
-		"JJSploit",
 		"Calamari",
-		"SirHurt",
 		"Sentinel",
 		"WEAREDEVS",
 		"Comet",
@@ -50,7 +46,6 @@ Window:CreateHomeTab({
 		"CODex",
 		"Delta"
 	},
-	DiscordInvite = false, -- same thing here
 	Icon = 0
 })
 
@@ -81,12 +76,14 @@ local Teleport = Window:CreateTab({
 	ImageSource = "lucide",
 	ShowTitle = true
 })
+
 local Misc = Window:CreateTab({
     Name = "Misc",
     Icon = "scroll",
     ImageSource = "lucide",
     ShowTitle = true
 })
+
 local Scripts = Window:CreateTab({
     Name = "Scripts",
     Icon = "scroll-text",
@@ -94,25 +91,26 @@ local Scripts = Window:CreateTab({
     ShowTitle = true
 })
 
+
+
+
+
+--config tab
+
 local ThemeTab = Window:CreateTab({
 	Name = "Theme Tab",
 	Icon = "palette",
 	ImageSource = "Material",
 	ShowTitle = true
 })
+ThemeTab:BuildThemeSection()
+
 local ConfigTab = Window:CreateTab({
 	Name = "Config Tab",
 	Icon = "settings",
 	ImageSource = "Material",
 	ShowTitle = true
 })
-
-
-
-
-
---config tab
-ThemeTab:BuildThemeSection()
 
 ConfigTab:BuildConfigSection()
 
