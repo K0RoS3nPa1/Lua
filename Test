@@ -52,7 +52,7 @@ Window:CreateHomeTab({
 		"Delta"
 	},
 	DiscordInvite = "1234", -- same thing here
-	Icon = 1
+	Icon = 2
 })
 
 
