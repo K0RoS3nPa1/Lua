@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.1.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -68,34 +68,62 @@ local Traget = Window:CreateTab({
     ShowTitle = true
 }) 
 
--- Globaler Spielername
-getgenv().SelectedPlayer = ""
+local Players = game:GetService("Players")
+local confirmedPlayerName = nil -- wirklich ausgewählter Spieler
+local lastInputText = ""
 
--- Custom Variable zum direkten Speichern
-local selectedPlayerName = ""
+local function findBestMatch(inputText)
+    inputText = tostring(inputText or ""):lower()
+    local bestMatch = nil
+    local bestMatchLength = math.huge
 
--- Input-Feld für die Spieler-Auswahl
+    for _, player in pairs(Players:GetPlayers()) do
+        local username = player.Name:lower()
+        local displayName = player.DisplayName:lower()
+
+        if string.find(username, inputText, 1, true) or string.find(displayName, inputText, 1, true) then
+            local matchLen = #username
+            if matchLen < bestMatchLength then
+                bestMatch = player
+                bestMatchLength = matchLen
+            end
+        end
+    end
+    return bestMatch
+end
+
 Traget:CreateInput({
-	Name = "Type Player Username",
-	Description = nil,
-	PlaceholderText = "Enter Player Username",
-	CurrentValue = "", -- the current text
-	Numeric = false, -- When true, the user may only type numbers in the box (Example walkspeed)
-	MaxCharacters = nil, -- if a number, the textbox length cannot exceed the number
-	Enter = false, -- When true, the callback will only be executed when the user presses enter.
-    	Callback = function(username)
-		username = tostring(username or "")
-		getgenv().SelectedPlayer = username
-		selectedPlayerName = username
+    Name = "Type Player Username",
+    Description = nil,
+    PlaceholderText = "Enter Player Username",
+    CurrentValue = "",
+    Numeric = false,
+    MaxCharacters = nil,
+    Enter = true,  -- wichtig: Callback nur bei Enter-Taste (Bestätigung)
+    Callback = function(inputText)
+        lastInputText = tostring(inputText or "")
+        local bestMatch = findBestMatch(lastInputText)
+        if bestMatch then
+            confirmedPlayerName = bestMatch.Name
+            getgenv().SelectedPlayer = confirmedPlayerName
 
-		PizzaHub:Notification({
-			Title = "Player Selected",
-			Icon = "person_search",
-			ImageSource = "Material",
-			Content = "You selected: " .. username
-		})
-	end
+            PizzaHub:Notification({
+                Title = "Player Confirmed",
+                Icon = "person_search",
+                ImageSource = "Material",
+                Content = "You confirmed player: " .. confirmedPlayerName .. " (" .. bestMatch.DisplayName .. ")"
+            })
+        else
+            PizzaHub:Notification({
+                Title = "No Player Found",
+                Icon = "person_off",
+                ImageSource = "Material",
+                Content = "No matching player for: " .. lastInputText
+            })
+        end
+    end
 })
+
 
 -- Button: Spieler per Mausklick auswählen
 Traget:CreateButton({
@@ -426,7 +454,7 @@ Traget:CreateButton({
 	end,
 })
 
-tragettab:CreateButton({
+Traget:CreateButton({
 	Name = "Bring Player To You",
 	Description = "Bringt den ausgewählten Spieler zu dir ins Fahrzeug",
 	Callback = function()
@@ -524,7 +552,7 @@ tragettab:CreateButton({
 local viewPlayerEnabled = false
 local viewPlayerConnection = nil
 
-tragettab:CreateToggle({
+Traget:CreateToggle({
 	Name = "View Player",
 	Description = "Kamera auf den ausgewählten Spieler fokussieren",
 	CurrentValue = false,
@@ -588,7 +616,7 @@ tragettab:CreateToggle({
 	end,
 }, "ToggleViewPlayer")
 
-local Button = Tab:CreateButton({
+Traget:CreateButton({
 	Name = "Throw Player Far Away",
 	Description = "Wirft den ausgewählten Spieler weit weg",
 	Callback = function()
@@ -668,7 +696,7 @@ local Button = Tab:CreateButton({
 	end,
 })
 
-tragettab:CreateButton({
+Traget:CreateButton({
     Name = "Kill Player",
     Description = "Tötet den ausgewählten Spieler durch Fahrzeug-Throw",
     Callback = function()
@@ -752,7 +780,7 @@ tragettab:CreateButton({
     end,
 })
 
-local Toggle = Tab:CreateToggle({
+Traget:CreateToggle({
     Name = "Spam Snowballs",
     CurrentValue = false,
     Flag = "ToggleSpamSnowballs",
@@ -1026,9 +1054,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
-
 
 
 
