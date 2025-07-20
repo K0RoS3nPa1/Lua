@@ -51,40 +51,6 @@ Window:CreateHomeTab({
 	Icon = 1
 })
 
-local Main = Window:CreateTab({
-	Name = "Main",
-	Icon = "home_max",
-	ImageSource = "Material",
-	ShowTitle = true
-})
-
-local Player = Window:CreateTab({
-	Name = "Player",
-	Icon = "account_circle",
-	ImageSource = "Material",
-	ShowTitle = true
-})
-
-local Anti = Window:CreateTab({
-	Name = "Anti",
-	Icon = "shield",
-	ImageSource = "Material",
-	ShowTitle = true
-})
-
-local Teleport = Window:CreateTab({
-	Name = "Teleports",
-	Icon = "person-standing",
-	ImageSource = "lucide",
-	ShowTitle = true
-})
-
-local Misc = Window:CreateTab({
-    Name = "Misc",
-    Icon = "scroll",
-    ImageSource = "lucide",
-    ShowTitle = true
-})
 
 local Scripts = Window:CreateTab({
     Name = "Scripts",
@@ -93,8 +59,34 @@ local Scripts = Window:CreateTab({
     ShowTitle = true
 })
 
+Scripts:CreateLabel({
+	Text = "Auto farm ban risk. Use alt account!",
+	Style = 3
+})
 
+Scripts:CreateButton({
+	Name = "Autofarm",
+	Description = nil,
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2"))()
+	end
+})
 
+Scripts:CreateButton({
+	Name = "Button Example!",
+	Description = nil,
+	Callback = function()
+		print("Button Example Pressed!")
+	end
+})
+
+Scripts:CreateButton({
+	Name = "Button Example!",
+	Description = nil,
+	Callback = function()
+		print("Button Example Pressed!")
+	end
+})
 
 
 --config tab
@@ -115,10 +107,6 @@ local ConfigTab = Window:CreateTab({
 })
 
 ConfigTab:BuildConfigSection()
-
-
-
-
 
 
 
