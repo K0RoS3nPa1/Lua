@@ -80,86 +80,77 @@ local player = game.Players.LocalPlayer
 local displayToUsername = {}
 local playerDropdown
 
--- Funktion: Liste aller Spieler außer LocalPlayer
+-- Holt aktuelle Spieler
 local function getPlayerDisplayNames()
-    local entries = { "None" }
-    displayToUsername = {}
+	local entries = { "None" }
+	displayToUsername = {}
 
-    for _, p in ipairs(game.Players:GetPlayers()) do
-        if p ~= player then
-            local display = string.format("%s (%s)", p.DisplayName, p.Name)
-            table.insert(entries, display)
-            displayToUsername[display] = p.Name
-        end
-    end
+	for _, p in ipairs(game.Players:GetPlayers()) do
+		if p ~= player then
+			local display = string.format("%s (%s)", p.DisplayName, p.Name)
+			table.insert(entries, display)
+			displayToUsername[display] = p.Name
+		end
+	end
 
-    table.sort(entries)
-    return entries
+	table.sort(entries)
+	return entries
 end
 
--- Funktion: Teleport zu Spieler anhand Displayname
+-- Teleportiert zu ausgewähltem Spieler
 local function teleportToPlayerDisplay(displayName)
-    local username = displayToUsername[displayName]
-    if not username then return end
+	local username = displayToUsername[displayName]
+	if not username then return end
 
-    local target = game.Players:FindFirstChild(username)
-    if target and target.Character then
-        local hrp = target.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local myChar = player.Character or player.CharacterAdded:Wait()
-            local myHRP = myChar:WaitForChild("HumanoidRootPart")
-            myHRP.CFrame = hrp.CFrame
-        end
-    end
+	local target = game.Players:FindFirstChild(username)
+	if target and target.Character then
+		local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			local myChar = player.Character or player.CharacterAdded:Wait()
+			local myHRP = myChar:WaitForChild("HumanoidRootPart")
+			myHRP.CFrame = hrp.CFrame
+		end
+	end
 end
 
--- Neues Dropdown im gewünschten Format erstellen
-local function createPlayerDropdown()
-    local options = getPlayerDisplayNames()
+-- Erstellt ein Dropdown neu
+local function recreateDropdown()
+	-- Wenn Dropdown schon existiert: löschen
+	if playerDropdown and playerDropdown.Destroy then
+		playerDropdown:Destroy()
+	end
 
-    playerDropdown = Teleports:CreateDropdown({
-        Name = "Teleport to player",
-        Description = nil,
-        Options = options,
-        CurrentOption = { "None" },
-        MultipleOptions = false,
-        SpecialType = nil,
-        Callback = function(option)
-            if typeof(option) == "table" then option = option[1] end
-            if not option or option == "None" then return end
-            teleportToPlayerDisplay(option)
-        end
-    }, "TeleportToPlayer")
+	local options = getPlayerDisplayNames()
+
+	playerDropdown = Teleports:CreateDropdown({
+		Name = "Teleport to player",
+		Description = nil,
+		Options = options,
+		CurrentOption = { "None" },
+		MultipleOptions = false,
+		SpecialType = nil,
+		Callback = function(option)
+			if typeof(option) == "table" then option = option[1] end
+			if not option or option == "None" then return end
+			teleportToPlayerDisplay(option)
+		end
+	}, "TeleportToPlayer")
 end
 
--- Funktion zum Aktualisieren der Dropdown-Optionen
-local function updatePlayerDropdown()
-    if not playerDropdown then return end
+-- Bei Spieler-Änderung vollständig neu erstellen
+game.Players.PlayerAdded:Connect(recreateDropdown)
+game.Players.PlayerRemoving:Connect(recreateDropdown)
 
-    local newOptions = getPlayerDisplayNames()
-    playerDropdown:SetOptions(newOptions)
-
-    local current = playerDropdown.CurrentOption and playerDropdown.CurrentOption[1] or "None"
-    if not table.find(newOptions, current) then
-        playerDropdown:SetOption({ "None" })
-    end
-end
-
--- Events zur Aktualisierung bei Join/Leave
-game.Players.PlayerAdded:Connect(updatePlayerDropdown)
-game.Players.PlayerRemoving:Connect(updatePlayerDropdown)
-
--- Regelmäßige Aktualisierung alle 5 Sekunden
+-- Regelmäßig neu erstellen (Failsafe)
 task.spawn(function()
-    while true do
-        task.wait(5)
-        updatePlayerDropdown()
-    end
+	while true do
+		task.wait(5)
+		recreateDropdown()
+	end
 end)
 
--- Initial erstellen
-createPlayerDropdown()
-
+-- Initial aufrufen
+recreateDropdown()
 
 -- Bereichsteleport Dropdown
 Teleports:CreateDropdown({
@@ -260,6 +251,78 @@ Teleports:CreateDropdown({
         end
     end
 }, "TeleportIslands")
+
+
+
+
+
+local Scripts = Window:CreateTab({
+    Name = "Scripts",
+    Icon = "code",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+
+Scripts:CreateLabel({
+	Text = "Warning, use this Farm whit alt account, this is ban risk on main account",
+	Style = 3
+})
+
+Scripts:CreateButton({
+	Name = "Auto Farm",
+	Description = nil,
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2"))()
+	end
+})
+
+Scripts:CreateButton({
+    Name = "Pizza hub 2.0",
+    Description = "by AFP",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ImARandom44/AFP/refs/heads/main/Source"))()
+    end
+})
+
+Scripts:CreateButton({
+    Name = "Hussien",
+    Description = nil,
+    Callback = function()
+        loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
+    end
+})
+
+Scripts:CreateButton({
+    Name = "invinite yield",
+    Description = nil,
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+
+    end
+})
+
+
+local Theme = Window:CreateTab({
+	Name = "Theme",
+	Icon = "palette",
+	ImageSource = "Material",
+	ShowTitle = true
+})
+Theme:BuildThemeSection()
+
+local Settings = Window:CreateTab({
+	Name = "Settings",
+	Icon = "settings",
+	ImageSource = "Material",
+	ShowTitle = true
+})
+
+Settings:BuildConfigSection()
+
+
+
+
 
 
 
