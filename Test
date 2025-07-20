@@ -79,25 +79,29 @@ playerInputElement = tragettab:CreateInput({
 	MaxCharacters = nil,
 	Enter = false,
 	Callback = function(username)
-		getgenv().SelectedPlayer = username
+		getgenv().SelectedPlayer = tostring(username or "")
 		PizzaHub:Notification({
 			Title = "Player Selected",
 			Icon = "person_search",
 			ImageSource = "Material",
-			Content = "You selected: " .. tostring(username)
+			Content = "You selected: " .. tostring(username or "")
 		})
 	end
 }, "SelectedPlayerInput")
 
 -- Funktion zum Setzen des Input-Feldes (falls die Library das zulässt)
 function SetPlayerInput(value)
-	if playerInputElement and playerInputElement.Set then
-		playerInputElement:Set(value)
-	elseif playerInputElement and playerInputElement.SetValue then
-		playerInputElement:SetValue(value)
-	elseif playerInputElement then
-		-- Fallback für Libraries ohne direkte Set-Methode
-		warn("Set-Methode für Input-Feld ist nicht verfügbar.")
+	value = tostring(value or "")
+	if playerInputElement then
+		if typeof(playerInputElement.Set) == "function" then
+			playerInputElement:Set(value)
+		elseif typeof(playerInputElement.SetValue) == "function" then
+			playerInputElement:SetValue(value)
+		else
+			warn("[SetPlayerInput] Set-Methode für Input-Feld ist nicht verfügbar.")
+		end
+	else
+		warn("[SetPlayerInput] playerInputElement ist nil.")
 	end
 end
 
@@ -282,7 +286,7 @@ tragettab:CreateToggle({
 }, "ToggleFlingPlayer")
 
 
-local Toggle = Tab:CreateToggle({
+tragettab:CreateToggle({
 	Name = "Tree Fling",
 	Description = "Uproots trees and flings them toward the selected player",
 	CurrentValue = false,
@@ -1034,6 +1038,10 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
+
 
 
 
