@@ -61,9 +61,9 @@ local main = Window:CreateTab({
 	ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
 
-local tragettab = Window:CreateTab({
+local Traget = Window:CreateTab({
     Name = "Traget",
-    Icon = "",
+    Icon = "code",
     ImageSource = "Material",
     ShowTitle = true
 }) 
@@ -75,7 +75,7 @@ getgenv().SelectedPlayer = ""
 local selectedPlayerName = ""
 
 -- Input-Feld für die Spieler-Auswahl
-tragettab:CreateInput({
+Traget:CreateInput({
 	Name = "Type Player Username",
 	PlaceholderText = "Enter Player Username",
 	CurrentValue = "",
@@ -94,7 +94,7 @@ tragettab:CreateInput({
 })
 
 -- Button: Spieler per Mausklick auswählen
-tragettab:CreateButton({
+Traget:CreateButton({
 	Name = "Mouse Button To Choose",
 	Description = "Click a player to select them via tool",
 	Callback = function()
@@ -1022,3 +1022,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
