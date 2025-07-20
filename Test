@@ -78,8 +78,9 @@ local Teleports = Window:CreateTab({
 
 local player = game.Players.LocalPlayer
 local displayToUsername = {}
+local playerDropdown
 
--- Holt die Spielernamen für das Dropdown
+-- Funktion: Liste aller Spieler außer LocalPlayer
 local function getPlayerDisplayNames()
     local entries = { "None" }
     displayToUsername = {}
@@ -96,7 +97,7 @@ local function getPlayerDisplayNames()
     return entries
 end
 
--- Teleportiert zu ausgewähltem Spieler
+-- Funktion: Teleport zu Spieler anhand Displayname
 local function teleportToPlayerDisplay(displayName)
     local username = displayToUsername[displayName]
     if not username then return end
@@ -112,42 +113,53 @@ local function teleportToPlayerDisplay(displayName)
     end
 end
 
--- Erstellt das Dropdown im Luna-Stil
-local playerDropdown
-playerDropdown = Teleports:CreateDropdown({
-    Name = "Teleport to player",
-    Description = nil,
-    Options = getPlayerDisplayNames(),
-    CurrentOption = { "None" },
-    MultipleOptions = false,
-    SpecialType = nil,
-    Callback = function(option)
-        if type(option) == "table" then option = option[1] end
-        if option == "None" then return end
-        if not displayToUsername[option] then return end
-        teleportToPlayerDisplay(option)
-    end
-}, "TeleportToPlayer")
+-- Neues Dropdown im gewünschten Format erstellen
+local function createPlayerDropdown()
+    local options = getPlayerDisplayNames()
 
--- Aktualisiert das Dropdown, wenn Spieler joinen/leaven
-local function updateDropdown()
+    playerDropdown = Teleports:CreateDropdown({
+        Name = "Teleport to player",
+        Description = nil,
+        Options = options,
+        CurrentOption = { "None" },
+        MultipleOptions = false,
+        SpecialType = nil,
+        Callback = function(option)
+            if typeof(option) == "table" then option = option[1] end
+            if not option or option == "None" then return end
+            teleportToPlayerDisplay(option)
+        end
+    }, "TeleportToPlayer")
+end
+
+-- Funktion zum Aktualisieren der Dropdown-Optionen
+local function updatePlayerDropdown()
+    if not playerDropdown then return end
+
     local newOptions = getPlayerDisplayNames()
     playerDropdown:SetOptions(newOptions)
+
     local current = playerDropdown.CurrentOption and playerDropdown.CurrentOption[1] or "None"
     if not table.find(newOptions, current) then
         playerDropdown:SetOption({ "None" })
     end
 end
 
-game.Players.PlayerAdded:Connect(updateDropdown)
-game.Players.PlayerRemoving:Connect(updateDropdown)
+-- Events zur Aktualisierung bei Join/Leave
+game.Players.PlayerAdded:Connect(updatePlayerDropdown)
+game.Players.PlayerRemoving:Connect(updatePlayerDropdown)
 
+-- Regelmäßige Aktualisierung alle 5 Sekunden
 task.spawn(function()
     while true do
         task.wait(5)
-        updateDropdown()
+        updatePlayerDropdown()
     end
 end)
+
+-- Initial erstellen
+createPlayerDropdown()
+
 
 -- Bereichsteleport Dropdown
 Teleports:CreateDropdown({
@@ -316,8 +328,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
 
 
 
