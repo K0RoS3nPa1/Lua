@@ -75,19 +75,26 @@ local Teleports = Window:CreateTab({
     ShowTitle = true
 }) 
 
-local liveLabel = Teleports:CreateLabel({
+local player = game.Players.LocalPlayer
+local liveLabel
+
+-- Label erstellen
+liveLabel = Teleports:CreateLabel({
 	Text = "Aktueller Treffer: keiner",
 	Style = 1
 })
 
-local player = game.Players.LocalPlayer
-
--- Finde Spieler mit passender Eingabe
+-- Spieler anhand von Eingabe finden
 local function findPlayerByPartialName(input)
+	if typeof(input) ~= "string" then return nil end
 	input = input:lower()
+
 	for _, p in ipairs(game.Players:GetPlayers()) do
 		if p ~= player then
-			if p.DisplayName:lower():find(input) or p.Name:lower():find(input) then
+			local displayName = tostring(p.DisplayName):lower()
+			local username = tostring(p.Name):lower()
+
+			if displayName:find(input) or username:find(input) then
 				return p
 			end
 		end
@@ -98,22 +105,27 @@ end
 -- Input-Feld erstellen
 Teleports:CreateInput({
 	Name = "Teleport zu Spieler",
-	Description = "Name oder Displayname",
+	Description = "Gib Name oder Displayname ein",
 	PlaceholderText = "z. B. Max oder MaxThePlayer",
 	CurrentValue = "",
 	Numeric = false,
-	MaxCharacters = nil,
-	Enter = false, -- Reagiert direkt
+	Enter = false,
 	Callback = function(text)
-		if text and text ~= "" then
-			local match = findPlayerByPartialName(text)
-			if match then
-				liveLabel:SetText("Aktueller Treffer: " .. match.DisplayName .. " (" .. match.Name .. ")")
-			else
-				liveLabel:SetText("Kein Treffer für: " .. text)
-			end
-		else
+		if typeof(text) ~= "string" then
+			liveLabel:SetText("Ungültige Eingabe")
+			return
+		end
+
+		if text == "" then
 			liveLabel:SetText("Aktueller Treffer: keiner")
+			return
+		end
+
+		local match = findPlayerByPartialName(text)
+		if match then
+			liveLabel:SetText("Aktueller Treffer: " .. match.DisplayName .. " (" .. match.Name .. ")")
+		else
+			liveLabel:SetText("Kein Treffer für: " .. text)
 		end
 	end
 }, "Input_TeleportLive")
@@ -287,6 +299,9 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
 
 
 
