@@ -73,72 +73,71 @@ local Teleports = Window:CreateTab({
     Icon = "code",
     ImageSource = "Material",
     ShowTitle = true
-}) 
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-local liveLabel
-
--- Label erstellen
-liveLabel = Teleports:CreateLabel({
-	Text = "Aktueller Treffer: keiner",
-	Style = 1
 })
+ 
+-- Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- Funktion zum Finden von Spielern per Partial Name (username oder displayname)
-local function findPlayerByPartialName(input)
-	if typeof(input) ~= "string" then return nil end
+-- GUI Framework: angenommen du nutzt eine Luna-kompatible UI
+-- Beispiel: Tabs.Teleports, passe ggf. an
+local Teleports = Tabs.Teleports
+
+-- Globale Referenzen
+local labelRef
+
+-- Spieler anhand von Teil-Name finden (DisplayName oder Username)
+local function findMatchingPlayer(input)
 	input = input:lower()
-
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= player then
-			local displayName = tostring(p.DisplayName):lower()
-			local username = tostring(p.Name):lower()
-
-			if displayName:find(input) or username:find(input) then
-				return p
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer then
+			if plr.DisplayName:lower():find(input) or plr.Name:lower():find(input) then
+				return plr
 			end
 		end
 	end
 	return nil
 end
 
--- Input Feld erstellen
+-- Teleportieren zum Spieler
+local function teleportTo(target)
+	if not target or not target.Character then return end
+	local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+	if not targetHRP then return end
+
+	local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	local myHRP = myChar:WaitForChild("HumanoidRootPart")
+	myHRP.CFrame = targetHRP.CFrame
+end
+
+-- Label erstellen
+labelRef = Teleports:CreateLabel({
+	Text = "Aktueller Treffer: keiner",
+	Style = 1
+})
+
+-- Input-Feld erstellen
 Teleports:CreateInput({
 	Name = "Teleport zu Spieler",
-	Description = "Gib Name oder Displayname ein",
-	PlaceholderText = "z. B. Max oder MaxThePlayer",
+	PlaceholderText = "Name oder DisplayName...",
 	CurrentValue = "",
 	Numeric = false,
-	Enter = false, -- Falls true, reagiert nur bei Enter, false reagiert live beim Tippen
+	Enter = false, -- Live-Update
 	Callback = function(text)
-		if typeof(text) ~= "string" then
-			liveLabel.Text = "Ungültige Eingabe"
+		if not text or text == "" then
+			labelRef:SetText("Aktueller Treffer: keiner")
 			return
 		end
 
-		if text == "" then
-			liveLabel.Text = "Aktueller Treffer: keiner"
-			return
-		end
-
-		local match = findPlayerByPartialName(text)
-		if match then
-			liveLabel.Text = "Aktueller Treffer: " .. match.DisplayName .. " (" .. match.Name .. ")"
-			-- Teleport direkt beim Tippen (kann man anpassen)
-			local hrp = match.Character and match.Character:FindFirstChild("HumanoidRootPart")
-			local myChar = player.Character
-			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-			if hrp and myHRP then
-				myHRP.CFrame = hrp.CFrame
-			end
+		local target = findMatchingPlayer(text)
+		if target then
+			labelRef:SetText("Aktueller Treffer: " .. target.DisplayName .. " (" .. target.Name .. ")")
+			teleportTo(target)
 		else
-			liveLabel.Text = "Kein Treffer für: " .. text
+			labelRef:SetText("Kein Treffer für: " .. text)
 		end
 	end
-}, "Input_TeleportLive")
+}, "TeleportToPlayerInput")
 
 
 
