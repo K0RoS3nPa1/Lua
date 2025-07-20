@@ -6,12 +6,12 @@ local Window = PizzaHub:CreateWindow({
 	Subtitle = nil, -- A Gray Subtitle next To the main title.
 	LogoID = nil, -- The Asset ID of your logo. Set to nil if you do not have a logo for Luna to use.
 	LoadingEnabled = false, -- Whether to enable the loading animation. Set to false if you do not want the loading screen or have your own custom one.
-	LoadingTitle = "Luna Interface Suite", -- Header for loading screen
-	LoadingSubtitle = "by Nebula Softworks", -- Subtitle for loading screen
+	LoadingTitle = "", -- Header for loading screen
+	LoadingSubtitle = "", -- Subtitle for loading screen
 
 	ConfigSettings = {
 		RootFolder = nil, -- The Root Folder Is Only If You Have A Hub With Multiple Game Scripts and u may remove it. DO NOT ADD A SLASH
-		ConfigFolder = "Big Hub" -- The Name Of The Folder Where Luna Will Store Configs For This Script. DO NOT ADD A SLASH
+		ConfigFolder = "Pizza hub" -- The Name Of The Folder Where Luna Will Store Configs For This Script. DO NOT ADD A SLASH
 	},
 
 	KeySystem = false, -- As Of Beta 6, Luna Has officially Implemented A Key System!
@@ -83,8 +83,43 @@ local Scripts = Window:CreateTab({
 })
 
 
+Scripts:CreateLabel({
+	Text = "Warning, use this Farm whit alt account, this is ban risk on main account",
+	Style = 3
+})
 
+Scripts:CreateButton({
+	Name = "Auto Farm",
+	Description = nil,
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2"))()
+	end
+})
 
+Scripts:CreateButton({
+    Name = "Pizza hub 2.0",
+    Description = "by AFP",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ImARandom44/AFP/refs/heads/main/Source"))()
+    end
+})
+
+Scripts:CreateButton({
+    Name = "Hussien",
+    Description = nil,
+    Callback = function()
+        loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
+    end
+})
+
+Scripts:CreateButton({
+    Name = "invinite yield",
+    Description = nil,
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+
+    end
+})
 
 
 local Theme = Window:CreateTab({
@@ -103,8 +138,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
 
 
 
