@@ -30,36 +30,37 @@ local Window = PizzaHub:CreateWindow({
     Theme = "Darker",
     MinimizeKey = Enum.KeyCode.Tab -- Used when theres no MinimizeKeybind
 })
+-- 🧱 Vorbedingung: Window muss bereits existieren
+-- Beispiel: local Window = PizzaHub:CreateWindow({...})
 
 local UIS = game:GetService("UserInputService")
 local camera = workspace.CurrentCamera
 local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
--- Neues GUI
+-- 📦 Neues separates GUI
 local buttonGui = Instance.new("ScreenGui")
 buttonGui.Name = "MobileMinimizeButton"
 buttonGui.ResetOnSpawn = false
 buttonGui.IgnoreGuiInset = true
 buttonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-buttonGui.Parent = playerGui -- ❗ NICHT CoreGui → PlayerGui zeigt immer korrekt
+buttonGui.Parent = playerGui
 
--- Runder Button
+-- 🔘 Runder Button
 local button = Instance.new("ImageButton")
 button.Size = UDim2.new(0, 60, 0, 60)
-button.Position = UDim2.new(0, 300, 0, 300)
-button.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
+button.Position = UDim2.new(0, 200, 0, 200)
+button.BackgroundColor3 = Color3.fromRGB(70, 130, 255)
 button.Image = "rbxassetid://6034996695"
 button.BackgroundTransparency = 0
 button.AnchorPoint = Vector2.new(0, 0)
 button.ZIndex = 10
-button.Name = "MinimizeTrigger"
 button.Parent = buttonGui
 
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(1, 0)
 corner.Parent = button
 
--- Drag-Funktion (springt nicht)
+-- 🚗 Drag-System (fehlerfrei)
 local dragging = false
 local dragOffset
 
@@ -91,18 +92,32 @@ UIS.InputChanged:Connect(function(input)
 	end
 end)
 
--- Klick-Funktion: MinimizeKey (Tab)
+-- ✅ Dynamische Abfrage von MinimizeKey (z. B. Tab, oder ein anderer)
+-- ❗ Ersetze "Window" durch die echte Window-Variable aus deinem Fluent-Code
+local function triggerMinimizeKey()
+    if not Window or not Window.MinimizeKey then
+        warn("⚠️ Kein gültiges Fluent-Window gefunden.")
+        return
+    end
+
+    local key = Window.MinimizeKey
+
+    for _, connection in ipairs(getconnections(UIS.InputBegan)) do
+        pcall(function()
+            connection:Fire({
+                UserInputType = Enum.UserInputType.Keyboard,
+                KeyCode = key,
+                UserInputState = Enum.UserInputState.Begin
+            })
+        end)
+    end
+end
+
+-- 🔘 Klick → löst aktuellen MinimizeKey aus
 button.MouseButton1Click:Connect(function()
-	for _, connection in ipairs(getconnections(UIS.InputBegan)) do
-		pcall(function()
-			connection:Fire({
-				UserInputType = Enum.UserInputType.Keyboard,
-				KeyCode = Enum.KeyCode.Tab,
-				UserInputState = Enum.UserInputState.Begin
-			})
-		end)
-	end
+    triggerMinimizeKey()
 end)
+
 
 
 --Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
