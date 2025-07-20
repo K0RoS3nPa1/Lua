@@ -84,13 +84,13 @@ local Tabs = {
 }
 
 -- ✅ Label erstellen
-local label = Tabs.Teleports:CreateLabel({
+local label = Teleports:CreateLabel({
 	Text = "Status: Kein Spieler gewählt",
 	Style = 1
 })
 
 -- ✅ Input-Feld
-Tabs.Teleports:CreateInput({
+Teleports:CreateInput({
 	Name = "Spielername eingeben",
 	PlaceholderText = "Displayname oder Username",
 	CurrentValue = "",
@@ -270,6 +270,8 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
 
 
 
