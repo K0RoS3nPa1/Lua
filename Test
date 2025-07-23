@@ -1007,7 +1007,6 @@ Traget:CreateToggle({
                 ImageSource = "Material"
             })
 
-            -- Get position of selected player
             local function getTargetPosition()
                 local selectedName = getgenv().SelectedPlayer
                 local target = selectedName and Players:FindFirstChild(selectedName)
@@ -1015,16 +1014,7 @@ Traget:CreateToggle({
                     target.Character:FindFirstChild("UpperTorso") or
                     target.Character:FindFirstChild("Torso")
                 )
-                return torso and torso.Position or Vector3.new(0, 50, 0) -- fallback: air
-            end
-
-            local function getTargetPositionVector()
-                local pos = getTargetPosition()
-                if typeof(vector) == "table" and type(vector.create) == "function" then
-                    return vector.create(pos)
-                else
-                    return pos
-                end
+                return torso and torso.Position or Vector3.new(0, 50, 0)
             end
 
             getgenv().SnowballThread = task.spawn(function()
@@ -1033,9 +1023,12 @@ Traget:CreateToggle({
 
                     local backpack = LocalPlayer:FindFirstChild("Backpack")
                     local character = LocalPlayer.Character
-                    if not backpack or not character then continue end
+                    if not backpack or not character then
+                        warn("Backpack oder Charakter fehlt, abbrechen")
+                        break
+                    end
 
-                    -- Clean old snowballs
+                    -- Alte Snowballs löschen
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
                             tool:Destroy()
@@ -1047,14 +1040,23 @@ Traget:CreateToggle({
                         end
                     end
 
-                    -- Request new snowballs from server
-                    for i = 1, 7 do
+                    -- Neue Snowballs anfordern
+                    for i = 1, 5 do -- erstmal nur 5 statt 7
                         ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
-                        task.wait(0.1)
+                        task.wait(0.2)
                     end
 
-                    repeat task.wait() until #backpack:GetChildren() >= 7
+                    local waitCount = 0
+                    repeat
+                        task.wait(0.1)
+                        waitCount = waitCount + 1
+                        if waitCount > 100 then -- nach 10 Sekunden abbrechen
+                            warn("Wartezeit für Snowballs überschritten!")
+                            break
+                        end
+                    until #backpack:GetChildren() >= 5
 
+                    -- Snowballs werfen
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
                             tool.Parent = character
@@ -1062,20 +1064,23 @@ Traget:CreateToggle({
 
                             local clickEvent = tool:FindFirstChild("Clicked")
                             if clickEvent and clickEvent:IsA("RemoteEvent") then
-                                local targetVec = getTargetPositionVector()
-                                pcall(function()
-                                    clickEvent:FireServer(targetVec)
+                                local targetPos = getTargetPosition()
+                                local success, err = pcall(function()
+                                    clickEvent:FireServer(targetPos)
                                 end)
+                                if not success then warn("ClickEvent Fehler:", err) end
                             else
-                                pcall(function()
+                                local success, err = pcall(function()
                                     tool:Activate()
                                 end)
+                                if not success then warn("Tool Activate Fehler:", err) end
                             end
 
                             task.wait(0.1)
                         end
                     end
                 end
+                print("Snowball Spam Thread beendet")
             end)
 
         else
@@ -1089,9 +1094,6 @@ Traget:CreateToggle({
         end
     end,
 })
-
-
-
 
 
 local Teleports = Window:CreateTab({
@@ -1281,6 +1283,7 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
 
 
 
