@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.1.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -1007,24 +1007,6 @@ Traget:CreateToggle({
                 ImageSource = "Material"
             })
 
-            -- Try loading utility library
-            local success, Library = pcall(function()
-                return require(ReplicatedStorage:WaitForChild("Library"))
-            end)
-            if not success then
-                warn("Failed to load Utility Library.")
-                return
-            end
-
-            local Utility = Library:Load("Utility")
-
-            -- Prevent removal of snowballs (anti-auto-remove)
-            local originalSendData = Utility.SendData
-            Utility.SendData = function(_, action, ...)
-                if action == "RemoveGear" then return end
-                return originalSendData(_, action, ...)
-            end
-
             -- Get position of selected player
             local function getTargetPosition()
                 local selectedName = getgenv().SelectedPlayer
@@ -1036,7 +1018,6 @@ Traget:CreateToggle({
                 return torso and torso.Position or Vector3.new(0, 50, 0) -- fallback: air
             end
 
-            -- Returns a Vector3 or vector object for FireServer event
             local function getTargetPositionVector()
                 local pos = getTargetPosition()
                 if typeof(vector) == "table" and type(vector.create) == "function" then
@@ -1046,7 +1027,6 @@ Traget:CreateToggle({
                 end
             end
 
-            -- Start snowball spam loop
             getgenv().SnowballThread = task.spawn(function()
                 while getgenv().SnowballThrowingEnabled do
                     task.wait(0.5)
@@ -1073,10 +1053,8 @@ Traget:CreateToggle({
                         task.wait(0.1)
                     end
 
-                    -- Wait until all tools are added to backpack (7 snowballs)
                     repeat task.wait() until #backpack:GetChildren() >= 7
 
-                    -- Equip and fire snowballs
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
                             tool.Parent = character
@@ -1089,7 +1067,6 @@ Traget:CreateToggle({
                                     clickEvent:FireServer(targetVec)
                                 end)
                             else
-                                -- fallback: falls kein Clicked-Event, aktiviere Tool (Schleuder)
                                 pcall(function()
                                     tool:Activate()
                                 end)
@@ -1102,7 +1079,6 @@ Traget:CreateToggle({
             end)
 
         else
-            -- Turn off spam loop
             getgenv().SnowballThrowingEnabled = false
             PizzaHub:Notification({
                 Title = "Snowball Spam",
