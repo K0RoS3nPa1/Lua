@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.1"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -61,6 +61,144 @@ local main = Window:CreateTab({
 	ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
 
+main:CreateButton({
+	Name = "Kick Manager & Take Seat",
+	Description = "Kicks the Manager using car TP and teleports you to the Manager seat",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local Teams = game:GetService("Teams")
+		local Workspace = game:GetService("Workspace")
+		local LocalPlayer = Players.LocalPlayer
+
+		local removeModel = Workspace:FindFirstChild("RemoveManager")
+		local chairModel = Workspace:FindFirstChild("ManagerChair")
+
+		if not removeModel or not chairModel then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "RemoveManager or ManagerChair model not found.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		local function getModelPosition(model)
+			if model.PrimaryPart then
+				return model.PrimaryPart.Position
+			end
+			for _, part in ipairs(model:GetDescendants()) do
+				if part:IsA("BasePart") then
+					return part.Position
+				end
+			end
+			return nil
+		end
+
+		local kickPosition = getModelPosition(removeModel)
+		local chairPosition = getModelPosition(chairModel)
+
+		if not kickPosition or not chairPosition then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "Model positions could not be determined.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		-- Find player with "Manager" job
+		local managerTeam = Teams:FindFirstChild("Manager")
+		if not managerTeam then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "Team 'Manager' not found.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		local manager = nil
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player.Team == managerTeam then
+				manager = player
+				break
+			end
+		end
+
+		if not manager or not manager.Character or not manager.Character:FindFirstChild("HumanoidRootPart") then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "No manager currently in the game.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		-- Find usable vehicle
+		local car, seat, hoodseat
+		local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		local originalCFrame = localHRP and localHRP.CFrame
+
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
+				local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+				if v.Occupant == humanoid then
+					car = v.Parent
+					seat = v
+					hoodseat = v.Parent.HoodSeat
+					break
+				elseif not v.Occupant then
+					car = v.Parent
+					seat = v
+					hoodseat = v.Parent.HoodSeat
+					if localHRP then localHRP.CFrame = v.CFrame end
+					break
+				end
+			end
+		end
+
+		if not car or not seat or not hoodseat then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "No suitable car found.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		-- Wait until you are in seat
+		repeat task.wait() until seat.Occupant == LocalPlayer.Character:FindFirstChild("Humanoid")
+
+		-- Offset calculation
+		local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
+
+		-- Move manager to kick position
+		local managerHRP = manager.Character:FindFirstChild("HumanoidRootPart")
+		repeat
+			task.wait()
+			car:SetPrimaryPartCFrame(managerHRP.CFrame * offset:Inverse())
+		until hoodseat.Occupant == manager.Character:FindFirstChild("Humanoid")
+
+		repeat
+			task.wait()
+			car:SetPrimaryPartCFrame(CFrame.new(kickPosition) * offset:Inverse())
+		until hoodseat.Occupant == nil
+
+		-- Teleport you to ManagerChair
+		if localHRP and chairPosition then
+			localHRP.CFrame = CFrame.new(chairPosition)
+		end
+
+		PizzaHub:Notification({
+			Title = "Done",
+			Content = "Manager removed and seat taken!",
+			Icon = "check_circle",
+			ImageSource = "Material"
+		})
+	end
+})
+
+
 local Traget = Window:CreateTab({
     Name = "Traget",
     Icon = "code",
@@ -68,133 +206,110 @@ local Traget = Window:CreateTab({
     ShowTitle = true
 }) 
 
+
 local Players = game:GetService("Players")
-local confirmedPlayerName = nil -- The actually confirmed player name after matching
+local confirmedPlayerName = nil
 local lastInputText = ""
 
--- Function to find the best matching player by username or display name
+-- Function to find the best matching player
 local function findBestMatch(inputText)
-    inputText = tostring(inputText or ""):lower()
-    local bestMatch = nil
-    local bestMatchLength = math.huge
+	inputText = tostring(inputText or ""):lower()
+	local bestMatch = nil
+	local bestMatchLength = math.huge
 
-    for _, player in pairs(Players:GetPlayers()) do
-        local username = player.Name:lower()
-        local displayName = player.DisplayName:lower()
+	for _, player in pairs(Players:GetPlayers()) do
+		local username = player.Name:lower()
+		local displayName = player.DisplayName:lower()
 
-        -- Check if the input text is a substring of username or displayName
-        if string.find(username, inputText, 1, true) or string.find(displayName, inputText, 1, true) then
-            -- Prefer the player with the shortest username for better match accuracy
-            local matchLen = #username
-            if matchLen < bestMatchLength then
-                bestMatch = player
-                bestMatchLength = matchLen
-            end
-        end
-    end
-    return bestMatch
+		if string.find(username, inputText, 1, true) or string.find(displayName, inputText, 1, true) then
+			local matchLen = #username
+			if matchLen < bestMatchLength then
+				bestMatch = player
+				bestMatchLength = matchLen
+			end
+		end
+	end
+	return bestMatch
 end
 
--- Input box for typing player username with confirmation on Enter key
-local Players = game:GetService("Players")
+-- Replace with your actual tab
+local Tab = Traget or Window:CreateTab("Player", 12345678) -- Make sure Traget is defined
 
-Traget:CreateInput({
-    Name = "Type Player Username",
-    Description = nil,
-    PlaceholderText = "Enter Player Username",
-    CurrentValue = "",
-    Numeric = false,
-    MaxCharacters = nil,
-    Enter = true, -- Callback wird nur ausgeführt, wenn Enter gedrückt wird
-    Callback = function(text)
-        -- Callback wird ausgeführt, wenn Enter gedrückt wird
-
-        -- Suche den besten Spieler, dessen Name oder DisplayName den eingegebenen Text enthält
-        local function findBestMatch(inputText)
-            inputText = tostring(inputText or ""):lower()
-            local bestMatch = nil
-            local bestMatchLength = math.huge
-
-            for _, player in pairs(Players:GetPlayers()) do
-                local username = player.Name:lower()
-                local displayName = player.DisplayName:lower()
-
-                if string.find(username, inputText, 1, true) or string.find(displayName, inputText, 1, true) then
-                    local matchLen = #username
-                    if matchLen < bestMatchLength then
-                        bestMatch = player
-                        bestMatchLength = matchLen
-                    end
-                end
-            end
-            return bestMatch
-        end
-
-        local bestMatch = findBestMatch(text)
-        if bestMatch then
-            getgenv().SelectedPlayer = bestMatch.Name
-
-            PizzaHub:Notification({
-                Title = "Player Confirmed",
-                Icon = "person_search",
-                ImageSource = "Material",
-                Content = "You confirmed player: " .. bestMatch.Name .. " (" .. bestMatch.DisplayName .. ")"
-            })
-        else
-            PizzaHub:Notification({
-                Title = "No Player Found",
-                Icon = "person_off",
-                ImageSource = "Material",
-                Content = "No matching player for: " .. text
-            })
-        end
-    end
+Tab:CreateInput({
+	Name = "Type Player Username",
+	Description = nil,
+	PlaceholderText = "Enter Player Username",
+	CurrentValue = "",
+	Numeric = false,
+	MaxCharacters = nil,
+	Enter = true,
+	Callback = function(text)
+		local bestMatch = findBestMatch(text)
+		if bestMatch then
+			getgenv().SelectedPlayer = bestMatch.Name
+			PizzaHub:Notification({
+				Title = "Player Confirmed",
+				Icon = "person_search",
+				ImageSource = "Material",
+				Content = "You confirmed player: " .. bestMatch.Name .. " (" .. bestMatch.DisplayName .. ")"
+			})
+		else
+			PizzaHub:Notification({
+				Title = "No Player Found",
+				Icon = "person_off",
+				ImageSource = "Material",
+				Content = "No matching player for: " .. text
+			})
+		end
+	end
 }, "InputPlayerName")
 
+-- Tool to select a player by clicking
+Tab:CreateButton({
+	Name = "Mouse Button To Choose",
+	Description = "Click a player to select them via tool",
+	Callback = function()
+		local localPlayer = Players.LocalPlayer
 
--- Button that equips a tool to select a player by clicking their character
-Traget:CreateButton({
-    Name = "Mouse Button To Choose",
-    Description = "Click a player to select them via tool",
-    Callback = function()
-        local localPlayer = Players.LocalPlayer
+		local tool = Instance.new("Tool")
+		tool.Name = "Player Selector"
+		tool.RequiresHandle = false
+		tool.CanBeDropped = false
+		tool.ToolTip = "Click a player"
 
-        local selectTool = Instance.new("Tool")
-        selectTool.Name = "Player Selector"
-        selectTool.RequiresHandle = false
-        selectTool.TextureId = "rbxassetid://114058734028941" -- Example icon asset ID
+		tool.Equipped:Connect(function()
+			local mouse = localPlayer:GetMouse()
+			mouse.Button1Down:Connect(function()
+				local target = mouse.Target
+				if target then
+					local model = target:FindFirstAncestorOfClass("Model")
+					if model and Players:FindFirstChild(model.Name) then
+						local selectedName = model.Name
+						getgenv().SelectedPlayer = selectedName
+						confirmedPlayerName = selectedName
 
-        selectTool.Activated:Connect(function()
-            local mouse = localPlayer:GetMouse()
-            local target = mouse.Target
-            if target then
-                -- Find the player's character model that the mouse clicked on
-                local model = target:FindFirstAncestorOfClass("Model")
-                if model and Players:FindFirstChild(model.Name) then
-                    local selectedName = model.Name
-                    getgenv().SelectedPlayer = selectedName
-                    confirmedPlayerName = selectedName
+						PizzaHub:Notification({
+							Title = "Player Selected",
+							Icon = "person_search",
+							ImageSource = "Material",
+							Content = "Selected: " .. selectedName
+						})
+					else
+						PizzaHub:Notification({
+							Title = "No Player Found",
+							Icon = "person_off",
+							ImageSource = "Material",
+							Content = "Please click on a player's character."
+						})
+					end
+				end
+			end)
+		end)
 
-                    PizzaHub:Notification({
-                        Title = "Player Selected",
-                        Icon = "person_search",
-                        ImageSource = "Material",
-                        Content = "Selected: " .. selectedName
-                    })
-                else
-                    PizzaHub:Notification({
-                        Title = "No Player Found",
-                        Icon = "person_off",
-                        ImageSource = "Material",
-                        Content = "Please click on a player's character."
-                    })
-                end
-            end
-        end)
-
-        selectTool.Parent = localPlayer.Backpack
-    end
+		tool.Parent = localPlayer.Backpack
+	end
 })
+
 
 
 local Players = game:GetService("Players")
@@ -1159,8 +1274,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
 
 
 
