@@ -213,56 +213,65 @@ local dropdownFlag = "DropdownSelectedPlayer"
 local dropdown = nil
 local currentSelection = "None"
 
--- Funktion: sammle Optionen
+-- Erzeuge Tabelle mit Anzeige-Text und Wert (Name)
 local function getPlayerOptions()
-    local opts = {"None"}
+    local opts = { "None" }
     for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(opts, player.Name)
+        local displayText = player.Name .. " (" .. player.DisplayName .. ")"
+        table.insert(opts, displayText)
     end
     return opts
 end
 
--- Funktion: Dropdown initial erstellen
+-- Hilfsfunktion: von Anzeige-Text zum Player-Name extrahieren
+local function getPlayerNameFromDisplayText(displayText)
+    if displayText == "None" then return nil end
+    local name = displayText:match("^(.-) %(") -- alles vor " ("
+    return name
+end
+
+-- Dropdown initial erstellen
 local function createPlayerDropdown()
     dropdown = Traget:CreateDropdown({
         Name = "Select Player",
         Description = "Select a player from the dropdown",
         Options = getPlayerOptions(),
-        CurrentOption = {currentSelection},
+        CurrentOption = { "None" },
         MultipleOptions = false,
         Callback = function(option)
             currentSelection = option
-            if option == "None" then
-                getgenv().SelectedPlayer = nil
-                PizzaHub:Notification({
-                    Title = "Player Selection",
-                    Icon = "person_off",
-                    ImageSource = "Material",
-                    Content = "No player selected."
-                })
-            else
-                getgenv().SelectedPlayer = option
+            local playerName = getPlayerNameFromDisplayText(option)
+            getgenv().SelectedPlayer = playerName
+
+            if playerName then
                 PizzaHub:Notification({
                     Title = "Player Selected",
                     Icon = "person_search",
                     ImageSource = "Material",
                     Content = "Selected player: " .. option
                 })
+            else
+                PizzaHub:Notification({
+                    Title = "Player Selection",
+                    Icon = "person_off",
+                    ImageSource = "Material",
+                    Content = "No player selected."
+                })
             end
         end
     }, dropdownFlag)
 end
 
--- Dropdown erstellen
+-- Erstelle Dropdown
 createPlayerDropdown()
 
--- Funktion: Options im Dropdown aktualisieren
+-- Options aktualisieren (mit Anzeige-Text)
 local function updateDropdownOptions()
     if dropdown and typeof(dropdown.SetOptions) == "function" then
         local opts = getPlayerOptions()
         dropdown:SetOptions(opts)
 
-        -- Falls aktuelle Auswahl nicht mehr da, setze auf None
+        -- Prüfe, ob aktuelle Auswahl noch gültig ist
         local found = false
         for _, opt in ipairs(opts) do
             if opt == currentSelection then
@@ -270,18 +279,19 @@ local function updateDropdownOptions()
                 break
             end
         end
+
         if not found then
             currentSelection = "None"
             getgenv().SelectedPlayer = nil
             dropdown:SetCurrentOption({currentSelection})
         end
     else
-        -- Falls SetOptions nicht existiert: Dropdown neu erstellen (not ideal)
-        -- Hier kannst du selbst entscheiden, ob du neu erstellst oder nichts machst
+        -- Fallback: falls kein SetOptions: Dropdown neu erstellen
+        -- (Optional)
     end
 end
 
--- Events: Spieler joinen/verlässt -> Options updaten
+-- Aktualisiere, wenn Spieler joinen oder gehen
 Players.PlayerAdded:Connect(updateDropdownOptions)
 Players.PlayerRemoving:Connect(updateDropdownOptions)
 
@@ -1287,6 +1297,8 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
 
 
 
