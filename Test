@@ -206,24 +206,47 @@ local Traget = Window:CreateTab({
     ShowTitle = true
 }) 
 
-
 local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
 
--- Hilfsfunktion, um die Optionsliste der Spielernamen zu bekommen
+-- Variable für das Dropdown-Objekt, damit wir es von außen steuern können
+local dropdown
+
+-- Funktion, die alle Spielernamen in einer Liste zurückgibt
 local function getPlayerNames()
-    local names = { "None" }
-    for _, player in pairs(Players:GetPlayers()) do
+    local names = {}
+    for _, player in ipairs(Players:GetPlayers()) do
         table.insert(names, player.Name)
     end
     return names
 end
 
--- Dropdown erstellen mit dynamischen Optionen
-local Dropdown = Traget:CreateDropdown({
+-- Funktion, um das Dropdown mit aktuellen Spielernamen zu aktualisieren
+local function updateDropdownOptions()
+    if dropdown then
+        local currentSelection = getgenv().SelectedPlayer or "None"
+        local options = getPlayerNames()
+        table.insert(options, 1, "None") -- "None" als erste Option
+
+        dropdown:SetOptions(options)
+        -- Wenn der aktuell ausgewählte Spieler nicht mehr da ist, setze auf "None"
+        if not table.find(options, currentSelection) then
+            currentSelection = "None"
+            getgenv().SelectedPlayer = nil
+        end
+        dropdown:SetCurrentOption(currentSelection)
+    end
+end
+
+-- Tab erstellen (oder deine vorhandene Variable Traget nutzen)
+local Tab = Traget or Window:CreateTab("Player", 12345678)
+
+-- Dropdown erstellen
+dropdown = Tab:CreateDropdown({
     Name = "Select Player",
     Description = "Select a player from the dropdown",
-    Options = getPlayerNames(),
-    CurrentOption = { "None" },
+    Options = {"None"},
+    CurrentOption = {"None"},
     MultipleOptions = false,
     SpecialType = nil,
     Callback = function(option)
@@ -231,90 +254,80 @@ local Dropdown = Traget:CreateDropdown({
             getgenv().SelectedPlayer = nil
             PizzaHub:Notification({
                 Title = "Player Selection",
-                Content = "No player selected.",
-                Icon = "info",
-                ImageSource = "Material"
+                Icon = "person_off",
+                ImageSource = "Material",
+                Content = "No player selected."
             })
         else
             getgenv().SelectedPlayer = option
             PizzaHub:Notification({
                 Title = "Player Selected",
-                Content = "You selected player: " .. option,
                 Icon = "person_search",
-                ImageSource = "Material"
+                ImageSource = "Material",
+                Content = "Selected player: " .. option
             })
         end
     end
-}, "SelectPlayer")
+}, "DropdownSelectedPlayer")
 
--- Funktion zum Aktualisieren der Dropdown-Optionen
-local function updateDropdown()
-    local newOptions = getPlayerNames()
-    Dropdown:SetOptions(newOptions)
-    -- Falls aktuell ausgewählter Spieler nicht mehr da ist, reset auf None
-    if not table.find(newOptions, getgenv().SelectedPlayer) then
-        Dropdown:SetValue("None")
-        getgenv().SelectedPlayer = nil
+-- Tool zum Spieler auswählen per Klick
+Tab:CreateButton({
+    Name = "Mouse Button To Choose",
+    Description = "Click a player to select them via tool",
+    Callback = function()
+        local tool = Instance.new("Tool")
+        tool.Name = "Player Selector"
+        tool.RequiresHandle = false
+        tool.CanBeDropped = false
+        tool.ToolTip = "Click a player"
+
+        tool.Equipped:Connect(function()
+            local mouse = localPlayer:GetMouse()
+            local connection
+            connection = mouse.Button1Down:Connect(function()
+                local target = mouse.Target
+                if target then
+                    local model = target:FindFirstAncestorOfClass("Model")
+                    if model and Players:FindFirstChild(model.Name) then
+                        local selectedName = model.Name
+                        getgenv().SelectedPlayer = selectedName
+                        dropdown:SetCurrentOption(selectedName) -- Wichtig: Dropdown updaten
+
+                        PizzaHub:Notification({
+                            Title = "Player Selected",
+                            Icon = "person_search",
+                            ImageSource = "Material",
+                            Content = "Selected: " .. selectedName
+                        })
+                        connection:Disconnect()
+                        tool.Parent = nil -- Tool entfernen
+                    else
+                        PizzaHub:Notification({
+                            Title = "No Player Found",
+                            Icon = "person_off",
+                            ImageSource = "Material",
+                            Content = "Please click on a player's character."
+                        })
+                    end
+                end
+            end)
+        end)
+
+        tool.Parent = localPlayer.Backpack
     end
-end
-
--- Events zum Aktualisieren bei Join/Leave
-Players.PlayerAdded:Connect(function()
-    updateDropdown()
-end)
-
-Players.PlayerRemoving:Connect(function()
-    updateDropdown()
-end)
-
--- Initiales Update
-updateDropdown()
-
--- Tool to select a player by clicking
-Traget:CreateButton({
-	Name = "Mouse Button To Choose",
-	Description = "Click a player to select them via tool",
-	Callback = function()
-		local localPlayer = Players.LocalPlayer
-
-		local tool = Instance.new("Tool")
-		tool.Name = "Player Selector"
-		tool.RequiresHandle = false
-		tool.CanBeDropped = false
-		tool.ToolTip = "Click a player"
-
-		tool.Equipped:Connect(function()
-			local mouse = localPlayer:GetMouse()
-			mouse.Button1Down:Connect(function()
-				local target = mouse.Target
-				if target then
-					local model = target:FindFirstAncestorOfClass("Model")
-					if model and Players:FindFirstChild(model.Name) then
-						local selectedName = model.Name
-						getgenv().SelectedPlayer = selectedName
-						confirmedPlayerName = selectedName
-
-						PizzaHub:Notification({
-							Title = "Player Selected",
-							Icon = "person_search",
-							ImageSource = "Material",
-							Content = "Selected: " .. selectedName
-						})
-					else
-						PizzaHub:Notification({
-							Title = "No Player Found",
-							Icon = "person_off",
-							ImageSource = "Material",
-							Content = "Please click on a player's character."
-						})
-					end
-				end
-			end)
-		end)
-
-		tool.Parent = localPlayer.Backpack
-	end
 })
+
+-- Spielerlisten-Update bei Join/Leave
+Players.PlayerAdded:Connect(function()
+    updateDropdownOptions()
+end)
+Players.PlayerRemoving:Connect(function()
+    updateDropdownOptions()
+end)
+
+-- Initial Dropdown Optionen setzen
+updateDropdownOptions()
+
 
 
 
@@ -1318,6 +1331,10 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
+
 
 
 
