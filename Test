@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.1.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -985,112 +985,133 @@ Traget:CreateButton({
 		})
 	end,
 })
+
 Traget:CreateToggle({
-	Name = "Spam Snowballs",
-	Description = "Continuously throws snowballs at the selected player.",
-	CurrentValue = false,
-	Flag = "ToggleSpamSnowballs",
+    Name = "Spam Snowballs",
+    Description = "Continuously throws snowballs at the selected player.",
+    CurrentValue = false,
+    Flag = "ToggleSpamSnowballs",
 
-	Callback = function(enabled)
-		getgenv().SnowballThrowingEnabled = enabled
+    Callback = function(enabled)
+        getgenv().SnowballThrowingEnabled = enabled
 
-		local Players = game:GetService("Players")
-		local ReplicatedStorage = game:GetService("ReplicatedStorage")
-		local LocalPlayer = Players.LocalPlayer
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local LocalPlayer = Players.LocalPlayer
 
-		if enabled then
-			PizzaHub:Notification({
-				Title = "Snowball Spam",
-				Content = "Snowball spam enabled!",
-				Icon = "check_circle",
-				ImageSource = "Material"
-			})
+        if enabled then
+            PizzaHub:Notification({
+                Title = "Snowball Spam",
+                Content = "Snowball spam enabled!",
+                Icon = "check_circle",
+                ImageSource = "Material"
+            })
 
-			-- Versuche die Utility zu laden
-			local success, Library = pcall(function()
-				return require(ReplicatedStorage:WaitForChild("Library"))
-			end)
-			if not success then
-				warn("⚠️ Failed to load Utility Library.")
-				return
-			end
+            -- Try loading utility library
+            local success, Library = pcall(function()
+                return require(ReplicatedStorage:WaitForChild("Library"))
+            end)
+            if not success then
+                warn("Failed to load Utility Library.")
+                return
+            end
 
-			local Utility = Library:Load("Utility")
+            local Utility = Library:Load("Utility")
 
-			-- Blockiere "RemoveGear"
-			local originalSendData = Utility.SendData
-			Utility.SendData = function(_, action, ...)
-				if action == "RemoveGear" then return end
-				return originalSendData(_, action, ...)
-			end
+            -- Prevent removal of snowballs (anti-auto-remove)
+            local originalSendData = Utility.SendData
+            Utility.SendData = function(_, action, ...)
+                if action == "RemoveGear" then return end
+                return originalSendData(_, action, ...)
+            end
 
-			-- Zielposition holen
-			local function getTargetPosition()
-				local selectedName = getgenv().SelectedPlayer
-				local target = selectedName and Players:FindFirstChild(selectedName)
-				local torso = target and target.Character and (
-					target.Character:FindFirstChild("HumanoidRootPart")
-					or target.Character:FindFirstChild("UpperTorso")
-					or target.Character:FindFirstChild("Torso")
-				)
-				return torso and torso.Position or Vector3.new(0, 50, 0)
-			end
+            -- Get position of selected player
+            local function getTargetPosition()
+                local selectedName = getgenv().SelectedPlayer
+                local target = selectedName and Players:FindFirstChild(selectedName)
+                local torso = target and target.Character and (
+                    target.Character:FindFirstChild("UpperTorso") or
+                    target.Character:FindFirstChild("Torso")
+                )
+                return torso and torso.Position or Vector3.new(0, 50, 0) -- fallback: air
+            end
 
-			-- Spam starten
-			getgenv().SnowballThread = task.spawn(function()
-				while getgenv().SnowballThrowingEnabled do
-					task.wait(0.3)
+            -- Returns a Vector3 or vector object for FireServer event
+            local function getTargetPositionVector()
+                local pos = getTargetPosition()
+                if typeof(vector) == "table" and type(vector.create) == "function" then
+                    return vector.create(pos)
+                else
+                    return pos
+                end
+            end
 
-					local backpack = LocalPlayer:FindFirstChild("Backpack")
-					local character = LocalPlayer.Character
-					if not backpack or not character then continue end
+            -- Start snowball spam loop
+            getgenv().SnowballThread = task.spawn(function()
+                while getgenv().SnowballThrowingEnabled do
+                    task.wait(0.5)
 
-					-- Anfordern von Snowballs
-					for i = 1, 7 do
-						ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
-						task.wait(0.1)
-					end
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+                    local character = LocalPlayer.Character
+                    if not backpack or not character then continue end
 
-					-- Warte auf mindestens 1 Tool
-					local timeout = 3
-					repeat task.wait(0.2); timeout -= 0.2 until #(backpack:GetChildren()) >= 1 or timeout <= 0
+                    -- Clean old snowballs
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            tool:Destroy()
+                        end
+                    end
+                    for _, tool in ipairs(character:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            tool:Destroy()
+                        end
+                    end
 
-					-- Equip + Auslösen
-					for _, tool in ipairs(backpack:GetChildren()) do
-						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							tool.Parent = character
-							task.wait(0.05)
+                    -- Request new snowballs from server
+                    for i = 1, 7 do
+                        ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
+                        task.wait(0.1)
+                    end
 
-							-- Mögliche Varianten der Remote
-							local fireRemote = tool:FindFirstChild("Clicked") or tool:FindFirstChildWhichIsA("RemoteEvent")
+                    -- Wait until all tools are added to backpack (7 snowballs)
+                    repeat task.wait() until #backpack:GetChildren() >= 7
 
-							if fireRemote then
-								pcall(function()
-									fireRemote:FireServer(getTargetPosition())
-								end)
-							else
-								-- Alternativ: Nutze Tool-Activate()
-								pcall(function()
-									tool:Activate()
-								end)
-							end
+                    -- Equip and fire snowballs
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            tool.Parent = character
+                            task.wait(0.1)
 
-							task.wait(0.1)
-						end
-					end
-				end
-			end)
+                            local clickEvent = tool:FindFirstChild("Clicked")
+                            if clickEvent and clickEvent:IsA("RemoteEvent") then
+                                local targetVec = getTargetPositionVector()
+                                pcall(function()
+                                    clickEvent:FireServer(targetVec)
+                                end)
+                            else
+                                -- fallback: falls kein Clicked-Event, aktiviere Tool (Schleuder)
+                                pcall(function()
+                                    tool:Activate()
+                                end)
+                            end
 
-		else
-			getgenv().SnowballThrowingEnabled = false
-			PizzaHub:Notification({
-				Title = "Snowball Spam",
-				Content = "Snowball spam disabled.",
-				Icon = "info",
-				ImageSource = "Material"
-			})
-		end
-	end,
+                            task.wait(0.1)
+                        end
+                    end
+                end
+            end)
+
+        else
+            -- Turn off spam loop
+            getgenv().SnowballThrowingEnabled = false
+            PizzaHub:Notification({
+                Title = "Snowball Spam",
+                Content = "Snowball spam disabled.",
+                Icon = "info",
+                ImageSource = "Material"
+            })
+        end
+    end,
 })
 
 
@@ -1284,6 +1305,7 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
 
 
 
