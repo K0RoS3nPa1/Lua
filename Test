@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.2"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -620,99 +620,122 @@ Traget:CreateToggle({
 
 
 Traget:CreateButton({
-	Name = "Bring Player To You",
-	Description = "Brings the selected player into your vehicle.",
+    Name = "Bring Player To You",
+    Description = "Brings the selected player into your vehicle.",
 
-	Callback = function()
-		local Players = game:GetService("Players")
-		local LocalPlayer = Players.LocalPlayer
-		local selectedName = getgenv().SelectedPlayer
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local selectedName = getgenv().SelectedPlayer
 
-		if not selectedName or selectedName == "" then
-			PizzaHub:Notification({
-				Title = "Action Failed",
-				Content = "No player selected!",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-			return
-		end
+        if not selectedName or selectedName == "" then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "No player selected!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
 
-		local TargetPlayer = Players:FindFirstChild(selectedName)
-		if not TargetPlayer then
-			PizzaHub:Notification({
-				Title = "Action Failed",
-				Content = "Player '" .. selectedName .. "' not found!",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-			return
-		end
+        local TargetPlayer = Players:FindFirstChild(selectedName)
+        if not TargetPlayer then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "Player '" .. selectedName .. "' not found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
 
-		local car, seat, hoodseat, offset
-		local player = TargetPlayer
+        local car, seat, hoodseat
+        local player = TargetPlayer
+        local character = LocalPlayer.Character
+        if not character then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "Local player character not found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
 
-		-- Try to find a vehicle you're already in or move you into one
-		for _, v in ipairs(workspace:GetDescendants()) do
-			if v:IsA("VehicleSeat") and v.Occupant == LocalPlayer.Character.Humanoid then
-				if v.Parent:FindFirstChild("HoodSeat") then
-					car = v.Parent
-					seat = v
-					hoodseat = v.Parent.HoodSeat
-					break
-				end
-			elseif v:IsA("VehicleSeat") and v.Occupant == nil then
-				if v.Parent:FindFirstChild("HoodSeat") then
-					car = v.Parent
-					seat = v
-					hoodseat = v.Parent.HoodSeat
-					LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
-					break
-				end
-			end
-		end
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if not hrp then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "Local player HumanoidRootPart not found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
 
-		if not seat then
-			PizzaHub:Notification({
-				Title = "Action Failed",
-				Content = "No suitable vehicle with free seat found!",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-			return
-		end
+        -- Find a vehicle seat you are in or an empty one and move you into it
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("VehicleSeat") and v.Occupant == character.Humanoid then
+                if v.Parent:FindFirstChild("HoodSeat") then
+                    car = v.Parent
+                    seat = v
+                    hoodseat = v.Parent:FindFirstChild("HoodSeat")
+                    break
+                end
+            elseif v:IsA("VehicleSeat") and v.Occupant == nil then
+                if v.Parent:FindFirstChild("HoodSeat") then
+                    car = v.Parent
+                    seat = v
+                    hoodseat = v.Parent:FindFirstChild("HoodSeat")
+                    character.HumanoidRootPart.CFrame = v.CFrame
+                    break
+                end
+            end
+        end
 
-		-- Wait until you're seated
-		repeat task.wait() until seat.Occupant == LocalPlayer.Character.Humanoid
+        if not seat or not hoodseat or not car then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "No suitable vehicle with free seat found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
 
-		offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
+        -- Wait until local player is seated
+        repeat task.wait() until seat.Occupant == character.Humanoid
 
-		-- Move the car to the selected player until they sit in the hood seat
-		repeat
-			task.wait()
-			car:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * offset:Inverse())
-		until hoodseat.Occupant == player.Character.Humanoid
+        -- Calculate offset between car primary part and hood seat
+        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
 
-		-- Optional: teleport the target player to your position
-		local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-		local targetHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if myHRP and targetHRP then
-			targetHRP.CFrame = myHRP.CFrame
-		end
+        -- Move car to your position until the target player sits on hood seat
+        repeat
+            task.wait()
+            car:SetPrimaryPartCFrame(hrp.CFrame * offset)
+        until hoodseat.Occupant == player.Character.Humanoid
 
-		-- Keep the vehicle synced to the player until they exit the seat
-		repeat
-			task.wait()
-			car:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * offset:Inverse())
-		until hoodseat.Occupant == nil
+        -- Optional: (kann weg, da Spieler ja jetzt im Fahrzeug sitzt)
+        --[[
+        local targetHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if targetHRP then
+            targetHRP.CFrame = hrp.CFrame
+        end
+        ]]
 
-		PizzaHub:Notification({
-			Title = "Success",
-			Content = "Player '" .. selectedName .. "' was brought to you!",
-			Icon = "check_circle",
-			ImageSource = "Material"
-		})
-	end,
+        -- Keep vehicle synced to target player until they leave the hood seat
+        repeat
+            task.wait()
+            car:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * offset:Inverse())
+        until hoodseat.Occupant == nil
+
+        PizzaHub:Notification({
+            Title = "Success",
+            Content = "Player '" .. selectedName .. "' was brought to you!",
+            Icon = "check_circle",
+            ImageSource = "Material"
+        })
+    end,
 })
 
 
@@ -1283,6 +1306,7 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
 
 
 
