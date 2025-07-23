@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.10"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -209,69 +209,68 @@ local Traget = Window:CreateTab({
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
--- Variable für das Dropdown-Objekt, damit wir es von außen steuern können
-local dropdown
+-- Dein Tab-Objekt heißt Traget
+local dropdownFlag = "DropdownSelectedPlayer"
+local dropdown -- Dropdown-Objekt speichern
+local currentSelection = "None"
 
--- Funktion, die alle Spielernamen in einer Liste zurückgibt
-local function getPlayerNames()
-    local names = {}
+-- Funktion, um das Dropdown mit aktuellen Spielern zu erstellen/aktualisieren
+local function createPlayerDropdown()
+    -- Falls deine UI-Library ein Entfernen-Feature hat, hier einfügen (optional)
+    -- z.B. Traget:RemoveElement(dropdown)
+
+    local options = {"None"}
     for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(names, player.Name)
+        table.insert(options, player.Name)
     end
-    return names
+
+    dropdown = Traget:CreateDropdown({
+        Name = "Select Player",
+        Description = "Select a player from the dropdown",
+        Options = options,
+        CurrentOption = {currentSelection},
+        MultipleOptions = false,
+        Callback = function(option)
+            currentSelection = option
+            if option == "None" then
+                getgenv().SelectedPlayer = nil
+                PizzaHub:Notification({
+                    Title = "Player Selection",
+                    Icon = "person_off",
+                    ImageSource = "Material",
+                    Content = "No player selected."
+                })
+            else
+                getgenv().SelectedPlayer = option
+                PizzaHub:Notification({
+                    Title = "Player Selected",
+                    Icon = "person_search",
+                    ImageSource = "Material",
+                    Content = "Selected player: " .. option
+                })
+            end
+        end
+    }, dropdownFlag)
 end
 
--- Funktion, um das Dropdown mit aktuellen Spielernamen zu aktualisieren
-local function updateDropdownOptions()
-    if dropdown then
-        local currentSelection = getgenv().SelectedPlayer or "None"
-        local options = getPlayerNames()
-        table.insert(options, 1, "None") -- "None" als erste Option
+-- Initial Dropdown erstellen
+createPlayerDropdown()
 
-        dropdown:SetOptions(options)
-        -- Wenn der aktuell ausgewählte Spieler nicht mehr da ist, setze auf "None"
-        if not table.find(options, currentSelection) then
-            currentSelection = "None"
-            getgenv().SelectedPlayer = nil
-        end
-        dropdown:SetCurrentOption(currentSelection)
+-- Aktualisiere Dropdown bei Spieler join/leave
+Players.PlayerAdded:Connect(function()
+    createPlayerDropdown()
+end)
+
+Players.PlayerRemoving:Connect(function()
+    if currentSelection ~= "None" and not Players:FindFirstChild(currentSelection) then
+        currentSelection = "None"
+        getgenv().SelectedPlayer = nil
     end
-end
+    createPlayerDropdown()
+end)
 
--- Tab erstellen (oder deine vorhandene Variable Traget nutzen)
-local Tab = Traget or Window:CreateTab("Player", 12345678)
-
--- Dropdown erstellen
-dropdown = Tab:CreateDropdown({
-    Name = "Select Player",
-    Description = "Select a player from the dropdown",
-    Options = {"None"},
-    CurrentOption = {"None"},
-    MultipleOptions = false,
-    SpecialType = nil,
-    Callback = function(option)
-        if option == "None" then
-            getgenv().SelectedPlayer = nil
-            PizzaHub:Notification({
-                Title = "Player Selection",
-                Icon = "person_off",
-                ImageSource = "Material",
-                Content = "No player selected."
-            })
-        else
-            getgenv().SelectedPlayer = option
-            PizzaHub:Notification({
-                Title = "Player Selected",
-                Icon = "person_search",
-                ImageSource = "Material",
-                Content = "Selected player: " .. option
-            })
-        end
-    end
-}, "DropdownSelectedPlayer")
-
--- Tool zum Spieler auswählen per Klick
-Tab:CreateButton({
+-- Tool Button (bleibt gleich)
+Traget:CreateButton({
     Name = "Mouse Button To Choose",
     Description = "Click a player to select them via tool",
     Callback = function()
@@ -290,8 +289,9 @@ Tab:CreateButton({
                     local model = target:FindFirstAncestorOfClass("Model")
                     if model and Players:FindFirstChild(model.Name) then
                         local selectedName = model.Name
+                        currentSelection = selectedName
                         getgenv().SelectedPlayer = selectedName
-                        dropdown:SetCurrentOption(selectedName) -- Wichtig: Dropdown updaten
+                        createPlayerDropdown()
 
                         PizzaHub:Notification({
                             Title = "Player Selected",
@@ -300,7 +300,7 @@ Tab:CreateButton({
                             Content = "Selected: " .. selectedName
                         })
                         connection:Disconnect()
-                        tool.Parent = nil -- Tool entfernen
+                        tool.Parent = nil
                     else
                         PizzaHub:Notification({
                             Title = "No Player Found",
@@ -316,18 +316,6 @@ Tab:CreateButton({
         tool.Parent = localPlayer.Backpack
     end
 })
-
--- Spielerlisten-Update bei Join/Leave
-Players.PlayerAdded:Connect(function()
-    updateDropdownOptions()
-end)
-Players.PlayerRemoving:Connect(function()
-    updateDropdownOptions()
-end)
-
--- Initial Dropdown Optionen setzen
-updateDropdownOptions()
-
 
 
 
@@ -1331,7 +1319,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
