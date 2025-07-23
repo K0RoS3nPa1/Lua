@@ -96,33 +96,61 @@ local function findBestMatch(inputText)
 end
 
 -- Input box for typing player username with confirmation on Enter key
-Traget:CreateInput({
+local Players = game:GetService("Players")
+
+local Input = Tab:CreateInput({
     Name = "Type Player Username",
+    Description = nil,
     PlaceholderText = "Enter Player Username",
-    Enter = true,  -- Callback only triggers when Enter is pressed
-    Callback = function(inputText)
-        lastInputText = tostring(inputText or "")
-        local bestMatch = findBestMatch(lastInputText)
+    CurrentValue = "",
+    Numeric = false,
+    MaxCharacters = nil,
+    Enter = true, -- Callback wird nur ausgeführt, wenn Enter gedrückt wird
+    Callback = function(text)
+        -- Callback wird ausgeführt, wenn Enter gedrückt wird
+
+        -- Suche den besten Spieler, dessen Name oder DisplayName den eingegebenen Text enthält
+        local function findBestMatch(inputText)
+            inputText = tostring(inputText or ""):lower()
+            local bestMatch = nil
+            local bestMatchLength = math.huge
+
+            for _, player in pairs(Players:GetPlayers()) do
+                local username = player.Name:lower()
+                local displayName = player.DisplayName:lower()
+
+                if string.find(username, inputText, 1, true) or string.find(displayName, inputText, 1, true) then
+                    local matchLen = #username
+                    if matchLen < bestMatchLength then
+                        bestMatch = player
+                        bestMatchLength = matchLen
+                    end
+                end
+            end
+            return bestMatch
+        end
+
+        local bestMatch = findBestMatch(text)
         if bestMatch then
-            confirmedPlayerName = bestMatch.Name
-            getgenv().SelectedPlayer = confirmedPlayerName
+            getgenv().SelectedPlayer = bestMatch.Name
 
             PizzaHub:Notification({
                 Title = "Player Confirmed",
                 Icon = "person_search",
                 ImageSource = "Material",
-                Content = "You confirmed player: " .. confirmedPlayerName .. " (" .. bestMatch.DisplayName .. ")"
+                Content = "You confirmed player: " .. bestMatch.Name .. " (" .. bestMatch.DisplayName .. ")"
             })
         else
             PizzaHub:Notification({
                 Title = "No Player Found",
                 Icon = "person_off",
                 ImageSource = "Material",
-                Content = "No matching player for: " .. lastInputText
+                Content = "No matching player for: " .. text
             })
         end
     end
-})
+}, "InputPlayerName")
+
 
 -- Button that equips a tool to select a player by clicking their character
 Traget:CreateButton({
