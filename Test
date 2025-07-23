@@ -233,9 +233,8 @@ local function findBestMatch(inputText)
 end
 
 -- Replace with your actual tab
-local Tab = Traget or Window:CreateTab("Player", 12345678) -- Make sure Traget is defined
 
-Tab:CreateInput({
+Traget:CreateInput({
 	Name = "Type Player Username",
 	Description = nil,
 	PlaceholderText = "Enter Player Username",
@@ -265,7 +264,7 @@ Tab:CreateInput({
 }, "InputPlayerName")
 
 -- Tool to select a player by clicking
-Tab:CreateButton({
+Traget:CreateButton({
 	Name = "Mouse Button To Choose",
 	Description = "Click a player to select them via tool",
 	Callback = function()
@@ -1312,7 +1311,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
