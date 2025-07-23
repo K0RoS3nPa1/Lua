@@ -978,114 +978,104 @@ Traget:CreateButton({
 })
 
 Traget:CreateToggle({
-    Name = "Spam Snowballs",
-    Description = "Continuously throws snowballs at the selected player.",
-    CurrentValue = false,
-    Flag = "ToggleSpamSnowballs",
+	Name = "Spam Snowballs",
+	Description = "Continuously throws ALL snowballs at the selected player.",
+	CurrentValue = false,
+	Flag = "ToggleSpamSnowballs",
 
-    Callback = function(enabled)
-        getgenv().SnowballThrowingEnabled = enabled
+	Callback = function(enabled)
+		getgenv().SnowballThrowingEnabled = enabled
 
-        local Players = game:GetService("Players")
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local LocalPlayer = Players.LocalPlayer
+		local Players = game:GetService("Players")
+		local ReplicatedStorage = game:GetService("ReplicatedStorage")
+		local LocalPlayer = Players.LocalPlayer
 
-        if enabled then
-            PizzaHub:Notification({
-                Title = "Snowball Spam",
-                Content = "Snowball spam enabled!",
-                Icon = "check_circle",
-                ImageSource = "Material"
-            })
+		if enabled then
+			PizzaHub:Notification({
+				Title = "Snowball Spam",
+				Content = "Snowball spam enabled!",
+				Icon = "check_circle",
+				ImageSource = "Material"
+			})
 
-            local function getTargetPosition()
-                local selectedName = getgenv().SelectedPlayer
-                local target = selectedName and Players:FindFirstChild(selectedName)
-                local torso = target and target.Character and (
-                    target.Character:FindFirstChild("UpperTorso") or
-                    target.Character:FindFirstChild("Torso")
-                )
-                return torso and torso.Position or Vector3.new(0, 50, 0)
-            end
+			local function getTargetPosition()
+				local selectedName = getgenv().SelectedPlayer
+				local target = selectedName and Players:FindFirstChild(selectedName)
+				local torso = target and target.Character and (
+					target.Character:FindFirstChild("UpperTorso") or
+					target.Character:FindFirstChild("Torso")
+				)
+				return torso and torso.Position or Vector3.new(0, 50, 0)
+			end
 
-            getgenv().SnowballThread = task.spawn(function()
-                while getgenv().SnowballThrowingEnabled do
-                    task.wait(0.5)
+			getgenv().SnowballThread = task.spawn(function()
+				while getgenv().SnowballThrowingEnabled do
+					local backpack = LocalPlayer:FindFirstChild("Backpack")
+					local character = LocalPlayer.Character
+					if not backpack or not character then break end
 
-                    local backpack = LocalPlayer:FindFirstChild("Backpack")
-                    local character = LocalPlayer.Character
-                    if not backpack or not character then
-                        warn("Backpack oder Charakter fehlt, abbrechen")
-                        break
-                    end
+					-- Alte Snowballs entfernen
+					for _, tool in ipairs(backpack:GetChildren()) do
+						if tool:IsA("Tool") and tool.Name == "Snowball" then
+							tool:Destroy()
+						end
+					end
+					for _, tool in ipairs(character:GetChildren()) do
+						if tool:IsA("Tool") and tool.Name == "Snowball" then
+							tool:Destroy()
+						end
+					end
 
-                    -- Alte Snowballs löschen
-                    for _, tool in ipairs(backpack:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            tool:Destroy()
-                        end
-                    end
-                    for _, tool in ipairs(character:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            tool:Destroy()
-                        end
-                    end
+					-- 7 Snowballs anfordern (max Stapel?)
+					for i = 1, 7 do
+						ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
+						task.wait(0.05)
+					end
 
-                    -- Neue Snowballs anfordern
-                    for i = 1, 5 do -- erstmal nur 5 statt 7
-                        ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
-                        task.wait(0.2)
-                    end
+					-- Warten bis Snowballs da sind
+					local timeout = 0
+					repeat
+						task.wait(0.05)
+						timeout += 1
+					until #backpack:GetChildren() >= 7 or timeout > 40
 
-                    local waitCount = 0
-                    repeat
-                        task.wait(0.1)
-                        waitCount = waitCount + 1
-                        if waitCount > 100 then -- nach 10 Sekunden abbrechen
-                            warn("Wartezeit für Snowballs überschritten!")
-                            break
-                        end
-                    until #backpack:GetChildren() >= 5
+					-- Alle Snowballs werfen
+					for _, tool in ipairs(backpack:GetChildren()) do
+						if tool:IsA("Tool") and tool.Name == "Snowball" then
+							tool.Parent = character
+							task.wait(0.05)
 
-                    -- Snowballs werfen
-                    for _, tool in ipairs(backpack:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            tool.Parent = character
-                            task.wait(0.1)
+							local clickEvent = tool:FindFirstChild("Clicked")
+							if clickEvent and clickEvent:IsA("RemoteEvent") then
+								local success, err = pcall(function()
+									clickEvent:FireServer(getTargetPosition())
+								end)
+								if not success then warn("ClickEvent Fehler:", err) end
+							else
+								pcall(function()
+									tool:Activate()
+								end)
+							end
 
-                            local clickEvent = tool:FindFirstChild("Clicked")
-                            if clickEvent and clickEvent:IsA("RemoteEvent") then
-                                local targetPos = getTargetPosition()
-                                local success, err = pcall(function()
-                                    clickEvent:FireServer(targetPos)
-                                end)
-                                if not success then warn("ClickEvent Fehler:", err) end
-                            else
-                                local success, err = pcall(function()
-                                    tool:Activate()
-                                end)
-                                if not success then warn("Tool Activate Fehler:", err) end
-                            end
+							task.wait(0.1)
+						end
+					end
 
-                            task.wait(0.1)
-                        end
-                    end
-                end
-                print("Snowball Spam Thread beendet")
-            end)
+					task.wait(0.1)
+				end
+			end)
 
-        else
-            getgenv().SnowballThrowingEnabled = false
-            PizzaHub:Notification({
-                Title = "Snowball Spam",
-                Content = "Snowball spam disabled.",
-                Icon = "info",
-                ImageSource = "Material"
-            })
-        end
-    end,
+		else
+			getgenv().SnowballThrowingEnabled = false
+			PizzaHub:Notification({
+				Title = "Snowball Spam",
+				Content = "Snowball spam disabled.",
+				Icon = "info",
+				ImageSource = "Material"
+			})
+		end
+	end,
 })
-
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
@@ -1274,9 +1264,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
-
-
 
 
 
