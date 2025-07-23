@@ -205,15 +205,11 @@ local Traget = Window:CreateTab({
     ImageSource = "Material",
     ShowTitle = true
 }) 
-
 local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
 
 local dropdownFlag = "DropdownSelectedPlayer"
-local dropdown = nil
 local currentSelection = "None"
-
--- Erzeuge Tabelle mit Anzeige-Text und Wert (Name)
+local dropdown -- speichert die Dropdown-Instanz
 local function getPlayerOptions()
     local opts = { "None" }
     for _, player in ipairs(Players:GetPlayers()) do
@@ -223,26 +219,28 @@ local function getPlayerOptions()
     return opts
 end
 
--- Hilfsfunktion: von Anzeige-Text zum Player-Name extrahieren
 local function getPlayerNameFromDisplayText(displayText)
     if displayText == "None" then return nil end
-    local name = displayText:match("^(.-) %(") -- alles vor " ("
+    local name = displayText:match("^(.-) %(")
     return name
 end
 
--- Dropdown initial erstellen
 local function createPlayerDropdown()
+    if dropdown then
+        Traget:RemoveElement(dropdownFlag) -- Element vorher entfernen, falls unterstützt
+        dropdown = nil
+    end
+
     dropdown = Traget:CreateDropdown({
         Name = "Select Player",
         Description = "Select a player from the dropdown",
         Options = getPlayerOptions(),
-        CurrentOption = { "None" },
+        CurrentOption = { currentSelection },
         MultipleOptions = false,
         Callback = function(option)
             currentSelection = option
             local playerName = getPlayerNameFromDisplayText(option)
             getgenv().SelectedPlayer = playerName
-
             if playerName then
                 PizzaHub:Notification({
                     Title = "Player Selected",
@@ -262,39 +260,12 @@ local function createPlayerDropdown()
     }, dropdownFlag)
 end
 
--- Erstelle Dropdown
+-- Dropdown initial erstellen
 createPlayerDropdown()
 
--- Options aktualisieren (mit Anzeige-Text)
-local function updateDropdownOptions()
-    if dropdown and typeof(dropdown.SetOptions) == "function" then
-        local opts = getPlayerOptions()
-        dropdown:SetOptions(opts)
-
-        -- Prüfe, ob aktuelle Auswahl noch gültig ist
-        local found = false
-        for _, opt in ipairs(opts) do
-            if opt == currentSelection then
-                found = true
-                break
-            end
-        end
-
-        if not found then
-            currentSelection = "None"
-            getgenv().SelectedPlayer = nil
-            dropdown:SetCurrentOption({currentSelection})
-        end
-    else
-        -- Fallback: falls kein SetOptions: Dropdown neu erstellen
-        -- (Optional)
-    end
-end
-
--- Aktualisiere, wenn Spieler joinen oder gehen
-Players.PlayerAdded:Connect(updateDropdownOptions)
-Players.PlayerRemoving:Connect(updateDropdownOptions)
-
+-- Wenn Spieler joinen oder gehen: Dropdown neu erstellen
+Players.PlayerAdded:Connect(createPlayerDropdown)
+Players.PlayerRemoving:Connect(createPlayerDropdown)
 
 
 local Players = game:GetService("Players")
@@ -1297,7 +1268,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
