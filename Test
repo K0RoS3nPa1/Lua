@@ -985,7 +985,6 @@ Traget:CreateButton({
 		})
 	end,
 })
-
 Traget:CreateToggle({
 	Name = "Spam Snowballs",
 	Description = "Continuously throws snowballs at the selected player.",
@@ -1007,74 +1006,73 @@ Traget:CreateToggle({
 				ImageSource = "Material"
 			})
 
-			-- Try loading utility library
+			-- Versuche die Utility zu laden
 			local success, Library = pcall(function()
 				return require(ReplicatedStorage:WaitForChild("Library"))
 			end)
 			if not success then
-				warn("Failed to load Utility Library.")
+				warn("⚠️ Failed to load Utility Library.")
 				return
 			end
 
 			local Utility = Library:Load("Utility")
 
-			-- Prevent removal of snowballs (anti-auto-remove)
+			-- Blockiere "RemoveGear"
 			local originalSendData = Utility.SendData
 			Utility.SendData = function(_, action, ...)
 				if action == "RemoveGear" then return end
 				return originalSendData(_, action, ...)
 			end
 
-			-- Get position of selected player
+			-- Zielposition holen
 			local function getTargetPosition()
 				local selectedName = getgenv().SelectedPlayer
 				local target = selectedName and Players:FindFirstChild(selectedName)
 				local torso = target and target.Character and (
-					target.Character:FindFirstChild("UpperTorso") or
-					target.Character:FindFirstChild("Torso")
+					target.Character:FindFirstChild("HumanoidRootPart")
+					or target.Character:FindFirstChild("UpperTorso")
+					or target.Character:FindFirstChild("Torso")
 				)
-				return torso and torso.Position or Vector3.new(0, 50, 0) -- fallback: air
+				return torso and torso.Position or Vector3.new(0, 50, 0)
 			end
 
-			-- Start snowball spam loop
+			-- Spam starten
 			getgenv().SnowballThread = task.spawn(function()
 				while getgenv().SnowballThrowingEnabled do
-					task.wait(0.5)
+					task.wait(0.3)
 
 					local backpack = LocalPlayer:FindFirstChild("Backpack")
 					local character = LocalPlayer.Character
 					if not backpack or not character then continue end
 
-					-- Clean old snowballs
-					for _, tool in ipairs(backpack:GetChildren()) do
-						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							tool:Destroy()
-						end
-					end
-					for _, tool in ipairs(character:GetChildren()) do
-						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							tool:Destroy()
-						end
-					end
-
-					-- Request new snowballs from server
+					-- Anfordern von Snowballs
 					for i = 1, 7 do
 						ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
 						task.wait(0.1)
 					end
 
-					-- Wait until all tools are added to backpack
-					repeat task.wait() until #(backpack:GetChildren()) >= 7
+					-- Warte auf mindestens 1 Tool
+					local timeout = 3
+					repeat task.wait(0.2); timeout -= 0.2 until #(backpack:GetChildren()) >= 1 or timeout <= 0
 
-					-- Equip and fire snowballs
+					-- Equip + Auslösen
 					for _, tool in ipairs(backpack:GetChildren()) do
 						if tool:IsA("Tool") and tool.Name == "Snowball" then
 							tool.Parent = character
-							task.wait(0.1)
+							task.wait(0.05)
 
-							local clickEvent = tool:FindFirstChild("Clicked")
-							if clickEvent then
-								clickEvent:FireServer(getTargetPosition())
+							-- Mögliche Varianten der Remote
+							local fireRemote = tool:FindFirstChild("Clicked") or tool:FindFirstChildWhichIsA("RemoteEvent")
+
+							if fireRemote then
+								pcall(function()
+									fireRemote:FireServer(getTargetPosition())
+								end)
+							else
+								-- Alternativ: Nutze Tool-Activate()
+								pcall(function()
+									tool:Activate()
+								end)
 							end
 
 							task.wait(0.1)
@@ -1084,7 +1082,6 @@ Traget:CreateToggle({
 			end)
 
 		else
-			-- Turn off spam loop
 			getgenv().SnowballThrowingEnabled = false
 			PizzaHub:Notification({
 				Title = "Snowball Spam",
@@ -1099,6 +1096,7 @@ Traget:CreateToggle({
 
 
 
+
 local Teleports = Window:CreateTab({
     Name = "Teleports",
     Icon = "code",
@@ -1106,8 +1104,9 @@ local Teleports = Window:CreateTab({
     ShowTitle = true
 })
 
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
--- Bereichsteleport Dropdown
 Teleports:CreateDropdown({
     Name = "Teleport to area",
     Description = nil,
@@ -1117,6 +1116,7 @@ Teleports:CreateDropdown({
     SpecialType = nil,
     Callback = function(option)
         if type(option) == "table" then option = option[1] end
+
         local character = player.Character or player.CharacterAdded:Wait()
         local hrp = character:WaitForChild("HumanoidRootPart")
         if not hrp then return end
@@ -1138,7 +1138,9 @@ Teleports:CreateDropdown({
 }, "TeleportArea")
 
 
--- Haus-Teleport Dropdown
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
 Teleports:CreateDropdown({
     Name = "Teleport to house",
     Description = nil,
@@ -1148,6 +1150,7 @@ Teleports:CreateDropdown({
     SpecialType = nil,
     Callback = function(option)
         if type(option) == "table" then option = option[1] end
+
         local character = player.Character or player.CharacterAdded:Wait()
         local hrp = character:WaitForChild("HumanoidRootPart")
         if not hrp then return end
@@ -1175,9 +1178,9 @@ Teleports:CreateDropdown({
     end
 }, "TeleportHouse")
 
-
--- Insel-Teleport Dropdown
-local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
 
 local islandOptions = { "None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island" }
 local islandModelName = {
@@ -1195,18 +1198,25 @@ Teleports:CreateDropdown({
     SpecialType = nil,
     Callback = function(option)
         if type(option) == "table" then option = option[1] end
+
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+
         if islandModelName[option] then
-            local model = workspace:FindFirstChild(islandModelName[option])
+            local model = Workspace:FindFirstChild(islandModelName[option])
             if model and model:IsA("Model") then
                 local targetCFrame = model:GetPivot() + Vector3.new(0, 20, 0)
-                _G.teleportTo(targetCFrame)
+                if hrp then
+                    hrp.CFrame = targetCFrame
+                end
             end
         elseif option == "Teleport to Party Island" then
-            _G.teleportTo(Vector3.new(88, 1, -315))
+            if hrp then
+                hrp.CFrame = CFrame.new(88, 1, -315)
+            end
         end
     end
 }, "TeleportIslands")
-
 
 
 
