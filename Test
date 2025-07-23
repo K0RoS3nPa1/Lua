@@ -98,7 +98,7 @@ end
 -- Input box for typing player username with confirmation on Enter key
 local Players = game:GetService("Players")
 
-local Input = Tab:CreateInput({
+Traget:CreateInput({
     Name = "Type Player Username",
     Description = nil,
     PlaceholderText = "Enter Player Username",
@@ -1159,6 +1159,7 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
 
 
 
