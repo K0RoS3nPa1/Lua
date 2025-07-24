@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.test.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -768,23 +768,26 @@ Traget:CreateToggle({
 
 -- Wenn Zielspieler das Spiel verlässt
 Players.PlayerRemoving:Connect(function(leavingPlayer)
-	if currentTargetPlayer and leavingPlayer == currentTargetPlayer then
+	local selectedName = getgenv().SelectedPlayer
+
+	if not selectedName then return end
+
+	-- Absicherung über string-Vergleich, nicht nur Objektvergleich
+	if leavingPlayer.Name == selectedName then
+		local displayName = leavingPlayer.DisplayName or leavingPlayer.Name -- fallback
+		local username = leavingPlayer.Name
+
 		PizzaHub:Notification({
 			Title = "Player Left",
-			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
+			Content = displayName .. " (" .. username .. ") has left the game.",
 			Icon = "person_off",
 			ImageSource = "Material"
 		})
 
-		-- Kamera zurücksetzen
+		-- Kamera zurücksetzen auf den LocalPlayer
 		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 			camera.CameraSubject = LocalPlayer.Character.Humanoid
 		end
-
-		-- Reset
-		viewPlayerEnabled = false
-		currentTargetPlayer = nil
-		lastSelectedName = nil
 
 		-- Verbindung trennen
 		if viewPlayerConnection then
@@ -792,18 +795,23 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 			viewPlayerConnection = nil
 		end
 
-		-- UI-Toggle zurücksetzen
+		-- Toggle deaktivieren
+		viewPlayerEnabled = false
 		if ToggleViewPlayer and ToggleViewPlayer.Set then
 			ToggleViewPlayer:Set(false)
 		end
 
-		-- Auswahl löschen
+		-- Auswahl zurücksetzen
 		getgenv().SelectedPlayer = nil
+		currentTargetPlayer = nil
+		lastSelectedName = nil
+
 		if selectedPlayerInput and selectedPlayerInput.Set then
 			selectedPlayerInput:Set("")
 		end
 	end
 end)
+
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
