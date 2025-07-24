@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.01"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -189,13 +189,10 @@ Traget:CreateButton({
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local localPlayer = Players.LocalPlayer
 
+local localPlayer = Players.LocalPlayer
 local flinging = false
-local flingDied
-local noclipConnection
-local currentFling
-local followConnection
+local flingConnection
 
 local function getTargetPlayer()
 	local name = tostring(getgenv().SelectedPlayer or ""):lower()
@@ -204,139 +201,99 @@ local function getTargetPlayer()
 			return player
 		end
 	end
+	return nil
 end
 
 Traget:CreateToggle({
 	Name = "Fling",
-	Description = "Flings target player by spinning your character",
+	Description = "Flings target player (and their vehicle if any)",
 	CurrentValue = false,
 	Callback = function(enabled)
-		local function enableNoclip()
-			if noclipConnection then noclipConnection:Disconnect() end
-			noclipConnection = RunService.Stepped:Connect(function()
-				if flinging and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
-					localPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(11)
-				end
-			end)
-		end
-
-		local function disableNoclip()
-			if noclipConnection then
-				noclipConnection:Disconnect()
-				noclipConnection = nil
-			end
-		end
-
-		local function setSeatsDisabled(state)
-			for _, seat in ipairs(workspace:GetDescendants()) do
-				if seat:IsA("Seat") or seat:IsA("VehicleSeat") then
-					seat.Disabled = state
-				end
-			end
-		end
-
-		local function startFling(character)
-			if not character then return end
-			local hrp = character:FindFirstChild("HumanoidRootPart")
-			if not hrp then return end
-
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
-					part.CanCollide = true
-					part.Massless = false
-					part.Velocity = Vector3.zero
-				end
-			end
-
-			if currentFling then
-				currentFling:Destroy()
-				currentFling = nil
-			end
-
-			local bav = Instance.new("BodyAngularVelocity")
-			bav.Name = "FlingForce"
-			bav.AngularVelocity = Vector3.new(0, 2000, 0) -- Rotationsgeschwindigkeit anpassen
-			bav.MaxTorque = Vector3.new(0, math.huge, 0)
-			bav.P = math.huge
-			bav.Parent = hrp
-			currentFling = bav
-
-			enableNoclip()
-
-			if flingDied then flingDied:Disconnect() end
-			local humanoid = character:FindFirstChildOfClass("Humanoid")
-			if humanoid then
-				flingDied = humanoid.Died:Connect(function()
-					localPlayer.CharacterAdded:Wait()
-					wait(0.25)
-					startFling(localPlayer.Character)
-				end)
-			end
-
-			if followConnection then
-				followConnection:Disconnect()
-				followConnection = nil
-			end
-
-			followConnection = RunService.Heartbeat:Connect(function()
-				local target = getTargetPlayer()
-				if target and target.Character then
-					local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-					if targetHRP and hrp then
-						-- Nicht CFrame setzen, sondern Bewegung per Velocity
-						local direction = (targetHRP.Position - hrp.Position).unit
-						hrp.Velocity = direction * 50 + Vector3.new(0, 30, 0) -- Drück nach vorne und leicht nach oben
-
-						-- Zusätzlich Position nur minimal anpassen, um Kollisionskontakt sicherzustellen
-						local offset = Vector3.new(0, 0, -1)
-						hrp.CFrame = CFrame.new(targetHRP.Position + offset)
-					end
-				end
-			end)
-		end
-
-		local function stopFling()
-			flinging = false
-			if currentFling then currentFling:Destroy() currentFling = nil end
-			if flingDied then flingDied:Disconnect() flingDied = nil end
-			if followConnection then followConnection:Disconnect() followConnection = nil end
-			disableNoclip()
-
-			setSeatsDisabled(false)
-
-			local character = localPlayer.Character
-			if character then
-				for _, part in ipairs(character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
-						part.CanCollide = true
-						part.Massless = false
-						part.Velocity = Vector3.zero
-					end
-				end
-			end
+		if flingConnection then
+			flingConnection:Disconnect()
+			flingConnection = nil
 		end
 
 		if enabled then
 			flinging = true
-			setSeatsDisabled(true)
-			startFling(localPlayer.Character)
-			localPlayer.CharacterAdded:Connect(function(char)
-				if flinging then
-					wait(0.25)
-					startFling(char)
+
+			flingConnection = RunService.Heartbeat:Connect(function()
+				local target = getTargetPlayer()
+				local localChar = localPlayer.Character
+				local targetChar = target and target.Character
+				if not targetChar or not localChar then return end
+
+				local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+				local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+				if not localHRP or not targetHRP then return end
+
+				-- Teleportiere dich über den Zielspieler (damit du nah dran bist)
+				localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 0)
+
+				-- Suche Fahrzeug (Seat), falls Ziel drin sitzt
+				local vehiclePart = nil
+				for _, part in ipairs(workspace:GetDescendants()) do
+					if (part:IsA("VehicleSeat") or part:IsA("Seat")) and part.Occupant and part.Occupant.Parent == targetChar then
+						vehiclePart = part
+						break
+					end
+				end
+
+				-- Fling-Parts: Fahrzeug falls gefunden, sonst Zielspieler HumanoidRootPart
+				local flingParts = {}
+				if vehiclePart then
+					-- Fling alle BaseParts im Fahrzeug Model (Parent des Seats)
+					local vehicleModel = vehiclePart.Parent
+					for _, p in ipairs(vehicleModel:GetDescendants()) do
+						if p:IsA("BasePart") then
+							table.insert(flingParts, p)
+						end
+					end
+				else
+					table.insert(flingParts, targetHRP)
+				end
+
+				-- Wende starke Dreh- und Aufwärtskraft an alle flingParts an
+				for _, part in ipairs(flingParts) do
+					-- Entferne alte Kräfte
+					local oldForce = part:FindFirstChild("FlingForce")
+					if oldForce then oldForce:Destroy() end
+
+					-- Setze BodyAngularVelocity für Rotation
+					local bav = Instance.new("BodyAngularVelocity")
+					bav.Name = "FlingForce"
+					bav.AngularVelocity = Vector3.new(0, 5000, 0) -- Stark drehen
+					bav.MaxTorque = Vector3.new(0, math.huge, 0)
+					bav.P = math.huge
+					bav.Parent = part
+
+					-- Setze Aufwärts-Velocity für „hochwerfen“
+					part.Velocity = Vector3.new(0, 100, 0)
+
+					-- Optional: Kann hier noch BodyForce für Dauerauftrieb ergänzen
 				end
 			end)
 		else
-			stopFling()
+			flinging = false
+			if flingConnection then
+				flingConnection:Disconnect()
+				flingConnection = nil
+			end
+
+			-- Aufräumen: Entferne BodyAngularVelocity von allen Parts des Zielspielers
+			local target = getTargetPlayer()
+			if target and target.Character then
+				for _, part in ipairs(target.Character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						local oldForce = part:FindFirstChild("FlingForce")
+						if oldForce then oldForce:Destroy() end
+					end
+				end
+				-- Optional: Hier noch Fahrzeugteile reinigen falls nötig
+			end
 		end
 	end
 })
-
-
-
-
 
 
 Traget:CreateButton({
