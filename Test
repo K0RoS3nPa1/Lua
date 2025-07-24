@@ -537,12 +537,15 @@ end)
 
 Traget:CreateButton({
     Name = "Bring Player To You",
-    Description = "Brings the selected player into your vehicle and returns you to your original position.",
+    Description = "Smoothly brings the selected player into your vehicle and returns you to your original position (lifted).",
+
     Callback = function()
         local Players = game:GetService("Players")
+        local Workspace = game:GetService("Workspace")
+        local RunService = game:GetService("RunService")
+
         local LocalPlayer = Players.LocalPlayer
         local selectedName = getgenv().SelectedPlayer
-        local Workspace = game:GetService("Workspace")
 
         if not selectedName or selectedName == "" then
             PizzaHub:Notification({
@@ -558,7 +561,7 @@ Traget:CreateButton({
         if not TargetPlayer or not TargetPlayer.Character then
             PizzaHub:Notification({
                 Title = "Action Failed",
-                Content = "Target player not found or no character!",
+                Content = "Target player not found or missing character!",
                 Icon = "error",
                 ImageSource = "Material"
             })
@@ -566,10 +569,10 @@ Traget:CreateButton({
         end
 
         local character = LocalPlayer.Character
-        if not character then
+        if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
             PizzaHub:Notification({
                 Title = "Action Failed",
-                Content = "Your character not found!",
+                Content = "Your character is invalid!",
                 Icon = "error",
                 ImageSource = "Material"
             })
@@ -578,20 +581,11 @@ Traget:CreateButton({
 
         local hrp = character:FindFirstChild("HumanoidRootPart")
         local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if not hrp or not humanoid then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "Missing Humanoid or RootPart!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
 
-        -- Speichere alte Position
-        local originalCFrame = hrp.CFrame
+        -- Speicher alte Position
+        local originalCFrame = hrp.CFrame + Vector3.new(0, 5, 0) -- 5 Studs höher
 
-        -- Finde Auto mit HoodSeat
+        -- Auto suchen
         local car, seat, hoodseat
         for _, v in ipairs(Workspace:GetDescendants()) do
             if v:IsA("VehicleSeat") and v.Parent:IsA("Model") and v.Parent:FindFirstChild("HoodSeat") then
@@ -612,7 +606,7 @@ Traget:CreateButton({
         if not car or not seat or not hoodseat then
             PizzaHub:Notification({
                 Title = "Action Failed",
-                Content = "No suitable vehicle with a HoodSeat found!",
+                Content = "No car with hood seat found!",
                 Icon = "error",
                 ImageSource = "Material"
             })
@@ -632,41 +626,47 @@ Traget:CreateButton({
             end
         end
 
-        -- Warte bis du sitzt
         repeat task.wait() until seat.Occupant == humanoid
 
         local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
 
-        -- Verfolge den Spieler, bis er im HoodSeat sitzt
-        local targetHumanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
         local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-
+        local targetHumanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
         if not targetHRP or not targetHumanoid then
             PizzaHub:Notification({
                 Title = "Action Failed",
-                Content = "Target player's body parts not found!",
+                Content = "Target missing body parts!",
                 Icon = "error",
                 ImageSource = "Material"
             })
             return
         end
 
-        -- 🚗 Verfolge den Spieler, bis er einsteigt
+        -- ✅ SMOOTH VERFOLGEN
         while hoodseat.Occupant ~= targetHumanoid do
             if not targetHRP then break end
-            car:SetPrimaryPartCFrame(targetHRP.CFrame * offset:Inverse())
+
+            local current = car.PrimaryPart.CFrame
+            local target = targetHRP.CFrame * offset:Inverse()
+            local lerped = current:Lerp(target, 0.15) -- glatte Bewegung, 0.15 = sanft
+
+            car:SetPrimaryPartCFrame(lerped)
             task.wait(0.1)
         end
 
-        -- 🔁 Fahre zurück zur alten Position
+        -- ✅ ZURÜCK zur alten Position (leicht höher)
         while hoodseat.Occupant ~= nil do
-            car:SetPrimaryPartCFrame(originalCFrame * offset:Inverse())
+            local current = car.PrimaryPart.CFrame
+            local target = originalCFrame * offset:Inverse()
+            local lerped = current:Lerp(target, 0.1)
+
+            car:SetPrimaryPartCFrame(lerped)
             task.wait(0.1)
         end
 
         PizzaHub:Notification({
-            Title = "Success",
-            Content = "Player '" .. selectedName .. "' was brought to you successfully!",
+            Title = "Erfolg",
+            Content = "Spieler wurde eingesammelt und zurückgebracht!",
             Icon = "check_circle",
             ImageSource = "Material"
         })
