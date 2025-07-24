@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.20.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -648,8 +648,8 @@ Traget:CreateButton({
 })
 
 Traget:CreateToggle({
-    Name = "Spam Snowballs",
-    Description = "Wirft kontinuierlich Snowballs auf das gewählte Ziel",
+    Name = "Spam Snowballs (Stable)",
+    Description = "Holt & wirft Snowballs nacheinander auf das Ziel",
     CurrentValue = false,
 
     Callback = function(Value)
@@ -683,61 +683,49 @@ Traget:CreateToggle({
                         continue
                     end
 
-                    -- Fordere ein paar Snowballs an
-                    for i = 1, 3 do
-                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
-                        task.wait(0.05)
-                    end
-
-                    task.wait(0.3)
-
-                    local tools = {}
-                    for _, tool in ipairs(backpack:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            table.insert(tools, tool)
-                        end
-                    end
-
-                    if #tools == 0 then
+                    local targetPos = getTargetPosition()
+                    if not targetPos then
                         task.wait(0.3)
                         continue
                     end
 
-                    for _, tool in ipairs(tools) do
-                        if not getgenv().SnowballThrowingEnabled then break end
+                    -- 1 Snowball anfordern
+                    ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                    task.wait(0.1)
 
+                    -- Suche nach dem Tool im Backpack
+                    local tool
+                    for _, t in ipairs(backpack:GetChildren()) do
+                        if t:IsA("Tool") and t.Name == "Snowball" then
+                            tool = t
+                            break
+                        end
+                    end
+
+                    if tool then
                         local clicked = tool:FindFirstChild("Clicked")
-                        if not clicked then continue end
+                        if clicked then
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                            end)
+                            task.wait(0.15)
 
-                        local equipped = pcall(function()
-                            humanoid:EquipTool(tool)
-                        end)
-                        task.wait(0.2)
-
-                        local targetPos = getTargetPosition()
-                        if targetPos then
                             pcall(function()
                                 clicked:FireServer(targetPos)
                             end)
 
-                            -- Warten, bis Server den Wurf verarbeitet hat
-                            task.delay(0.35, function()
+                            task.delay(0.25, function()
                                 if tool and tool.Parent then
                                     pcall(function()
                                         tool:Destroy()
                                     end)
                                 end
                             end)
-                        else
-                            task.wait(0.2)
                         end
-
-                        task.wait(0.3)
                     end
 
-                    task.wait(0.2)
+                    task.wait(0.15)
                 end
-
                 print("[SnowballSpam] Beendet.")
             end)
         else
@@ -745,6 +733,7 @@ Traget:CreateToggle({
         end
     end
 })
+
 
 
 
