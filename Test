@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.20"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -186,14 +186,14 @@ Traget:CreateButton({
 		end)
 	end
 })
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 Players.PlayerRemoving:Connect(function(leavingPlayer)
+	-- Prüfe, ob der Spieler der aktuell ausgewählte ist
 	if getgenv().SelectedPlayer == leavingPlayer.Name then
-		-- Zeige eine Notification
+		-- Benachrichtigung anzeigen
 		PizzaHub:Notification({
 			Title = "Player Left",
 			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
@@ -201,29 +201,36 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 			ImageSource = "Material"
 		})
 
-		-- Kamera zurücksetzen, falls View Player aktiv war
-		if viewPlayerEnabled then
-			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-				camera.CameraSubject = LocalPlayer.Character.Humanoid
-			end
-			viewPlayerEnabled = false
+		-- Kamera zurücksetzen
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			camera.CameraSubject = LocalPlayer.Character.Humanoid
+		end
 
-			-- Falls du das Toggle-Objekt gespeichert hast:
-			if ToggleViewPlayer and ToggleViewPlayer.Set then
-				ToggleViewPlayer:Set(false)
-			end
+		-- Toggle deaktivieren (intern)
+		viewPlayerEnabled = false
+
+		-- Verbindung zum alten Character entfernen
+		if viewPlayerConnection then
+			viewPlayerConnection:Disconnect()
+			viewPlayerConnection = nil
+		end
+
+		-- Toggle in UI zurücksetzen
+		if ToggleViewPlayer and ToggleViewPlayer.Set then
+			ToggleViewPlayer:Set(false)
 		end
 
 		-- Auswahl zurücksetzen
 		getgenv().SelectedPlayer = nil
 		confirmedPlayerName = nil
 
-		-- Eingabefeld leeren (wenn es existiert)
+		-- Eingabefeld leeren (wenn vorhanden)
 		if selectedPlayerInput and selectedPlayerInput.Set then
 			selectedPlayerInput:Set("")
 		end
 	end
 end)
+
 
 
 local Players = game:GetService("Players")
@@ -447,6 +454,19 @@ Traget:CreateButton({
 
 local viewPlayerEnabled = false
 local viewPlayerConnection = nil
+local currentTargetPlayer = nil
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local function setCameraToTargetPlayer()
+	if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Humanoid") then
+		camera.CameraSubject = currentTargetPlayer.Character.Humanoid
+	else
+		warn("Target player character or humanoid not found.")
+	end
+end
 
 Traget:CreateToggle({
 	Name = "View Player",
@@ -456,18 +476,15 @@ Traget:CreateToggle({
 	Callback = function(enabled)
 		viewPlayerEnabled = enabled
 
-		local Players = game:GetService("Players")
-		local LocalPlayer = Players.LocalPlayer
-		local camera = workspace.CurrentCamera
-		local selectedName = getgenv().SelectedPlayer
-
-		-- Disconnect any previous connection
+		-- Alte Verbindung trennen
 		if viewPlayerConnection then
 			viewPlayerConnection:Disconnect()
 			viewPlayerConnection = nil
 		end
 
 		if enabled then
+			local selectedName = getgenv().SelectedPlayer
+
 			if not selectedName or selectedName == "" then
 				PizzaHub:Notification({
 					Title = "Action Failed",
@@ -478,8 +495,9 @@ Traget:CreateToggle({
 				return
 			end
 
-			local TargetPlayer = Players:FindFirstChild(selectedName)
-			if not TargetPlayer then
+			currentTargetPlayer = Players:FindFirstChild(selectedName)
+
+			if not currentTargetPlayer then
 				PizzaHub:Notification({
 					Title = "Action Failed",
 					Content = "Player '" .. selectedName .. "' not found!",
@@ -489,34 +507,31 @@ Traget:CreateToggle({
 				return
 			end
 
-			local function setCameraSubject()
-				if TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("Humanoid") then
-					camera.CameraSubject = TargetPlayer.Character.Humanoid
-					PizzaHub:Notification({
-						Title = "View Player",
-						Content = "Now viewing '" .. selectedName .. "'",
-						Icon = "visibility",
-						ImageSource = "Material"
-					})
-				else
-					warn("Target player character or humanoid not found.")
+			setCameraToTargetPlayer()
+
+			viewPlayerConnection = currentTargetPlayer.CharacterAdded:Connect(function()
+				if viewPlayerEnabled then
+					setCameraToTargetPlayer()
 				end
-			end
+			end)
 
-			-- Set initial camera target
-			setCameraSubject()
-
-			-- Reapply if player respawns
-			viewPlayerConnection = TargetPlayer.CharacterAdded:Connect(setCameraSubject)
+			PizzaHub:Notification({
+				Title = "View Player",
+				Content = "Now viewing '" .. selectedName .. "'",
+				Icon = "visibility",
+				ImageSource = "Material"
+			})
 
 		else
-			-- Reset camera to local player
+			-- Kamera zurück zum lokalen Spieler
 			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 				camera.CameraSubject = LocalPlayer.Character.Humanoid
 			end
+			currentTargetPlayer = nil
 		end
 	end,
-}, "ToggleViewPlayer")
+})
+
 
 Traget:CreateButton({
 	Name = "Throw Player Far Away",
@@ -755,24 +770,27 @@ Traget:CreateToggle({
 				while getgenv().SnowballThrowingEnabled do
 					local backpack = LocalPlayer:FindFirstChild("Backpack")
 					local character = LocalPlayer.Character
-					if not backpack or not character then
+					local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+					if not backpack or not character or not humanoid then
 						task.wait(0.2)
 						continue
 					end
 
-					-- Wenn keine Snowballs im Backpack, neue anfordern
+					-- Snowballs auffüllen, falls zu wenig da sind
 					if #backpack:GetChildren() < 3 then
 						giveSnowballs(7)
 						task.wait(0.3)
 					end
 
-					-- Snowballs werfen
+					-- Snowballs aus Backpack werfen
 					for _, tool in ipairs(backpack:GetChildren()) do
 						if not getgenv().SnowballThrowingEnabled then break end
-
 						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							tool.Parent = character
-							task.wait(0.05)
+							-- Snowball ausrüsten über Humanoid
+							pcall(function()
+								humanoid:EquipTool(tool)
+							end)
+							task.wait(0.1)
 
 							local clickEvent = tool:FindFirstChild("Clicked")
 							if clickEvent and clickEvent:IsA("RemoteEvent") then
@@ -785,8 +803,14 @@ Traget:CreateToggle({
 								end)
 							end
 
-							task.wait(0.08)
-							tool.Parent = backpack -- zurück ins Backpack (falls möglich)
+							task.wait(0.1)
+
+							-- Wieder zurück ins Backpack (optional, falls Tool hängen bleibt)
+							if tool.Parent == character then
+								tool.Parent = backpack
+							end
+
+							task.wait(0.1)
 						end
 					end
 
