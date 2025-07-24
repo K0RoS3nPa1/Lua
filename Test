@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.01.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -444,95 +444,124 @@ Traget:CreateToggle({
 }, "ToggleFlingPlayer")
 
 Traget:CreateToggle({
-    Name = "Tree Fling",
-    Description = "Clones trees and flings them toward the selected player without teleporting",
-    CurrentValue = false,
-    Flag = "ToggleTreeFling",
+   Name = "Tree Fling",
+   CurrentValue = false,
+   Flag = "ToggleTreeFling",
+   Callback = function(Enabled)
+      getgenv().treeFlingEnabled = Enabled
+      
+      local Players = game:GetService("Players")
+      local workspace = game:GetService("Workspace")
+      local LocalPlayer = Players.LocalPlayer
 
-    Callback = function(enabled)
-        getgenv().treeFlingEnabled = enabled
+      -- Uproot Thread (lässt Bäume „ausreißen“ falls nötig)
+      if not getgenv().treeUprootThread then
+         getgenv().treeUprootThread = coroutine.create(function()
+            while true do
+               task.wait(0.5)
+               if getgenv().treeFlingEnabled then
+                  pcall(function()
+                     local treesFolder = workspace:FindFirstChild("Trees")
+                     local uprootRemote = workspace:FindFirstChild("Main") and workspace.Main:FindFirstChild("UprootTree")
+                     if not treesFolder or not uprootRemote then return end
 
-        if enabled then
-            PizzaHub:Notification({
-                Title = "Tree Fling",
-                Content = "Tree fling enabled!",
-                Icon = "check_circle",
-                ImageSource = "Material"
-            })
-
-            local Players = game:GetService("Players")
-            local workspace = game:GetService("Workspace")
-            local LocalPlayer = Players.LocalPlayer
-
-            getgenv().treeFlingThread = task.spawn(function()
-                while getgenv().treeFlingEnabled do
-                    task.wait(1) -- alle 1 Sekunde
-
-                    local selectedName = getgenv().SelectedPlayer
-                    local targetPlayer = selectedName and Players:FindFirstChild(selectedName)
-                    if not targetPlayer or not targetPlayer.Character then continue end
-
-                    local torso = targetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetPlayer.Character:FindFirstChild("Torso")
-                    if not torso then continue end
-
-                    local treesFolder = workspace:FindFirstChild("Trees")
-                    if not treesFolder then continue end
-
-                    for _, tree in ipairs(treesFolder:GetChildren()) do
-                        if tree:IsA("Model") and tree.PrimaryPart then
-                            -- Baum klonen
-                            local clone = tree:Clone()
-                            clone.Parent = workspace
-                            clone:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                            clone.PrimaryPart.Anchored = false
-
-                            -- BodyPosition zum Ziel
-                            local bp = Instance.new("BodyPosition")
-                            bp.Position = torso.Position + Vector3.new(0, 3, 0)
-                            bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-                            bp.P = 1e5
-                            bp.Parent = clone.PrimaryPart
-
-                            -- BodyVelocity für extra Speed
-                            local direction = (torso.Position - clone.PrimaryPart.Position).Unit
-                            local bv = Instance.new("BodyVelocity")
-                            bv.Velocity = direction * 100 + Vector3.new(0, 50, 0)
-                            bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-                            bv.Parent = clone.PrimaryPart
-
-                            -- BodyAngularVelocity für Rotation
-                            local bav = Instance.new("BodyAngularVelocity")
-                            bav.AngularVelocity = Vector3.new(
-                                math.random(-50, 50),
-                                math.random(-50, 50),
-                                math.random(-50, 50)
-                            )
-                            bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-                            bav.Parent = clone.PrimaryPart
-
-                            -- Nach 5 Sekunden den Klon löschen
-                            task.delay(5, function()
-                                if clone then
-                                    clone:Destroy()
-                                end
-                            end)
-
-                            task.wait(0.2) -- kleine Pause pro Baum
+                     for _, descendant in pairs(treesFolder:GetDescendants()) do
+                        if descendant.Name == "Tree" or descendant.Name == "DeadTree" then
+                           uprootRemote:FireServer(descendant)
                         end
-                    end
-                end
-            end)
+                     end
+                  end)
+               end
+            end
+         end)
+         coroutine.resume(getgenv().treeUprootThread)
+      end
 
-        else
-            getgenv().treeFlingEnabled = false
-            PizzaHub:Notification({
-                Title = "Tree Fling",
-                Content = "Tree fling disabled.",
-                Icon = "info",
-                ImageSource = "Material"
-            })
-        end
-    end,
+      -- Tree Fling Thread: klont Bäume und wirft sie auf Spieler
+      if Enabled then
+         if getgenv().treeFlingThread and coroutine.status(getgenv().treeFlingThread) ~= "dead" then
+            -- Thread läuft schon, nichts tun
+            return
+         end
+
+         getgenv().treeFlingThread = coroutine.create(function()
+            while getgenv().treeFlingEnabled do
+               task.wait(1)
+               local selectedName = getgenv().SelectedPlayer
+               local target = selectedName and Players:FindFirstChild(selectedName)
+               local torso = target and target.Character and (
+                  target.Character:FindFirstChild("HumanoidRootPart") or
+                  target.Character:FindFirstChild("Torso")
+               )
+
+               if not torso then continue end
+
+               local treesFolder = workspace:FindFirstChild("Trees")
+               if not treesFolder then
+                  warn("[Tree Fling] No Trees folder found")
+                  continue
+               end
+
+               for _, tree in ipairs(treesFolder:GetChildren()) do
+                  if tree:IsA("Model") and tree.PrimaryPart then
+                     -- Baum klonen
+                     local clone = tree:Clone()
+                     clone.Parent = workspace
+                     clone:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                     clone.PrimaryPart.Anchored = false
+
+                     -- Alte BodyMover entfernen
+                     for _, child in ipairs(clone.PrimaryPart:GetChildren()) do
+                        if child:IsA("BodyMover") then
+                           child:Destroy()
+                        end
+                     end
+
+                     -- BodyPosition zum Spieler setzen (leicht über Torso)
+                     local bp = Instance.new("BodyPosition")
+                     bp.Position = torso.Position + Vector3.new(0, 3, 0)
+                     bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                     bp.P = 1e5
+                     bp.Parent = clone.PrimaryPart
+
+                     -- BodyVelocity für Fling-Effekt (schießt auf Spieler zu)
+                     local direction = (torso.Position - clone.PrimaryPart.Position).Unit
+                     local bv = Instance.new("BodyVelocity")
+                     bv.Velocity = direction * 150 + Vector3.new(0, 50, 0)
+                     bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                     bv.Parent = clone.PrimaryPart
+
+                     -- BodyAngularVelocity für Rotation
+                     local bav = Instance.new("BodyAngularVelocity")
+                     bav.AngularVelocity = Vector3.new(
+                        math.random(-50, 50),
+                        math.random(-50, 50),
+                        math.random(-50, 50)
+                     )
+                     bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+                     bav.Parent = clone.PrimaryPart
+
+                     -- Klon nach 5 Sekunden löschen
+                     task.delay(5, function()
+                        if clone and clone.Parent then
+                           clone:Destroy()
+                        end
+                     end)
+
+                     task.wait(0.3) -- Pause zwischen Bäumen
+                  end
+               end
+            end
+         end)
+         coroutine.resume(getgenv().treeFlingThread)
+      else
+         getgenv().treeFlingEnabled = false
+         if getgenv().treeFlingThread and coroutine.status(getgenv().treeFlingThread) ~= "dead" then
+            -- Es gibt keine native Methode Coroutines zu stoppen, hier beenden wir mit Flag
+            getgenv().treeFlingThread = nil
+         end
+      end
+   end,
 })
 
 
