@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.10"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -789,7 +789,7 @@ Traget:CreateToggle({
                     end
 
                     -- Sehr schnelles Klonen bis 20 erreicht sind
-                    while countSnowballs() < 20 and getgenv().SnowballThrowingEnabled do
+                    while countSnowballs() < 100 and getgenv().SnowballThrowingEnabled do
                         ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
                         task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
                     end
