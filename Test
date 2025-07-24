@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.20"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -187,19 +187,38 @@ Traget:CreateButton({
 	end
 })
 
--- Notify if selected player leaves the game
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
 Players.PlayerRemoving:Connect(function(leavingPlayer)
 	if getgenv().SelectedPlayer == leavingPlayer.Name then
+		-- Zeige eine Notification
 		PizzaHub:Notification({
 			Title = "Player Left",
 			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
 			Icon = "person_off",
 			ImageSource = "Material"
 		})
-		-- Optional: Auswahl zurücksetzen
+
+		-- Kamera zurücksetzen, falls View Player aktiv war
+		if viewPlayerEnabled then
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+				camera.CameraSubject = LocalPlayer.Character.Humanoid
+			end
+			viewPlayerEnabled = false
+
+			-- Falls du das Toggle-Objekt gespeichert hast:
+			if ToggleViewPlayer and ToggleViewPlayer.Set then
+				ToggleViewPlayer:Set(false)
+			end
+		end
+
+		-- Auswahl zurücksetzen
 		getgenv().SelectedPlayer = nil
 		confirmedPlayerName = nil
 
+		-- Eingabefeld leeren (wenn es existiert)
 		if selectedPlayerInput and selectedPlayerInput.Set then
 			selectedPlayerInput:Set("")
 		end
