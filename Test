@@ -649,7 +649,7 @@ Traget:CreateButton({
 
 Traget:CreateToggle({
     Name = "Spam Snowballs",
-    Description = "Wirft kontinuierlich Snowballs auf das gewählte Ziel, zielt direkt auf HumanoidRootPart",
+    Description = "Wirft kontinuierlich Snowballs auf das gewählte Ziel",
     CurrentValue = false,
 
     Callback = function(Value)
@@ -665,8 +665,8 @@ Traget:CreateToggle({
             if targetPlayer and targetPlayer.Character then
                 local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if root then
-                    -- Zielposition exakt auf HumanoidRootPart (ohne Vorhersage)
-                    return root.Position + Vector3.new(0, 2, 0) -- 2 Studs hoch, damit es gut trifft
+                    -- Zielposition mit leichter Vorhersage, +2 Y für Trefferhöhe
+                    return root.Position + root.Velocity * 0.2 + Vector3.new(0, 2, 0)
                 end
             end
             return nil
@@ -698,7 +698,7 @@ Traget:CreateToggle({
                         continue
                     end
 
-                    -- Alle Snowballs ausrüsten und direkt auf Zielposition werfen
+                    -- Alle Snowballs ausrüsten und werfen mit Delay zwischen den Würfen
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if not getgenv().SnowballThrowingEnabled then break end
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
@@ -710,15 +710,20 @@ Traget:CreateToggle({
                             pcall(function()
                                 humanoid:EquipTool(tool)
                             end)
-                            task.wait(0.2) -- Warte nach Ausrüsten
+                            task.wait(0.3) -- Kurzes Warten nach Ausrüsten
 
                             pcall(function()
                                 clicked:FireServer(targetPos)
                             end)
 
-                            task.wait(0.5) -- Wichtiges Delay für Server-Register
+                            -- WICHTIG: Hier das Delay auf 0.8 Sekunden erhöhen,
+                            -- damit der Server den Wurf verarbeiten kann
+                            task.wait(0.8)
 
+                            -- Snowball löschen, damit ein neuer geholt wird
                             tool:Destroy()
+
+                            -- Kleines zusätzliches Warten, falls nötig
                             task.wait(0.1)
                         end
                     end
