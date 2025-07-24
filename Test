@@ -1240,11 +1240,11 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
-local maxPlayersToJoin = 12 -- default max players allowed
+local maxPlayersToJoin = 5 -- default max players allowed
 
 Settings:CreateSlider({
     Name = "Max Server Players",
-    Range = {1, 20},
+    Range = {1, 12},
     Increment = 1,
     CurrentValue = maxPlayersToJoin,
     Callback = function(value)
