@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.012.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -739,8 +739,8 @@ Traget:CreateToggle({
 })
 
 Traget:CreateToggle({
-    Name = "Spam 50 Snowballs Random",
-    Description = "Klonet bis zu 50 Snowballs und wirft sie zufällig in der Nähe des Spielers",
+    Name = "Spam 50 Snowballs (schnell & gleichzeitig)",
+    Description = "Klonet bis zu 50 Snowballs in Wellen und wirft alle gleichzeitig in der Nähe",
     CurrentValue = false,
 
     Callback = function(Value)
@@ -750,25 +750,28 @@ Traget:CreateToggle({
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local LocalPlayer = Players.LocalPlayer
 
-        local function countSnowballs(backpack)
+        local function countSnowballs()
             local count = 0
-            for _, item in ipairs(backpack:GetChildren()) do
-                if item:IsA("Tool") and item.Name == "Snowball" then
-                    count = count + 1
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            if backpack then
+                for _, item in ipairs(backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name == "Snowball" then
+                        count += 1
+                    end
                 end
             end
             return count
         end
 
-        local function getRandomPosition(character)
-            local root = character:FindFirstChild("HumanoidRootPart")
+        local function getRandomPosition()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
             if root then
-                local randomOffset = Vector3.new(
-                    math.random(-20,20),
-                    math.random(5,15),
-                    math.random(-20,20)
+                return root.Position + Vector3.new(
+                    math.random(-10, 10),
+                    math.random(5, 10),
+                    math.random(-10, 10)
                 )
-                return root.Position + randomOffset
             end
             return Vector3.new(0, 50, 0)
         end
@@ -776,59 +779,54 @@ Traget:CreateToggle({
         if Value then
             getgenv().SnowballThread = task.spawn(function()
                 while getgenv().SnowballThrowingEnabled do
-                    local backpack = LocalPlayer:FindFirstChild("Backpack")
                     local character = LocalPlayer.Character
                     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                    if not backpack or not character or not humanoid then
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+                    if not humanoid or not backpack then
                         task.wait(0.2)
                         continue
                     end
 
-                    -- Snowballs klonen bis 50 erreicht sind
-                    while countSnowballs(backpack) < 50 and getgenv().SnowballThrowingEnabled do
-                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
-                        task.wait(0.03)
+                    -- Klonen in Wellen (5 pro Schritt), bis 50 Snowballs erreicht sind
+                    while countSnowballs() < 50 and getgenv().SnowballThrowingEnabled do
+                        for i = 1, 5 do
+                            ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                            task.wait(0.05)
+                        end
+                        task.wait(0.4) -- kleine Pause, um Massendespawn zu vermeiden
                     end
 
-                    if not getgenv().SnowballThrowingEnabled then break end
-
-                    -- Alle Snowballs gleichzeitig werfen
+                    -- Alle Snowballs einsammeln
                     local snowballs = {}
-                    for _, item in ipairs(backpack:GetChildren()) do
-                        if item:IsA("Tool") and item.Name == "Snowball" then
-                            table.insert(snowballs, item)
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            table.insert(snowballs, tool)
                         end
                     end
 
+                    -- Alle Snowballs nacheinander OHNE Pause werfen
                     for _, tool in ipairs(snowballs) do
                         if not getgenv().SnowballThrowingEnabled then break end
                         local clicked = tool:FindFirstChild("Clicked")
-                        if not clicked then continue end
-
-                        pcall(function()
-                            humanoid:EquipTool(tool)
-                        end)
-                        task.wait(0.1)
-
-                        local throwPos = getRandomPosition(character)
-                        pcall(function()
-                            clicked:FireServer(throwPos)
-                        end)
-                        task.wait(0.1)
-
+                        if clicked then
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                                clicked:FireServer(getRandomPosition())
+                            end)
+                        end
                         tool:Destroy()
-                        task.wait(0.02)
                     end
 
-                    task.wait(0.5) -- kurze Pause bevor neu geklont wird
+                    task.wait(0.5) -- kleine Pause nach dem Werfen, bevor neu geklont wird
                 end
-                print("[SnowballSpam] Random Snowball-Loop gestoppt.")
             end)
         else
             getgenv().SnowballThrowingEnabled = false
         end
     end
 })
+
 
 
 
