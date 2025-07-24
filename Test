@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.012.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -739,8 +739,8 @@ Traget:CreateToggle({
 })
 
 Traget:CreateToggle({
-    Name = "Spam 50 Snowballs (schnell & gleichzeitig)",
-    Description = "Klonet bis zu 50 Snowballs in Wellen und wirft alle gleichzeitig in der Nähe",
+    Name = "Spam 20 Snowballs (schnell & gleichzeitig)",
+    Description = "Klonet bis zu 20 Snowballs schnell und wirft alle auf einmal in der Nähe",
     CurrentValue = false,
 
     Callback = function(Value)
@@ -768,9 +768,9 @@ Traget:CreateToggle({
             local root = char and char:FindFirstChild("HumanoidRootPart")
             if root then
                 return root.Position + Vector3.new(
-                    math.random(-10, 10),
-                    math.random(5, 10),
-                    math.random(-10, 10)
+                    math.random(-8, 8),
+                    math.random(4, 8),
+                    math.random(-8, 8)
                 )
             end
             return Vector3.new(0, 50, 0)
@@ -788,16 +788,13 @@ Traget:CreateToggle({
                         continue
                     end
 
-                    -- Klonen in Wellen (5 pro Schritt), bis 50 Snowballs erreicht sind
-                    while countSnowballs() < 50 and getgenv().SnowballThrowingEnabled do
-                        for i = 1, 5 do
-                            ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
-                            task.wait(0.05)
-                        end
-                        task.wait(0.4) -- kleine Pause, um Massendespawn zu vermeiden
+                    -- Sehr schnelles Klonen bis 20 erreicht sind
+                    while countSnowballs() < 20 and getgenv().SnowballThrowingEnabled do
+                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                        task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
                     end
 
-                    -- Alle Snowballs einsammeln
+                    -- Alle Snowballs gleichzeitig werfen
                     local snowballs = {}
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
@@ -805,7 +802,6 @@ Traget:CreateToggle({
                         end
                     end
 
-                    -- Alle Snowballs nacheinander OHNE Pause werfen
                     for _, tool in ipairs(snowballs) do
                         if not getgenv().SnowballThrowingEnabled then break end
                         local clicked = tool:FindFirstChild("Clicked")
@@ -818,7 +814,7 @@ Traget:CreateToggle({
                         tool:Destroy()
                     end
 
-                    task.wait(0.5) -- kleine Pause nach dem Werfen, bevor neu geklont wird
+                    task.wait(0.3) -- kurze Pause vor nächster Runde
                 end
             end)
         else
