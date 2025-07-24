@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -1205,6 +1205,65 @@ Settings:CreateToggle({
     end
 }, "AntiAFKToggle")
 
+-- ✅ REJOIN BUTTON: Rejoin in denselben Server
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Funktion, die dein GUI (PizzaHub) neu initialisiert
+local function LoadGUI()
+    -- Beispiel: Hier den Code rein, der dein GUI startet / zeigt
+    -- Falls dein GUI über PizzaHub geladen wird, mach hier den Aufruf:
+    print("GUI wird geladen...")
+    PizzaHub:Load() ---oder was bei dir der GUI Start ist
+end
+
+-- Sofort GUI laden, wenn Script startet (z.B. beim ersten Join)
+LoadGUI()
+
+-- Queue das Script für automatisches Nachladen beim Teleport (Rejoin)
+if syn and syn.queue_on_teleport then
+    syn.queue_on_teleport([[
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function LoadGUI()
+            print("GUI wird nach Rejoin geladen...")
+            -- Hier auch GUI-Initialisierung rein
+        end
+
+        LoadGUI()
+    ]])
+end
+
+-- Rejoin Button
+Settings:CreateButton({
+    Name = "Rejoin Game",
+    Description = "Rejoin the current game with countdown and notification",
+    Callback = function()
+        local countdown = 5 -- Sekunden
+
+        for i = countdown, 1, -1 do
+            PizzaHub:Notification({
+                Title = "Rejoin in " .. i .. " seconds",
+                Content = "Please wait until the rejoin starts...",
+                Icon = "notifications_active",
+                ImageSource = "Material"
+            })
+            task.wait(1)
+        end
+
+        -- Kick mit Message
+        LocalPlayer:Kick("\nYou will now be rejoined.")
+
+        task.wait(0.5)
+
+        -- Teleport zurück in denselben Server (kein Server Hop)
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    end,
+})
+
+
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
@@ -1223,40 +1282,8 @@ Settings:CreateSlider({
     end
 }, "MaxPlayersSlider")
 
--- ✅ REJOIN BUTTON: Rejoin in denselben Server
-Settings:CreateButton({
-    Name = "Rejoin Same Server",
-    Description = "Rejoins the exact same server you were in.",
-    Callback = function()
-        local countdown = 5
 
-        for i = countdown, 1, -1 do
-            PizzaHub:Notification({
-                Title = "Rejoin in " .. i .. " seconds",
-                Content = "Rejoining the same server...",
-                Icon = "notifications_active",
-                ImageSource = "Material"
-            })
-            task.wait(1)
-        end
 
-        -- Kick mit Hinweis
-        LocalPlayer:Kick("Rejoining the same server...")
-
-        -- GUI Titel setzen (optional kosmetisch)
-        local success, gui = pcall(function()
-            return game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
-        end)
-        if success and gui then
-            gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
-        end
-
-        task.wait(0.5)
-
-        -- Rejoin zum exakt gleichen Server (mit JobId)
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-    end
-})
 
 -- ✅ SERVER HOP BUTTON: Suche neuen Server (nicht denselben)
 Settings:CreateButton({
