@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "11.0.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -69,7 +69,21 @@ local Traget = Window:CreateTab({
     Icon = "radar",
     ImageSource = "Material",
     ShowTitle = true
-}) 
+})
+
+Traget:CreateButton({
+    Name = "Test Button",
+    Description = "Button to test if the Traget tab shows",
+    Callback = function()
+        PizzaHub:Notification({
+            Title = "Success",
+            Content = "Traget tab is working!",
+            Icon = "check_circle",
+            ImageSource = "Material"
+        })
+    end
+})
+
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
