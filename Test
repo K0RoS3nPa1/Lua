@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "2.0.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -452,7 +452,7 @@ Traget:CreateToggle({
 	Callback = function(enabled)
 		getgenv().nhekee = enabled
 
-		-- Nur einmal starten
+		-- Uproot trees in background thread
 		if not getgenv().treeUprootThread then
 			getgenv().treeUprootThread = task.spawn(function()
 				while true do
@@ -474,6 +474,7 @@ Traget:CreateToggle({
 			end)
 		end
 
+		-- Fling tree parts at the selected player
 		if enabled then
 			task.spawn(function()
 				local Players = game:GetService("Players")
@@ -484,38 +485,48 @@ Traget:CreateToggle({
 
 					local selectedName = getgenv().SelectedPlayer
 					local targetPlayer = selectedName and Players:FindFirstChild(selectedName)
-					local hrp = targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+					local torso = targetPlayer
+						and targetPlayer.Character
+						and (targetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetPlayer.Character:FindFirstChild("Torso"))
 
-					if not hrp then continue end
+					if not torso then continue end
 
 					for _, part in ipairs(workspace:GetDescendants()) do
 						if (part:IsA("BasePart") or part:IsA("UnionOperation"))
 							and not part.Anchored
-							and not part:IsDescendantOf(LocalPlayer.Character) then
+							and not part:IsDescendantOf(LocalPlayer.Character)
+							and (part.Name == "Tree" or part.Name == "DeadTree" or (part.Parent and part.Parent.Name == "Tree")) then
 
-							-- Clean up old movers
+							-- Ensure physics has real impact
+							part.CanCollide = true
+							part.Massless = false
+							pcall(function()
+								part:SetNetworkOwner(nil)
+							end)
+
+							-- Remove previous movers
 							for _, obj in ipairs(part:GetChildren()) do
-								if obj:IsA("BodyMover") then
+								if obj:IsA("BodyMover") or obj:IsA("BodyVelocity") or obj:IsA("BodyPosition") or obj:IsA("BodyAngularVelocity") then
 									obj:Destroy()
 								end
 							end
 
-							-- Richtungs-Vektor zum Spieler
-							local direction = (hrp.Position - part.Position).Unit
-							local velocity = direction * math.random(150, 250) + Vector3.new(0, 100, 0)
+							-- Fling direction and force
+							local direction = (torso.Position - part.Position).Unit
+							local flingPower = 200 -- Increase if needed
 
 							local bv = Instance.new("BodyVelocity")
-							bv.Velocity = velocity
+							bv.Velocity = direction * flingPower + Vector3.new(0, 100, 0)
 							bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
 							bv.P = 1e5
 							bv.Parent = part
 
 							local bav = Instance.new("BodyAngularVelocity")
 							bav.AngularVelocity = Vector3.new(
-								math.random(-20, 20),
-								math.random(-20, 20),
-								math.random(-20, 20)
-						 )
+								math.random(-100, 100),
+								math.random(-100, 100),
+								math.random(-100, 100)
+							)
 							bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
 							bav.P = 1e5
 							bav.Parent = part
@@ -525,7 +536,8 @@ Traget:CreateToggle({
 			end)
 		end
 	end
-}, "ToggleTreeFling")
+})
+
 
 
 
@@ -1277,7 +1289,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
