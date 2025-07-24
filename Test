@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -629,8 +629,8 @@ Traget:CreateButton({
 })
 
 Traget:CreateToggle({
-	Name = "Spam Snowballs",
-	Description = "Wirft kontinuierlich Snowballs auf das gewählte Ziel",
+	Name = "Spam Snowballs (mit Duplikaten)",
+	Description = "Spamt duplizierte Snowballs auf das gewählte Ziel",
 	CurrentValue = false,
 
 	Callback = function(Value)
@@ -639,6 +639,7 @@ Traget:CreateToggle({
 		local Players = game:GetService("Players")
 		local ReplicatedStorage = game:GetService("ReplicatedStorage")
 		local LocalPlayer = Players.LocalPlayer
+		local PlayerChannel = ReplicatedStorage:WaitForChild("PlayerChannel")
 		local Utility = require(ReplicatedStorage:WaitForChild("Library")):Load("Utility")
 
 		local function getTargetPosition()
@@ -653,7 +654,7 @@ Traget:CreateToggle({
 			return Vector3.new(0, 50, 0)
 		end
 
-		-- Blockiere das Entfernen von Gear durch den Server
+		-- Blockiere "RemoveGear"
 		local oldSendData = Utility.SendData
 		Utility.SendData = function(self, action, ...)
 			if action == "RemoveGear" then return end
@@ -672,31 +673,41 @@ Traget:CreateToggle({
 						continue
 					end
 
-					-- Fordere konstant neue Snowballs an
-					for i = 1, 3 do
-						ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185)
-						task.wait(0.05)
-					end
+					-- Fordere einen neuen Snowball an
+					PlayerChannel:FireServer("GiveItem", 19328185, false)
+					task.wait(0.25)
 
-					task.wait(0.2)
+					local original = backpack:FindFirstChild("Snowball")
+					if original and original:FindFirstChild("Clicked") then
+						-- Dupliziere das Tool mehrmals
+						local duplicates = {}
+						for i = 1, 5 do
+							local clone = original:Clone()
+							clone.Parent = backpack
+							table.insert(duplicates, clone)
+							task.wait(0.05)
+						end
 
-					-- Alle Snowballs verwenden
-					for _, tool in ipairs(backpack:GetChildren()) do
-						if not getgenv().SnowballThrowingEnabled then break end
-						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							local clicked = tool:FindFirstChild("Clicked")
+						-- Werfe alle duplizierten Snowballs aufs Ziel
+						for _, snowball in ipairs(duplicates) do
+							if not getgenv().SnowballThrowingEnabled then break end
+							local clicked = snowball:FindFirstChild("Clicked")
 							if clicked then
 								pcall(function()
-									humanoid:EquipTool(tool)
-									task.wait(0.1)
+									humanoid:EquipTool(snowball)
+									task.wait(0.05)
 									clicked:FireServer(getTargetPosition())
 								end)
-								task.wait(0.15)
 							end
+							snowball:Destroy()
+							task.wait(0.1)
 						end
+
+						-- Entferne auch das Original
+						original:Destroy()
 					end
 
-					task.wait(0.1)
+					task.wait(0.35)
 				end
 			end)
 		else
@@ -704,6 +715,8 @@ Traget:CreateToggle({
 		end
 	end
 })
+
+
 
 -- Wenn Zielspieler das Spiel verlässt
 Players.PlayerRemoving:Connect(function(leavingPlayer)
