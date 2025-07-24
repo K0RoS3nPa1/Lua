@@ -70,6 +70,7 @@ local Traget = Window:CreateTab({
     ImageSource = "Material",
     ShowTitle = true
 }) 
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -966,7 +967,7 @@ local Settings = Window:CreateTab({
 })
 
 
-settings:CreateButton({
+Settings:CreateButton({
 	Name = "Rejoin",
 	Description = "Rejoins the game",
 	Callback = function()
@@ -1013,4 +1014,3 @@ local Theme = Window:CreateTab({
 	ShowTitle = true
 })
 Theme:BuildThemeSection()
-
