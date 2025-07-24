@@ -443,102 +443,97 @@ Traget:CreateToggle({
 	end
 }, "ToggleFlingPlayer")
 
-
 Traget:CreateToggle({
-	Name = "Tree Fling",
-	Description = "Uproots trees and flings them toward the selected player",
-	CurrentValue = false,
+    Name = "Tree Fling",
+    Description = "Clones trees and flings them toward the selected player without teleporting",
+    CurrentValue = false,
+    Flag = "ToggleTreeFling",
 
-	Callback = function(enabled)
-		getgenv().nhekee = enabled
+    Callback = function(enabled)
+        getgenv().treeFlingEnabled = enabled
 
-		-- Uproot trees in background thread
-		if not getgenv().treeUprootThread then
-			getgenv().treeUprootThread = task.spawn(function()
-				while true do
-					task.wait(0.5)
-					if getgenv().nhekee then
-						pcall(function()
-							local treesFolder = workspace:FindFirstChild("Trees")
-							local uprootRemote = workspace:FindFirstChild("Main") and workspace.Main:FindFirstChild("UprootTree")
-							if not treesFolder or not uprootRemote then return end
+        if enabled then
+            PizzaHub:Notification({
+                Title = "Tree Fling",
+                Content = "Tree fling enabled!",
+                Icon = "check_circle",
+                ImageSource = "Material"
+            })
 
-							for _, tree in ipairs(treesFolder:GetDescendants()) do
-								if tree.Name == "Tree" or tree.Name == "DeadTree" then
-									uprootRemote:FireServer(tree)
-								end
-							end
-						end)
-					end
-				end
-			end)
-		end
+            local Players = game:GetService("Players")
+            local workspace = game:GetService("Workspace")
+            local LocalPlayer = Players.LocalPlayer
 
-		-- Fling tree parts at the selected player
-		if enabled then
-			task.spawn(function()
-				local Players = game:GetService("Players")
-				local LocalPlayer = Players.LocalPlayer
+            getgenv().treeFlingThread = task.spawn(function()
+                while getgenv().treeFlingEnabled do
+                    task.wait(1) -- alle 1 Sekunde
 
-				while getgenv().nhekee do
-					task.wait(1)
+                    local selectedName = getgenv().SelectedPlayer
+                    local targetPlayer = selectedName and Players:FindFirstChild(selectedName)
+                    if not targetPlayer or not targetPlayer.Character then continue end
 
-					local selectedName = getgenv().SelectedPlayer
-					local targetPlayer = selectedName and Players:FindFirstChild(selectedName)
-					local torso = targetPlayer
-						and targetPlayer.Character
-						and (targetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetPlayer.Character:FindFirstChild("Torso"))
+                    local torso = targetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetPlayer.Character:FindFirstChild("Torso")
+                    if not torso then continue end
 
-					if not torso then continue end
+                    local treesFolder = workspace:FindFirstChild("Trees")
+                    if not treesFolder then continue end
 
-					for _, part in ipairs(workspace:GetDescendants()) do
-						if (part:IsA("BasePart") or part:IsA("UnionOperation"))
-							and not part.Anchored
-							and not part:IsDescendantOf(LocalPlayer.Character)
-							and (part.Name == "Tree" or part.Name == "DeadTree" or (part.Parent and part.Parent.Name == "Tree")) then
+                    for _, tree in ipairs(treesFolder:GetChildren()) do
+                        if tree:IsA("Model") and tree.PrimaryPart then
+                            -- Baum klonen
+                            local clone = tree:Clone()
+                            clone.Parent = workspace
+                            clone:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                            clone.PrimaryPart.Anchored = false
 
-							-- Ensure physics has real impact
-							part.CanCollide = true
-							part.Massless = false
-							pcall(function()
-								part:SetNetworkOwner(nil)
-							end)
+                            -- BodyPosition zum Ziel
+                            local bp = Instance.new("BodyPosition")
+                            bp.Position = torso.Position + Vector3.new(0, 3, 0)
+                            bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                            bp.P = 1e5
+                            bp.Parent = clone.PrimaryPart
 
-							-- Remove previous movers
-							for _, obj in ipairs(part:GetChildren()) do
-								if obj:IsA("BodyMover") or obj:IsA("BodyVelocity") or obj:IsA("BodyPosition") or obj:IsA("BodyAngularVelocity") then
-									obj:Destroy()
-								end
-							end
+                            -- BodyVelocity für extra Speed
+                            local direction = (torso.Position - clone.PrimaryPart.Position).Unit
+                            local bv = Instance.new("BodyVelocity")
+                            bv.Velocity = direction * 100 + Vector3.new(0, 50, 0)
+                            bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                            bv.Parent = clone.PrimaryPart
 
-							-- Fling direction and force
-							local direction = (torso.Position - part.Position).Unit
-							local flingPower = 200 -- Increase if needed
+                            -- BodyAngularVelocity für Rotation
+                            local bav = Instance.new("BodyAngularVelocity")
+                            bav.AngularVelocity = Vector3.new(
+                                math.random(-50, 50),
+                                math.random(-50, 50),
+                                math.random(-50, 50)
+                            )
+                            bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+                            bav.Parent = clone.PrimaryPart
 
-							local bv = Instance.new("BodyVelocity")
-							bv.Velocity = direction * flingPower + Vector3.new(0, 100, 0)
-							bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-							bv.P = 1e5
-							bv.Parent = part
+                            -- Nach 5 Sekunden den Klon löschen
+                            task.delay(5, function()
+                                if clone then
+                                    clone:Destroy()
+                                end
+                            end)
 
-							local bav = Instance.new("BodyAngularVelocity")
-							bav.AngularVelocity = Vector3.new(
-								math.random(-100, 100),
-								math.random(-100, 100),
-								math.random(-100, 100)
-							)
-							bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-							bav.P = 1e5
-							bav.Parent = part
-						end
-					end
-				end
-			end)
-		end
-	end
+                            task.wait(0.2) -- kleine Pause pro Baum
+                        end
+                    end
+                end
+            end)
+
+        else
+            getgenv().treeFlingEnabled = false
+            PizzaHub:Notification({
+                Title = "Tree Fling",
+                Content = "Tree fling disabled.",
+                Icon = "info",
+                ImageSource = "Material"
+            })
+        end
+    end,
 })
-
-
 
 
 local viewPlayerEnabled = false
@@ -1289,6 +1284,8 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
 
 
 
