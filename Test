@@ -187,8 +187,6 @@ Traget:CreateButton({
 	end
 })
 
-
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
@@ -242,7 +240,6 @@ Traget:CreateToggle({
 			local hrp = character:FindFirstChild("HumanoidRootPart")
 			if not hrp then return end
 
-			-- Vorbereitung der Körperteile
 			for _, part in ipairs(character:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
@@ -252,11 +249,15 @@ Traget:CreateToggle({
 				end
 			end
 
-			-- Drehkraft
+			if currentFling then
+				currentFling:Destroy()
+				currentFling = nil
+			end
+
 			local bav = Instance.new("BodyAngularVelocity")
 			bav.Name = "FlingForce"
-			bav.AngularVelocity = Vector3.new(100000, 100000, 100000) -- starke Rotation auf allen Achsen
-			bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+			bav.AngularVelocity = Vector3.new(0, 2000, 0) -- Rotationsgeschwindigkeit anpassen
+			bav.MaxTorque = Vector3.new(0, math.huge, 0)
 			bav.P = math.huge
 			bav.Parent = hrp
 			currentFling = bav
@@ -273,16 +274,23 @@ Traget:CreateToggle({
 				end)
 			end
 
-			if followConnection then followConnection:Disconnect() end
+			if followConnection then
+				followConnection:Disconnect()
+				followConnection = nil
+			end
+
 			followConnection = RunService.Heartbeat:Connect(function()
 				local target = getTargetPlayer()
-				if target and target.Character and hrp then
-					local targetPart = target.Character:FindFirstChild("HumanoidRootPart")
-					if targetPart then
-						-- Position leicht seitlich setzen für mehr Kontakt
-						hrp.CFrame = targetPart.CFrame * CFrame.new(1, 0, 0)
-						-- Gleichzeitig Velocity setzen, um Druck zu erzeugen
-						hrp.Velocity = Vector3.new(50, 50, 50)
+				if target and target.Character then
+					local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+					if targetHRP and hrp then
+						-- Nicht CFrame setzen, sondern Bewegung per Velocity
+						local direction = (targetHRP.Position - hrp.Position).unit
+						hrp.Velocity = direction * 50 + Vector3.new(0, 30, 0) -- Drück nach vorne und leicht nach oben
+
+						-- Zusätzlich Position nur minimal anpassen, um Kollisionskontakt sicherzustellen
+						local offset = Vector3.new(0, 0, -1)
+						hrp.CFrame = CFrame.new(targetHRP.Position + offset)
 					end
 				end
 			end)
@@ -325,6 +333,7 @@ Traget:CreateToggle({
 		end
 	end
 })
+
 
 
 
