@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.01.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -242,20 +242,20 @@ Traget:CreateToggle({
 			local hrp = character:FindFirstChild("HumanoidRootPart")
 			if not hrp then return end
 
-			-- Character parts vorbereiten
+			-- Vorbereitung der Körperteile
 			for _, part in ipairs(character:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
-					part.CanCollide = true      -- wichtig für Fling
-					part.Massless = false       -- wichtig für Fling
+					part.CanCollide = true
+					part.Massless = false
 					part.Velocity = Vector3.zero
 				end
 			end
 
-			-- Dreh-Kraft
+			-- Drehkraft
 			local bav = Instance.new("BodyAngularVelocity")
 			bav.Name = "FlingForce"
-			bav.AngularVelocity = Vector3.new(50000, 99999, 50000)  -- Rotation auf allen Achsen
+			bav.AngularVelocity = Vector3.new(100000, 100000, 100000) -- starke Rotation auf allen Achsen
 			bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
 			bav.P = math.huge
 			bav.Parent = hrp
@@ -279,7 +279,10 @@ Traget:CreateToggle({
 				if target and target.Character and hrp then
 					local targetPart = target.Character:FindFirstChild("HumanoidRootPart")
 					if targetPart then
-						hrp.CFrame = targetPart.CFrame * CFrame.new(0, -1, 0)  -- Körpernähe für Kontakt
+						-- Position leicht seitlich setzen für mehr Kontakt
+						hrp.CFrame = targetPart.CFrame * CFrame.new(1, 0, 0)
+						-- Gleichzeitig Velocity setzen, um Druck zu erzeugen
+						hrp.Velocity = Vector3.new(50, 50, 50)
 					end
 				end
 			end)
@@ -301,6 +304,7 @@ Traget:CreateToggle({
 						part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
 						part.CanCollide = true
 						part.Massless = false
+						part.Velocity = Vector3.zero
 					end
 				end
 			end
@@ -321,6 +325,7 @@ Traget:CreateToggle({
 		end
 	end
 })
+
 
 
 
