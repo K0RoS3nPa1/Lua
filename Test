@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -665,10 +665,10 @@ Traget:CreateToggle({
             if targetPlayer and targetPlayer.Character then
                 local torso = targetPlayer.Character:FindFirstChild("UpperTorso") or targetPlayer.Character:FindFirstChild("Torso")
                 if torso then
-                    return torso.Position
+                    return torso.Position + Vector3.new(0, 2, 0) -- etwas höher für bessere Treffgenauigkeit
                 end
             end
-            return Vector3.new(0, 50, 0)
+            return nil
         end
 
         if Value then
@@ -683,51 +683,50 @@ Traget:CreateToggle({
                         continue
                     end
 
-                    -- Versuche, einige Snowballs zu bekommen
-                    for i = 1, 5 do
+                    -- Versuche 3 Snowballs zu bekommen
+                    for i = 1, 3 do
                         ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
-                        task.wait(0.03)
+                        task.wait(0.05)
                     end
 
-                    -- Sofortige Prüfung auf Tools
-                    local tools = {}
+                    task.wait(0.3) -- kurz warten, bis Items angekommen sind
+
                     for _, tool in ipairs(backpack:GetChildren()) do
+                        if not getgenv().SnowballThrowingEnabled then break end
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            table.insert(tools, tool)
+                            local clicked = tool:FindFirstChild("Clicked")
+                            if not clicked then continue end
+
+                            -- Ausrüsten
+                            local equipped = pcall(function()
+                                humanoid:EquipTool(tool)
+                            end)
+
+                            if equipped then
+                                task.wait(0.25) -- kleine Verzögerung für Stabilität
+
+                                local targetPos = getTargetPosition()
+                                if targetPos then
+                                    -- Wurf ausführen
+                                    pcall(function()
+                                        clicked:FireServer(targetPos)
+                                    end)
+
+                                    task.wait(0.3) -- Zeit lassen, bis Wurf "durchgeht"
+                                end
+                            end
+
+                            -- Tool danach entfernen
+                            pcall(function()
+                                tool:Destroy()
+                            end)
+
+                            task.wait(0.2)
                         end
                     end
 
-                    -- Wenn keine Snowballs da sind, nächste Runde
-                    if #tools == 0 then
-                        task.wait(0.3)
-                        continue
-                    end
-
-                    -- Nacheinander Snowballs werfen
-                    for _, tool in ipairs(tools) do
-                        if not getgenv().SnowballThrowingEnabled then break end
-
-                        local clicked = tool:FindFirstChild("Clicked")
-                        if not clicked then continue end
-
-                        pcall(function()
-                            humanoid:EquipTool(tool)
-                        end)
-                        task.wait(0.1)
-
-                        pcall(function()
-                            clicked:FireServer(getTargetPosition())
-                        end)
-                        task.wait(0.15)
-
-                        -- Entfernen, um Duplikate zu verhindern
-                        tool:Destroy()
-                        task.wait(0.1)
-                    end
-
-                    task.wait(0.1)
+                    task.wait(0.2)
                 end
-
                 print("[SnowballSpam] Beendet.")
             end)
         else
@@ -735,6 +734,7 @@ Traget:CreateToggle({
         end
     end
 })
+
 
 
 
