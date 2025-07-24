@@ -66,23 +66,11 @@ local main = Window:CreateTab({
 
 local Traget = Window:CreateTab({
     Name = "Traget",
-    Icon = "radar",
+    Icon = "code",
     ImageSource = "Material",
     ShowTitle = true
 })
 
-Traget:CreateButton({
-    Name = "Test Button",
-    Description = "Button to test if the Traget tab shows",
-    Callback = function()
-        PizzaHub:Notification({
-            Title = "Success",
-            Content = "Traget tab is working!",
-            Icon = "check_circle",
-            ImageSource = "Material"
-        })
-    end
-})
 
 
 local Players = game:GetService("Players")
