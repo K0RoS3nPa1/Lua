@@ -56,152 +56,17 @@ Window:CreateHomeTab({
 
 local main = Window:CreateTab({
 	Name = "main",
-	Icon = "view_in_ar",
+	Icon = "home",
 	ImageSource = "Material",
 	ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
 
-main:CreateButton({
-	Name = "Kick Manager & Take Seat",
-	Description = "Kicks the Manager using car TP and teleports you to the Manager seat",
-	Callback = function()
-		local Players = game:GetService("Players")
-		local Teams = game:GetService("Teams")
-		local Workspace = game:GetService("Workspace")
-		local LocalPlayer = Players.LocalPlayer
 
-		local removeModel = Workspace:FindFirstChild("RemoveManager")
-		local chairModel = Workspace:FindFirstChild("ManagerChair")
-
-		if not removeModel or not chairModel then
-			return PizzaHub:Notification({
-				Title = "Error",
-				Content = "RemoveManager or ManagerChair model not found.",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-		end
-
-		local function getModelPosition(model)
-			if model.PrimaryPart then
-				return model.PrimaryPart.Position
-			end
-			for _, part in ipairs(model:GetDescendants()) do
-				if part:IsA("BasePart") then
-					return part.Position
-				end
-			end
-			return nil
-		end
-
-		local kickPosition = getModelPosition(removeModel)
-		local chairPosition = getModelPosition(chairModel)
-
-		if not kickPosition or not chairPosition then
-			return PizzaHub:Notification({
-				Title = "Error",
-				Content = "Model positions could not be determined.",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-		end
-
-		-- Find player with "Manager" job
-		local managerTeam = Teams:FindFirstChild("Manager")
-		if not managerTeam then
-			return PizzaHub:Notification({
-				Title = "Error",
-				Content = "Team 'Manager' not found.",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-		end
-
-		local manager = nil
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player.Team == managerTeam then
-				manager = player
-				break
-			end
-		end
-
-		if not manager or not manager.Character or not manager.Character:FindFirstChild("HumanoidRootPart") then
-			return PizzaHub:Notification({
-				Title = "Error",
-				Content = "No manager currently in the game.",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-		end
-
-		-- Find usable vehicle
-		local car, seat, hoodseat
-		local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-		local originalCFrame = localHRP and localHRP.CFrame
-
-		for _, v in ipairs(workspace:GetDescendants()) do
-			if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
-				local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
-				if v.Occupant == humanoid then
-					car = v.Parent
-					seat = v
-					hoodseat = v.Parent.HoodSeat
-					break
-				elseif not v.Occupant then
-					car = v.Parent
-					seat = v
-					hoodseat = v.Parent.HoodSeat
-					if localHRP then localHRP.CFrame = v.CFrame end
-					break
-				end
-			end
-		end
-
-		if not car or not seat or not hoodseat then
-			return PizzaHub:Notification({
-				Title = "Error",
-				Content = "No suitable car found.",
-				Icon = "error",
-				ImageSource = "Material"
-			})
-		end
-
-		-- Wait until you are in seat
-		repeat task.wait() until seat.Occupant == LocalPlayer.Character:FindFirstChild("Humanoid")
-
-		-- Offset calculation
-		local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
-
-		-- Move manager to kick position
-		local managerHRP = manager.Character:FindFirstChild("HumanoidRootPart")
-		repeat
-			task.wait()
-			car:SetPrimaryPartCFrame(managerHRP.CFrame * offset:Inverse())
-		until hoodseat.Occupant == manager.Character:FindFirstChild("Humanoid")
-
-		repeat
-			task.wait()
-			car:SetPrimaryPartCFrame(CFrame.new(kickPosition) * offset:Inverse())
-		until hoodseat.Occupant == nil
-
-		-- Teleport you to ManagerChair
-		if localHRP and chairPosition then
-			localHRP.CFrame = CFrame.new(chairPosition)
-		end
-
-		PizzaHub:Notification({
-			Title = "Done",
-			Content = "Manager removed and seat taken!",
-			Icon = "check_circle",
-			ImageSource = "Material"
-		})
-	end
-})
 
 
 local Traget = Window:CreateTab({
     Name = "Traget",
-    Icon = "code",
+    Icon = "sensor_occupied",
     ImageSource = "Material",
     ShowTitle = true
 }) 
@@ -923,7 +788,7 @@ Traget:CreateToggle({
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
-    Icon = "code",
+    Icon = "move_location",
     ImageSource = "Material",
     ShowTitle = true
 })
@@ -1047,7 +912,7 @@ Teleports:CreateDropdown({
 
 local Scripts = Window:CreateTab({
     Name = "Scripts",
-    Icon = "code",
+    Icon = "folder_data",
     ImageSource = "Material",
     ShowTitle = true
 })
@@ -1092,13 +957,6 @@ Scripts:CreateButton({
 })
 
 
-local Theme = Window:CreateTab({
-	Name = "Theme",
-	Icon = "palette",
-	ImageSource = "Material",
-	ShowTitle = true
-})
-Theme:BuildThemeSection()
 
 local Settings = Window:CreateTab({
 	Name = "Settings",
@@ -1107,10 +965,52 @@ local Settings = Window:CreateTab({
 	ShowTitle = true
 })
 
+
+settings:CreateButton({
+	Name = "Rejoin",
+	Description = "Rejoins the game",
+	Callback = function()
+	local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Notification Loop: Zeigt "Rejoining..." mehrmals an bevor gekickt wird
+local function notifyAndRejoin()
+    for i = 1, 5 do -- 5 Mal anzeigen (kannst du anpassen)
+        PizzaHub:Notification({
+            Title = "Rejoining",
+            Content = "Du wirst in " .. (6 - i) .. " Sekunden neu verbinden...",
+            Icon = "autorenew",
+            ImageSource = "Material"
+        })
+        task.wait(1)
+    end
+
+    -- Kick mit angepasster Meldung
+    LocalPlayer:Kick("\nRejoining...")
+
+    -- Nach Kick anpassen des ErrorPrompt Texts (wird nur sichtbar nach Kick)
+    local gui = game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay")
+    local errorPrompt = gui:WaitForChild("ErrorPrompt")
+    errorPrompt.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
+end
+
+-- Starte die Notification und Rejoin-Sequenz
+notifyAndRejoin()
+
+	end
+})
+
+
+
 Settings:BuildConfigSection()
 
 
 
-
-
+local Theme = Window:CreateTab({
+	Name = "Theme",
+	Icon = "palette",
+	ImageSource = "Material",
+	ShowTitle = true
+})
+Theme:BuildThemeSection()
 
