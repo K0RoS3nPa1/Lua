@@ -478,39 +478,43 @@ Traget:CreateToggle({
 
 
 
-Traget:AddButton("Goto Player", function()
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-    local selectedName = getgenv().SelectedPlayer
+Traget:CreateButton({
+	Name = "Goto Player",
+	Description = "Teleport to the selected player",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+		local selectedName = getgenv().SelectedPlayer
 
-    if not selectedName or selectedName == "" then
-        warn("No player selected!")
-        return
-    end
+		if not selectedName or selectedName == "" then
+			warn("No player selected!")
+			return
+		end
 
-    local TargetPlayer = Players:FindFirstChild(selectedName)
-    if not TargetPlayer then
-        warn("Player not found!")
-        return
-    end
+		local TargetPlayer = Players:FindFirstChild(selectedName)
+		if not TargetPlayer then
+			warn("Player not found!")
+			return
+		end
 
-    local TargetCharacter = TargetPlayer.Character
-    local LocalCharacter = LocalPlayer.Character
+		local TargetCharacter = TargetPlayer.Character
+		local LocalCharacter = LocalPlayer.Character
 
-    if TargetCharacter and LocalCharacter then
-        local TargetHRP = TargetCharacter:FindFirstChild("HumanoidRootPart")
-        local LocalHRP = LocalCharacter:FindFirstChild("HumanoidRootPart")
+		if TargetCharacter and LocalCharacter then
+			local TargetHRP = TargetCharacter:FindFirstChild("HumanoidRootPart")
+			local LocalHRP = LocalCharacter:FindFirstChild("HumanoidRootPart")
 
-        if TargetHRP and LocalHRP then
-            LocalHRP.CFrame = TargetHRP.CFrame
-            print("Teleported to player: " .. selectedName)
-        else
-            warn("HumanoidRootPart missing!")
-        end
-    else
-        warn("One of the characters is missing!")
-    end
-end)
+			if TargetHRP and LocalHRP then
+				LocalHRP.CFrame = TargetHRP.CFrame
+				print("Teleported to player: " .. selectedName)
+			else
+				warn("HumanoidRootPart missing!")
+			end
+		else
+			warn("One of the characters is missing!")
+		end
+	end
+})
 
 
 Traget:CreateButton({
@@ -1104,6 +1108,7 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
 
 
 
