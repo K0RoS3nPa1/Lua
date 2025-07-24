@@ -1,4 +1,9 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
+local version = "1.10.0"
+
+local Window = PizzaHub:CreateWindow({
+	Name = "Pizza Hub", -- This Is Title Of Your Window
+	Subtitle = version, -- A Gray Subtitle next To the main title.local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
 local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
@@ -368,7 +373,7 @@ Traget:CreateToggle({
 			stopFling()
 		end
 	end
-}, "ToggleFlingPlayer")
+})
 
 
 
@@ -730,42 +735,37 @@ Traget:CreateButton({
 
 Traget:CreateToggle({
 	Name = "Spam Snowballs",
-	Description = "Continuously throws all snowballs at the selected player.",
+	Description = "Wirft kontinuierlich Snowballs auf das gewählte Ziel",
 	CurrentValue = false,
-	Flag = "ToggleSpamSnowballs",
 
-	Callback = function(enabled)
-		getgenv().SnowballThrowingEnabled = enabled
+	Callback = function(Value)
+		getgenv().SnowballThrowingEnabled = Value
 
 		local Players = game:GetService("Players")
 		local ReplicatedStorage = game:GetService("ReplicatedStorage")
 		local LocalPlayer = Players.LocalPlayer
+		local Utility = require(ReplicatedStorage:WaitForChild("Library")):Load("Utility")
 
 		local function getTargetPosition()
-			local selectedName = getgenv().SelectedPlayer
-			local target = selectedName and Players:FindFirstChild(selectedName)
-			local torso = target and target.Character and (
-				target.Character:FindFirstChild("UpperTorso") or
-				target.Character:FindFirstChild("Torso")
-			)
-			return torso and torso.Position or Vector3.new(0, 50, 0)
-		end
-
-		local function giveSnowballs(amount)
-			for i = 1, amount do
-				ReplicatedStorage:WaitForChild("PlayerChannel"):FireServer("GiveItem", 19328185)
-				task.wait(0.05)
+			local targetName = getgenv().SelectedPlayer
+			local targetPlayer = Players:FindFirstChild(targetName or "")
+			if targetPlayer and targetPlayer.Character then
+				local torso = targetPlayer.Character:FindFirstChild("UpperTorso") or targetPlayer.Character:FindFirstChild("Torso")
+				if torso then
+					return torso.Position
+				end
 			end
+			return Vector3.new(0, 50, 0)
 		end
 
-		if enabled then
-			PizzaHub:Notification({
-				Title = "Snowball Spam",
-				Content = "Snowball spam enabled!",
-				Icon = "check_circle",
-				ImageSource = "Material"
-			})
+		-- Unterdrücke "RemoveGear"-SendData vom Server
+		local oldSendData = Utility.SendData
+		Utility.SendData = function(_, action, ...)
+			if action == "RemoveGear" then return end
+			return oldSendData(_, action, ...)
+		end
 
+		if Value then
 			getgenv().SnowballThread = task.spawn(function()
 				while getgenv().SnowballThrowingEnabled do
 					local backpack = LocalPlayer:FindFirstChild("Backpack")
@@ -776,61 +776,66 @@ Traget:CreateToggle({
 						continue
 					end
 
-					-- Snowballs auffüllen, falls zu wenig da sind
-					if #backpack:GetChildren() < 3 then
-						giveSnowballs(7)
-						task.wait(0.3)
+					-- Entferne alte oder kaputte Snowballs
+					for _, tool in ipairs(backpack:GetChildren()) do
+						if tool:IsA("Tool") and tool.Name == "Snowball" then
+							tool:Destroy()
+						end
+					end
+					for _, tool in ipairs(character:GetChildren()) do
+						if tool:IsA("Tool") and tool.Name == "Snowball" then
+							tool:Destroy()
+						end
 					end
 
-					-- Snowballs aus Backpack werfen
+					-- Frische Snowballs anfordern
+					for i = 1, 7 do
+						ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185)
+						task.wait(0.05)
+					end
+
+					-- Warten bis genug da sind
+					repeat task.wait(0.1) until #(backpack:GetChildren()) >= 7
+
+					-- Snowballs ausrüsten und werfen
 					for _, tool in ipairs(backpack:GetChildren()) do
 						if not getgenv().SnowballThrowingEnabled then break end
 						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							-- Snowball ausrüsten über Humanoid
+							local clicked = tool:FindFirstChild("Clicked")
+							if not clicked then
+								tool:Destroy()
+								continue
+							end
+
+							-- Richtig ausrüsten
 							pcall(function()
 								humanoid:EquipTool(tool)
 							end)
 							task.wait(0.1)
 
-							local clickEvent = tool:FindFirstChild("Clicked")
-							if clickEvent and clickEvent:IsA("RemoteEvent") then
-								pcall(function()
-									clickEvent:FireServer(getTargetPosition())
-								end)
-							else
-								pcall(function()
-									tool:Activate()
-								end)
-							end
+							-- Werfen
+							pcall(function()
+								clicked:FireServer(getTargetPosition())
+							end)
+							task.wait(0.15)
 
-							task.wait(0.1)
-
-							-- Wieder zurück ins Backpack (optional, falls Tool hängen bleibt)
-							if tool.Parent == character then
-								tool.Parent = backpack
-							end
-
+							-- Tool zerstören (nicht zurücklegen)
+							tool:Destroy()
 							task.wait(0.1)
 						end
 					end
 
-					task.wait(0.1)
+					task.wait(0.2)
 				end
 
-				print("Snowball spam stopped.")
+				print("[SnowballSpam] Snowball-Loop gestoppt.")
 			end)
-
 		else
 			getgenv().SnowballThrowingEnabled = false
-			PizzaHub:Notification({
-				Title = "Snowball Spam",
-				Content = "Snowball spam disabled.",
-				Icon = "info",
-				ImageSource = "Material"
-			})
 		end
-	end,
+	end
 })
+
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
