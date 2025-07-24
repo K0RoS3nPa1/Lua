@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.02.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -205,80 +205,83 @@ local Traget = Window:CreateTab({
     ImageSource = "Material",
     ShowTitle = true
 }) 
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local selectedPlayerInput -- Referenz für später
-local confirmedPlayerName -- Wird durch Tool gesetzt
+local selectedPlayerInput -- Referenz für das Eingabefeld
+local confirmedPlayerName
 
--- Eingabefeld (Input) zum manuellen Namenstypen
+-- Dynamisches Eingabefeld (Input)
 selectedPlayerInput = Traget:CreateInput({
 	Name = "Spielername eingeben",
-	Placeholder = "z. B. CoolPlayer123",
-	RemoveTextAfterFocusLost = false,
-	Callback = function(input)
-		getgenv().SelectedPlayer = input
-		confirmedPlayerName = input
+	Description = "Gib den Namen eines Spielers ein oder klicke mit dem Tool",
+	PlaceholderText = "z. B. CoolPlayer123",
+	CurrentValue = "",
+	Numeric = false,
+	MaxCharacters = nil,
+	Enter = false,
+	Callback = function(text)
+		getgenv().SelectedPlayer = text
+		confirmedPlayerName = text
 
 		PizzaHub:Notification({
 			Title = "Spieler ausgewählt",
+			Content = "Du hast ausgewählt: " .. tostring(text),
 			Icon = "person",
-			ImageSource = "Material",
-			Content = "Du hast ausgewählt: " .. tostring(input),
+			ImageSource = "Material"
 		})
 	end
-})
+}, "SelectedPlayerInput") -- ⚠️ Flag: muss eindeutig sein
 
--- Button zum Tool-Spawnen für Mausklick-Auswahl
+-- Tool zur Spieler-Auswahl via Mausklick
 Traget:CreateButton({
-	Name = "Spieler per Mausklick auswählen",
-	Description = "Erstellt ein Tool, mit dem du einen Spieler per Klick auswählen kannst.",
+	Name = "Spieler per Klick auswählen",
+	Description = "Klicke einen Spieler an, um ihn automatisch auszuwählen",
 	Callback = function()
-		local tool = Instance.new("Tool")
-		tool.Name = "Spieler-Auswahl"
-		tool.RequiresHandle = false
-		tool.CanBeDropped = false
-		tool.ToolTip = "Klicke einen Spieler an"
+		local selectTool = Instance.new("Tool")
+		selectTool.Name = "Spieler-Auswahl"
+		selectTool.RequiresHandle = false
+		selectTool.CanBeDropped = false
+		selectTool.ToolTip = "Spieler per Klick auswählen"
 
-		-- Tool aktiviert
-		tool.Equipped:Connect(function()
+		selectTool.Equipped:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
 			mouse.Button1Down:Connect(function()
 				local target = mouse.Target
-				if target then
-					local model = target:FindFirstAncestorOfClass("Model")
-					if model and Players:FindFirstChild(model.Name) then
-						local selectedName = model.Name
-						getgenv().SelectedPlayer = selectedName
-						confirmedPlayerName = selectedName
+				if not target then return end
 
-						-- Eingabefeld visuell aktualisieren
-						if selectedPlayerInput and selectedPlayerInput.Set then
-							selectedPlayerInput:Set(selectedName)
-						end
+				local model = target:FindFirstAncestorOfClass("Model")
+				if model and Players:FindFirstChild(model.Name) then
+					local selectedName = model.Name
+					getgenv().SelectedPlayer = selectedName
+					confirmedPlayerName = selectedName
 
-						PizzaHub:Notification({
-							Title = "Spieler ausgewählt",
-							Icon = "person_search",
-							ImageSource = "Material",
-							Content = "Du hast " .. selectedName .. " ausgewählt.",
-						})
-					else
-						PizzaHub:Notification({
-							Title = "Kein Spieler",
-							Icon = "person_off",
-							ImageSource = "Material",
-							Content = "Bitte klicke auf einen gültigen Spieler.",
-						})
+					-- Setze den Input-Wert visuell
+					if selectedPlayerInput and selectedPlayerInput.Set then
+						selectedPlayerInput:Set(selectedName)
 					end
+
+					PizzaHub:Notification({
+						Title = "Spieler ausgewählt",
+						Content = "Du hast " .. selectedName .. " ausgewählt.",
+						Icon = "check_circle",
+						ImageSource = "Material"
+					})
+				else
+					PizzaHub:Notification({
+						Title = "Kein Spieler",
+						Content = "Bitte klicke direkt auf einen Spieler.",
+						Icon = "person_off",
+						ImageSource = "Material"
+					})
 				end
 			end)
 		end)
 
-		tool.Parent = LocalPlayer.Backpack
+		selectTool.Parent = LocalPlayer.Backpack
 	end
 })
+
 
 
 
@@ -1267,6 +1270,7 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
 
 
 
