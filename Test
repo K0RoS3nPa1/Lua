@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.02"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -319,7 +319,24 @@ Traget:CreateButton({
 	end
 })
 
+-- Notify if selected player leaves the game
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+	if getgenv().SelectedPlayer == leavingPlayer.Name then
+		PizzaHub:Notification({
+			Title = "Player Left",
+			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
+			Icon = "person_off",
+			ImageSource = "Material"
+		})
+		-- Optional: Auswahl zurücksetzen
+		getgenv().SelectedPlayer = nil
+		confirmedPlayerName = nil
 
+		if selectedPlayerInput and selectedPlayerInput.Set then
+			selectedPlayerInput:Set("")
+		end
+	end
+end)
 
 
 local Players = game:GetService("Players")
@@ -459,329 +476,79 @@ Traget:CreateToggle({
 	end
 }, "ToggleFlingPlayer")
 
-Traget:CreateToggle({
-	Name = "Tree Fling",
-	CurrentValue = false,
-	Flag = "ToggleTreeFling",
-	Callback = function(Enabled)
-		local Players = game:GetService("Players")
-		local Workspace = game:GetService("Workspace")
-		local LocalPlayer = Players.LocalPlayer
-
-		getgenv().treeFlingEnabled = Enabled
-
-		-- Uproot Thread (Bäume ausreißen)
-		if Enabled and not getgenv().treeUprootThread then
-			getgenv().treeUprootThread = coroutine.create(function()
-				while getgenv().treeFlingEnabled do
-					task.wait(0.5)
-					pcall(function()
-						local treesFolder = Workspace:FindFirstChild("Trees")
-						local uprootRemote = Workspace:FindFirstChild("Main") and Workspace.Main:FindFirstChild("UprootTree")
-						if not treesFolder or not uprootRemote then return end
-
-						for _, descendant in pairs(treesFolder:GetDescendants()) do
-							if descendant.Name == "Tree" or descendant.Name == "DeadTree" then
-								uprootRemote:FireServer(descendant)
-							end
-						end
-					end)
-				end
-				getgenv().treeUprootThread = nil
-			end)
-			coroutine.resume(getgenv().treeUprootThread)
-		end
-
-		-- Tree Fling Thread
-		if Enabled then
-			if getgenv().treeFlingThread and coroutine.status(getgenv().treeFlingThread) ~= "dead" then
-				-- Läuft bereits
-				return
-			end
-
-			getgenv().treeFlingThread = coroutine.create(function()
-				while getgenv().treeFlingEnabled do
-					task.wait(1)
-
-					local selectedName = getgenv().SelectedPlayer
-					local target = selectedName and Players:FindFirstChild(selectedName)
-					local torso = target and target.Character and (
-						target.Character:FindFirstChild("HumanoidRootPart") or
-						target.Character:FindFirstChild("Torso")
-					)
-
-					if not torso then continue end -- ! FIX folgt unten
-
-					local treesFolder = Workspace:FindFirstChild("Trees")
-					if not treesFolder then
-						warn("[Tree Fling] No Trees folder found")
-						continue
-					end
-
-					local char = LocalPlayer.Character
-					local root = char and char:FindFirstChild("HumanoidRootPart")
-					if not root then continue end
-
-					for _, tree in ipairs(treesFolder:GetChildren()) do
-						if tree:IsA("Model") and tree.PrimaryPart then
-							-- Klonen
-							local clone = tree:Clone()
-							clone.Parent = Workspace
-							clone:SetPrimaryPartCFrame(root.CFrame * CFrame.new(0, 5, 0))
-							clone.PrimaryPart.Anchored = false
-
-							-- Alte BodyMover entfernen
-							for _, child in ipairs(clone.PrimaryPart:GetChildren()) do
-								if child:IsA("BodyMover") then
-									child:Destroy()
-								end
-							end
-
-							-- BodyPosition (leicht über dem Torso)
-							local bp = Instance.new("BodyPosition")
-							bp.Position = torso.Position + Vector3.new(0, 3, 0)
-							bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-							bp.P = 1e5
-							bp.Parent = clone.PrimaryPart
-
-							-- BodyVelocity (Fling Richtung Spieler)
-							local direction = (torso.Position - clone.PrimaryPart.Position).Unit
-							local bv = Instance.new("BodyVelocity")
-							bv.Velocity = direction * 150 + Vector3.new(0, 50, 0)
-							bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-							bv.Parent = clone.PrimaryPart
-
-							-- BodyAngularVelocity (Drehen)
-							local bav = Instance.new("BodyAngularVelocity")
-							bav.AngularVelocity = Vector3.new(
-								math.random(-50, 50),
-								math.random(-50, 50),
-								math.random(-50, 50)
-							)
-							bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-							bav.Parent = clone.PrimaryPart
-
-							-- Auto-Despawn nach 5s
-							task.delay(5, function()
-								if clone and clone.Parent then
-									clone:Destroy()
-								end
-							end)
-
-							task.wait(0.3) -- Kurze Pause zwischen Bäumen
-						end
-					end
-				end
-
-				getgenv().treeFlingThread = nil
-			end)
-			coroutine.resume(getgenv().treeFlingThread)
-
-		else
-			-- Ausschalten
-			getgenv().treeFlingEnabled = false
-			-- Threads stoppen automatisch durch Flag
-			-- setze Referenzen auf nil
-			getgenv().treeFlingThread = nil
-			getgenv().treeUprootThread = nil
-		end
-	end,
-})
 
 
-local viewPlayerEnabled = false
-local viewPlayerConnection = nil
+Traget:AddButton("Goto Player", function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local selectedName = getgenv().SelectedPlayer
 
-Traget:CreateToggle({
-	Name = "View Player",
-	Description = "Focuses the camera on the selected player",
-	CurrentValue = false,
+    if not selectedName or selectedName == "" then
+        warn("No player selected!")
+        return
+    end
 
-	Callback = function(enabled)
-		viewPlayerEnabled = enabled
-		local Players = game:GetService("Players")
-		local LocalPlayer = Players.LocalPlayer
-		local selectedName = getgenv().SelectedPlayer
-		local camera = workspace.CurrentCamera
+    local TargetPlayer = Players:FindFirstChild(selectedName)
+    if not TargetPlayer then
+        warn("Player not found!")
+        return
+    end
 
-		-- Disconnect any previous camera-follow connection
-		if viewPlayerConnection then
-			viewPlayerConnection:Disconnect()
-			viewPlayerConnection = nil
-		end
+    local TargetCharacter = TargetPlayer.Character
+    local LocalCharacter = LocalPlayer.Character
 
-		if enabled then
-			if not selectedName or selectedName == "" then
-				PizzaHub:Notification({
-					Title = "Action Failed",
-					Content = "No player selected!",
-					Icon = "error",
-					ImageSource = "Material"
-				})
-				return
-			end
+    if TargetCharacter and LocalCharacter then
+        local TargetHRP = TargetCharacter:FindFirstChild("HumanoidRootPart")
+        local LocalHRP = LocalCharacter:FindFirstChild("HumanoidRootPart")
 
-			local TargetPlayer = Players:FindFirstChild(selectedName)
-			if not TargetPlayer then
-				PizzaHub:Notification({
-					Title = "Action Failed",
-					Content = "Player '" .. selectedName .. "' not found!",
-					Icon = "error",
-					ImageSource = "Material"
-				})
-				return
-			end
-
-			local function setCameraSubject()
-				if TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("Humanoid") then
-					camera.CameraSubject = TargetPlayer.Character.Humanoid
-					PizzaHub:Notification({
-						Title = "View Player",
-						Content = "Now viewing '" .. selectedName .. "'",
-						Icon = "visibility",
-						ImageSource = "Material"
-					})
-				else
-					warn("Target character or humanoid not found!")
-				end
-			end
-
-			setCameraSubject()
-			viewPlayerConnection = TargetPlayer.CharacterAdded:Connect(setCameraSubject)
-
-		else
-			-- Reset camera to your own character
-			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-				camera.CameraSubject = LocalPlayer.Character.Humanoid
-			end
-		end
-	end,
-}, "ToggleViewPlayer")
+        if TargetHRP and LocalHRP then
+            LocalHRP.CFrame = TargetHRP.CFrame
+            print("Teleported to player: " .. selectedName)
+        else
+            warn("HumanoidRootPart missing!")
+        end
+    else
+        warn("One of the characters is missing!")
+    end
+end)
 
 
 Traget:CreateButton({
-    Name = "Bring Player To You",
-    Description = "Brings the selected player into your vehicle and returns you to your original position.",
+	Name = "Goto Player",
+	Description = "Teleport to the selected player",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+		local selectedName = getgenv().SelectedPlayer
 
-    Callback = function()
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        local selectedName = getgenv().SelectedPlayer
+		if not selectedName or selectedName == "" then
+			warn("No player selected!")
+			return
+		end
 
-        if not selectedName or selectedName == "" then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "No player selected!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
+		local TargetPlayer = Players:FindFirstChild(selectedName)
+		if not TargetPlayer then
+			warn("Player not found!")
+			return
+		end
 
-        local TargetPlayer = Players:FindFirstChild(selectedName)
-        if not TargetPlayer then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "Player '" .. selectedName .. "' not found!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
+		local TargetCharacter = TargetPlayer.Character
+		local LocalCharacter = LocalPlayer.Character
 
-        local character = LocalPlayer.Character
-        if not character then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "Local player character not found!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
+		if TargetCharacter and LocalCharacter then
+			local TargetHRP = TargetCharacter:FindFirstChild("HumanoidRootPart")
+			local LocalHRP = LocalCharacter:FindFirstChild("HumanoidRootPart")
 
-        local hrp = character:FindFirstChild("HumanoidRootPart")
-        if not hrp then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "Local player HumanoidRootPart not found!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
-
-        -- Speichere deine aktuelle Position
-        local originalCFrame = hrp.CFrame
-
-        -- Suche Fahrzeug mit freiem Sitz oder in dem du sitzt
-        local car, seat, hoodseat
-        for _, v in ipairs(workspace:GetDescendants()) do
-            if v:IsA("VehicleSeat") then
-                if v.Occupant == character.Humanoid and v.Parent:FindFirstChild("HoodSeat") then
-                    car = v.Parent
-                    seat = v
-                    hoodseat = v.Parent:FindFirstChild("HoodSeat")
-                    break
-                elseif v.Occupant == nil and v.Parent:FindFirstChild("HoodSeat") then
-                    car = v.Parent
-                    seat = v
-                    hoodseat = v.Parent:FindFirstChild("HoodSeat")
-                    -- Setze dich in den freien Sitz
-                    character.HumanoidRootPart.CFrame = v.CFrame
-                    break
-                end
-            end
-        end
-
-        if not car or not seat or not hoodseat then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "No suitable vehicle with free seat found!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
-
-        -- Warte bis du sitzt
-        repeat task.wait() until seat.Occupant == character.Humanoid
-
-        -- Offset zwischen Auto Hauptteil und HoodSeat
-        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
-
-        -- Teleportiere das Auto mit dir zum Zielspieler
-        local targetHRP = TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not targetHRP then
-            PizzaHub:Notification({
-                Title = "Action Failed",
-                Content = "Target player HumanoidRootPart not found!",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-            return
-        end
-
-        car:SetPrimaryPartCFrame(targetHRP.CFrame * offset:Inverse())
-        -- Warte einen Moment, bis das Auto ankommt
-        task.wait(0.5)
-
-        -- Warte, bis der Spieler in den HoodSeat einsteigt
-        repeat task.wait() until hoodseat.Occupant == TargetPlayer.Character.Humanoid
-
-        -- Teleportiere dich zurück an die ursprüngliche Position mit dem Auto
-        car:SetPrimaryPartCFrame(originalCFrame * offset:Inverse())
-
-        -- Warte bis du wieder sitzt
-        repeat task.wait() until seat.Occupant == character.Humanoid
-
-        PizzaHub:Notification({
-            Title = "Success",
-            Content = "Player '" .. selectedName .. "' was brought to you and you returned to your position!",
-            Icon = "check_circle",
-            ImageSource = "Material"
-        })
-    end,
+			if TargetHRP and LocalHRP then
+				LocalHRP.CFrame = TargetHRP.CFrame
+				print("Teleported to player: " .. selectedName)
+			else
+				warn("HumanoidRootPart missing!")
+			end
+		else
+			warn("One of the characters is missing!")
+		end
+	end
 })
 
 
