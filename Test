@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "2.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -444,7 +444,6 @@ Traget:CreateToggle({
 }, "ToggleFlingPlayer")
 
 
-
 Traget:CreateToggle({
 	Name = "Tree Fling",
 	Description = "Uproots trees and flings them toward the selected player",
@@ -453,7 +452,7 @@ Traget:CreateToggle({
 	Callback = function(enabled)
 		getgenv().nhekee = enabled
 
-		-- Startet den Baum-Ausreiß-Thread nur einmal
+		-- Nur einmal starten
 		if not getgenv().treeUprootThread then
 			getgenv().treeUprootThread = task.spawn(function()
 				while true do
@@ -464,7 +463,6 @@ Traget:CreateToggle({
 							local uprootRemote = workspace:FindFirstChild("Main") and workspace.Main:FindFirstChild("UprootTree")
 							if not treesFolder or not uprootRemote then return end
 
-							-- Alle Bäume ausreißen (Tree oder DeadTree)
 							for _, tree in ipairs(treesFolder:GetDescendants()) do
 								if tree.Name == "Tree" or tree.Name == "DeadTree" then
 									uprootRemote:FireServer(tree)
@@ -476,7 +474,6 @@ Traget:CreateToggle({
 			end)
 		end
 
-		-- Teile der Bäume werden zum ausgewählten Spieler geflogen
 		if enabled then
 			task.spawn(function()
 				local Players = game:GetService("Players")
@@ -487,49 +484,38 @@ Traget:CreateToggle({
 
 					local selectedName = getgenv().SelectedPlayer
 					local targetPlayer = selectedName and Players:FindFirstChild(selectedName)
-					local torso = targetPlayer
-						and targetPlayer.Character
-						and (targetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetPlayer.Character:FindFirstChild("Torso"))
+					local hrp = targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-					if not torso then continue end
+					if not hrp then continue end
 
 					for _, part in ipairs(workspace:GetDescendants()) do
 						if (part:IsA("BasePart") or part:IsA("UnionOperation"))
 							and not part.Anchored
 							and not part:IsDescendantOf(LocalPlayer.Character) then
 
-							-- Alte Bewegungsobjekte entfernen
+							-- Clean up old movers
 							for _, obj in ipairs(part:GetChildren()) do
 								if obj:IsA("BodyMover") then
 									obj:Destroy()
 								end
 							end
 
-							-- Teil zum Spieler ziehen
-							local bp = Instance.new("BodyPosition")
-							bp.Position = torso.Position + Vector3.new(0, 3, 0)
-							bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-							bp.P = 1e5
-							bp.Parent = part
+							-- Richtungs-Vektor zum Spieler
+							local direction = (hrp.Position - part.Position).Unit
+							local velocity = direction * math.random(150, 250) + Vector3.new(0, 100, 0)
 
-							-- Zufällige Geschwindigkeit (für herumfliegen)
 							local bv = Instance.new("BodyVelocity")
-							bv.Velocity = Vector3.new(
-								math.random(-150, 150),
-								math.random(100, 200),
-								math.random(-150, 150)
-							)
+							bv.Velocity = velocity
 							bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
 							bv.P = 1e5
 							bv.Parent = part
 
-							-- Rotation hinzufügen (explosionsartig)
 							local bav = Instance.new("BodyAngularVelocity")
 							bav.AngularVelocity = Vector3.new(
-								math.random(-50, 50),
-								math.random(-50, 50),
-								math.random(-50, 50)
-							)
+								math.random(-20, 20),
+								math.random(-20, 20),
+								math.random(-20, 20)
+						 )
 							bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
 							bav.P = 1e5
 							bav.Parent = part
@@ -1291,6 +1277,9 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
+
+
+
 
 
 
