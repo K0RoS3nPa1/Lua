@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.01.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -189,7 +189,6 @@ Traget:CreateButton({
 
 
 
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
@@ -218,7 +217,7 @@ Traget:CreateToggle({
 			if noclipConnection then noclipConnection:Disconnect() end
 			noclipConnection = RunService.Stepped:Connect(function()
 				if flinging and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
-					localPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(11) -- Noclip state
+					localPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(11)
 				end
 			end)
 		end
@@ -243,28 +242,27 @@ Traget:CreateToggle({
 			local hrp = character:FindFirstChild("HumanoidRootPart")
 			if not hrp then return end
 
-			-- Prepare character parts for flinging
+			-- Character parts vorbereiten
 			for _, part in ipairs(character:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
-					part.CanCollide = false
-					part.Massless = true
+					part.CanCollide = true      -- wichtig für Fling
+					part.Massless = false       -- wichtig für Fling
 					part.Velocity = Vector3.zero
 				end
 			end
 
-			-- Create BodyAngularVelocity to spin character
+			-- Dreh-Kraft
 			local bav = Instance.new("BodyAngularVelocity")
 			bav.Name = "FlingForce"
-			bav.AngularVelocity = Vector3.new(0, 99999, 0)
-			bav.MaxTorque = Vector3.new(0, math.huge, 0)
+			bav.AngularVelocity = Vector3.new(50000, 99999, 50000)  -- Rotation auf allen Achsen
+			bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
 			bav.P = math.huge
 			bav.Parent = hrp
 			currentFling = bav
 
 			enableNoclip()
 
-			-- Restart fling on death
 			if flingDied then flingDied:Disconnect() end
 			local humanoid = character:FindFirstChildOfClass("Humanoid")
 			if humanoid then
@@ -275,16 +273,13 @@ Traget:CreateToggle({
 				end)
 			end
 
-			-- Follow the target player
 			if followConnection then followConnection:Disconnect() end
 			followConnection = RunService.Heartbeat:Connect(function()
 				local target = getTargetPlayer()
 				if target and target.Character and hrp then
-					local targetPart = target.Character:FindFirstChild("UpperTorso")
-						or target.Character:FindFirstChild("Torso")
-						or target.Character:FindFirstChild("HumanoidRootPart")
+					local targetPart = target.Character:FindFirstChild("HumanoidRootPart")
 					if targetPart then
-						hrp.CFrame = targetPart.CFrame * CFrame.new(0, 2.5, 0)
+						hrp.CFrame = targetPart.CFrame * CFrame.new(0, -1, 0)  -- Körpernähe für Kontakt
 					end
 				end
 			end)
@@ -326,7 +321,6 @@ Traget:CreateToggle({
 		end
 	end
 })
-
 
 
 
