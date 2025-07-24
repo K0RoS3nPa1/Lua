@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.01.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -267,42 +267,58 @@ Traget:CreateButton({
 		tool.CanBeDropped = false
 		tool.ToolTip = "Click a player"
 
+		local mouseConnection
+
 		tool.Equipped:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
-			mouse.Button1Down:Connect(function()
+
+			if mouseConnection then
+				mouseConnection:Disconnect()
+			end
+
+			mouseConnection = mouse.Button1Down:Connect(function()
 				local target = mouse.Target
 				if not target then return end
 
 				local model = target:FindFirstAncestorOfClass("Model")
-				if model and Players:FindFirstChild(model.Name) then
-					local selected = model
-					getgenv().SelectedPlayer = selected.Name
-					confirmedPlayerName = selected.Name
+				if model then
+					local player = Players:GetPlayerFromCharacter(model)
+					if player then
+						getgenv().SelectedPlayer = player.Name
+						confirmedPlayerName = player.Name
 
-					if selectedPlayerInput and selectedPlayerInput.Set then
-						selectedPlayerInput:Set(selected.Name)
+						PizzaHub:Notification({
+							Title = "Player Selected",
+							Content = "You selected: " .. player.DisplayName .. " (" .. player.Name .. ")",
+							Icon = "check_circle",
+							ImageSource = "Material"
+						})
+
+						tool:Destroy()
+					else
+						PizzaHub:Notification({
+							Title = "No Player Found",
+							Content = "You clicked a model, but it's not a player.",
+							Icon = "person_off",
+							ImageSource = "Material"
+						})
 					end
-
-					PizzaHub:Notification({
-						Title = "Player Selected",
-						Content = "You selected: " .. selected.DisplayName .. " (" .. selected.Name .. ")",
-						Icon = "check_circle",
-						ImageSource = "Material"
-					})
-				else
-					PizzaHub:Notification({
-						Title = "No Player Found",
-						Content = "Please click directly on a player’s character.",
-						Icon = "person_off",
-						ImageSource = "Material"
-					})
 				end
 			end)
 		end)
 
 		tool.Parent = LocalPlayer.Backpack
+
+		-- Optional: Tool direkt ausrüsten
+		task.delay(0.1, function()
+			local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid:EquipTool(tool)
+			end
+		end)
 	end
 })
+
 
 
 
