@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.20.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -538,7 +538,6 @@ end)
 Traget:CreateButton({
     Name = "Bring Player To You",
     Description = "Brings the selected player into your vehicle.",
-
     Callback = function()
         local Players = game:GetService("Players")
         local LocalPlayer = Players.LocalPlayer
@@ -589,7 +588,10 @@ Traget:CreateButton({
             return
         end
 
-        -- Find a vehicle seat you are in or an empty one and move you into it
+        -- ✅ SPEICHERE DEINE AKTUELLE POSITION
+        local originalCFrame = hrp.CFrame
+
+        -- Fahrzeug suchen
         for _, v in ipairs(workspace:GetDescendants()) do
             if v:IsA("VehicleSeat") and v.Occupant == character.Humanoid then
                 if v.Parent:FindFirstChild("HoodSeat") then
@@ -619,40 +621,35 @@ Traget:CreateButton({
             return
         end
 
-        -- Wait until local player is seated
+        -- Warte bis du sitzt
         repeat task.wait() until seat.Occupant == character.Humanoid
 
-        -- Calculate offset between car primary part and hood seat
         local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
 
-        -- Move car to your position until the target player sits on hood seat
+        -- Bring Fahrzeug zu dir
         repeat
             task.wait()
             car:SetPrimaryPartCFrame(hrp.CFrame * offset)
         until hoodseat.Occupant == player.Character.Humanoid
 
-        -- Optional: (kann weg, da Spieler ja jetzt im Fahrzeug sitzt)
-        --[[
-        local targetHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if targetHRP then
-            targetHRP.CFrame = hrp.CFrame
-        end
-        ]]
-
-        -- Keep vehicle synced to target player until they leave the hood seat
+        -- Sync während Spieler sitzt
         repeat
             task.wait()
             car:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * offset:Inverse())
         until hoodseat.Occupant == nil
 
+        -- ✅ ZURÜCK ZU DEINER POSITION
+        hrp.CFrame = originalCFrame
+
         PizzaHub:Notification({
             Title = "Success",
-            Content = "Player '" .. selectedName .. "' was brought to you!",
+            Content = "Player '" .. selectedName .. "' was brought to you and you're back to your original spot!",
             Icon = "check_circle",
             ImageSource = "Material"
         })
     end,
 })
+
 
 
 Traget:CreateButton({
