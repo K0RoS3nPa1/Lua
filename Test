@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.02.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -205,72 +205,80 @@ local Traget = Window:CreateTab({
     ImageSource = "Material",
     ShowTitle = true
 }) 
+
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-local dropdownFlag = "DropdownSelectedPlayer"
-local currentSelection = "None"
-local dropdownElement = nil
-local Tab = Traget -- Dein Tab-Objekt
+local selectedPlayerInput -- Referenz für später
+local confirmedPlayerName -- Wird durch Tool gesetzt
 
-local function getPlayerOptions()
-    local options = {"None"}
-    for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(options, player.Name .. " (" .. player.DisplayName .. ")")
-    end
-    return options
-end
+-- Eingabefeld (Input) zum manuellen Namenstypen
+selectedPlayerInput = Traget:CreateInput({
+	Name = "Spielername eingeben",
+	Placeholder = "z. B. CoolPlayer123",
+	RemoveTextAfterFocusLost = false,
+	Callback = function(input)
+		getgenv().SelectedPlayer = input
+		confirmedPlayerName = input
 
-local function getPlayerNameFromOption(option)
-    if option == "None" then return nil end
-    return option:match("^(.-) %(")
-end
+		PizzaHub:Notification({
+			Title = "Spieler ausgewählt",
+			Icon = "person",
+			ImageSource = "Material",
+			Content = "Du hast ausgewählt: " .. tostring(input),
+		})
+	end
+})
 
-local function createOrUpdateDropdown()
-    -- Versuche, existierendes Dropdown zu entfernen
-    if dropdownElement and Tab.RemoveElement then
-        Tab:RemoveElement(dropdownFlag)
-        dropdownElement = nil
-    end
+-- Button zum Tool-Spawnen für Mausklick-Auswahl
+Traget:CreateButton({
+	Name = "Spieler per Mausklick auswählen",
+	Description = "Erstellt ein Tool, mit dem du einen Spieler per Klick auswählen kannst.",
+	Callback = function()
+		local tool = Instance.new("Tool")
+		tool.Name = "Spieler-Auswahl"
+		tool.RequiresHandle = false
+		tool.CanBeDropped = false
+		tool.ToolTip = "Klicke einen Spieler an"
 
-    dropdownElement = Tab:CreateDropdown({
-        Name = "Select Player",
-        Description = "Select a player from the dropdown",
-        Options = getPlayerOptions(),
-        CurrentOption = {currentSelection},
-        MultipleOptions = false,
-        Callback = function(option)
-            currentSelection = option
-            local playerName = getPlayerNameFromOption(option)
-            getgenv().SelectedPlayer = playerName
-            if playerName then
-                PizzaHub:Notification({
-                    Title = "Player Selected",
-                    Icon = "person_search",
-                    ImageSource = "Material",
-                    Content = "Selected player: " .. option
-                })
-            else
-                PizzaHub:Notification({
-                    Title = "Player Selection",
-                    Icon = "person_off",
-                    ImageSource = "Material",
-                    Content = "No player selected."
-                })
-            end
-        end
-    }, dropdownFlag)
-end
+		-- Tool aktiviert
+		tool.Equipped:Connect(function()
+			local mouse = LocalPlayer:GetMouse()
+			mouse.Button1Down:Connect(function()
+				local target = mouse.Target
+				if target then
+					local model = target:FindFirstAncestorOfClass("Model")
+					if model and Players:FindFirstChild(model.Name) then
+						local selectedName = model.Name
+						getgenv().SelectedPlayer = selectedName
+						confirmedPlayerName = selectedName
 
--- Erstmaliges Erstellen
-createOrUpdateDropdown()
+						-- Eingabefeld visuell aktualisieren
+						if selectedPlayerInput and selectedPlayerInput.Set then
+							selectedPlayerInput:Set(selectedName)
+						end
 
--- Events verbinden, damit Dropdown aktualisiert wird
-Players.PlayerAdded:Connect(function()
-    task.defer(createOrUpdateDropdown)
-end)
-Players.PlayerRemoving:Connect(function()
-    task.defer(createOrUpdateDropdown)
-end)
+						PizzaHub:Notification({
+							Title = "Spieler ausgewählt",
+							Icon = "person_search",
+							ImageSource = "Material",
+							Content = "Du hast " .. selectedName .. " ausgewählt.",
+						})
+					else
+						PizzaHub:Notification({
+							Title = "Kein Spieler",
+							Icon = "person_off",
+							ImageSource = "Material",
+							Content = "Bitte klicke auf einen gültigen Spieler.",
+						})
+					end
+				end
+			end)
+		end)
+
+		tool.Parent = LocalPlayer.Backpack
+	end
+})
 
 
 
@@ -1259,7 +1267,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
