@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.02"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -56,8 +56,8 @@ Window:CreateHomeTab({
 
 local main = Window:CreateTab({
 	Name = "main",
-	Icon = "home",
-	ImageSource = "Material",
+	Icon = "11347112419",
+	ImageSource = "Custom",
 	ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
 
@@ -66,8 +66,8 @@ local main = Window:CreateTab({
 
 local Traget = Window:CreateTab({
     Name = "Traget",
-    Icon = "code",
-    ImageSource = "Material",
+    Icon = "13557340550",
+    ImageSource = "Custom",
     ShowTitle = true
 })
 
@@ -791,8 +791,8 @@ Traget:CreateToggle({
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
-    Icon = "move_location",
-    ImageSource = "Material",
+    Icon = "129576243303339",
+    ImageSource = "Custom",
     ShowTitle = true
 })
 
@@ -915,8 +915,8 @@ Teleports:CreateDropdown({
 
 local Scripts = Window:CreateTab({
     Name = "Scripts",
-    Icon = "folder_data",
-    ImageSource = "Material",
+    Icon = "11570895484",
+    ImageSource = "Custom",
     ShowTitle = true
 })
 
