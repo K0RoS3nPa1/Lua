@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.01.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -208,43 +208,66 @@ local Traget = Window:CreateTab({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local selectedPlayerInput -- Referenz für das Eingabefeld
+local selectedPlayerInput -- reference to the input box
 local confirmedPlayerName
 
--- Dynamisches Eingabefeld (Input)
+-- Helper: Match typed input to a player (supports DisplayName, case-insensitive, partial)
+local function findMatchingPlayer(query)
+	query = query:lower()
+	for _, player in ipairs(Players:GetPlayers()) do
+		local name = player.Name:lower()
+		local display = player.DisplayName:lower()
+		if name:find(query, 1, true) or display:find(query, 1, true) then
+			return player
+		end
+	end
+	return nil
+end
+
+-- Input field
 selectedPlayerInput = Traget:CreateInput({
-	Name = "Spielername eingeben",
-	Description = "Gib den Namen eines Spielers ein oder klicke mit dem Tool",
-	PlaceholderText = "z. B. CoolPlayer123",
+	Name = "Enter Player Name",
+	Description = "Type a player’s username or display name, or click one",
+	PlaceholderText = "e.g. CoolPlayer123",
 	CurrentValue = "",
 	Numeric = false,
 	MaxCharacters = nil,
-	Enter = true,
+	Enter = false,
 	Callback = function(text)
-		getgenv().SelectedPlayer = text
-		confirmedPlayerName = text
+		local match = findMatchingPlayer(text)
+		if match then
+			getgenv().SelectedPlayer = match.Name
+			confirmedPlayerName = match.Name
 
-		PizzaHub:Notification({
-			Title = "Spieler ausgewählt",
-			Content = "Du hast ausgewählt: " .. tostring(text),
-			Icon = "person",
-			ImageSource = "Material"
-		})
+			PizzaHub:Notification({
+				Title = "Player Selected",
+				Content = "You selected: " .. match.DisplayName .. " (" .. match.Name .. ")",
+				Icon = "person",
+				ImageSource = "Material"
+			})
+		else
+			PizzaHub:Notification({
+				Title = "No Match",
+				Content = "No player found for: " .. text,
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
 	end
-}, "SelectedPlayerInput") -- ⚠️ Flag: muss eindeutig sein
+}, "SelectedPlayerInput") -- Flag must be unique
 
--- Tool zur Spieler-Auswahl via Mausklick
+-- Tool-based selection
 Traget:CreateButton({
-	Name = "Spieler per Klick auswählen",
-	Description = "Klicke einen Spieler an, um ihn automatisch auszuwählen",
+	Name = "Click Player to Select",
+	Description = "Click a player’s character to select them",
 	Callback = function()
-		local selectTool = Instance.new("Tool")
-		selectTool.Name = "Spieler-Auswahl"
-		selectTool.RequiresHandle = false
-		selectTool.CanBeDropped = false
-		selectTool.ToolTip = "Spieler per Klick auswählen"
+		local tool = Instance.new("Tool")
+		tool.Name = "Player Selector"
+		tool.RequiresHandle = false
+		tool.CanBeDropped = false
+		tool.ToolTip = "Click a player"
 
-		selectTool.Equipped:Connect(function()
+		tool.Equipped:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
 			mouse.Button1Down:Connect(function()
 				local target = mouse.Target
@@ -252,25 +275,24 @@ Traget:CreateButton({
 
 				local model = target:FindFirstAncestorOfClass("Model")
 				if model and Players:FindFirstChild(model.Name) then
-					local selectedName = model.Name
-					getgenv().SelectedPlayer = selectedName
-					confirmedPlayerName = selectedName
+					local selected = model
+					getgenv().SelectedPlayer = selected.Name
+					confirmedPlayerName = selected.Name
 
-					-- Setze den Input-Wert visuell
 					if selectedPlayerInput and selectedPlayerInput.Set then
-						selectedPlayerInput:Set(selectedName)
+						selectedPlayerInput:Set(selected.Name)
 					end
 
 					PizzaHub:Notification({
-						Title = "Spieler ausgewählt",
-						Content = "Du hast " .. selectedName .. " ausgewählt.",
+						Title = "Player Selected",
+						Content = "You selected: " .. selected.DisplayName .. " (" .. selected.Name .. ")",
 						Icon = "check_circle",
 						ImageSource = "Material"
 					})
 				else
 					PizzaHub:Notification({
-						Title = "Kein Spieler",
-						Content = "Bitte klicke direkt auf einen Spieler.",
+						Title = "No Player Found",
+						Content = "Please click directly on a player’s character.",
 						Icon = "person_off",
 						ImageSource = "Material"
 					})
@@ -278,10 +300,9 @@ Traget:CreateButton({
 			end)
 		end)
 
-		selectTool.Parent = LocalPlayer.Backpack
+		tool.Parent = LocalPlayer.Backpack
 	end
 })
-
 
 
 
@@ -1270,7 +1291,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
