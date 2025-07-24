@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "11.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -1055,6 +1055,33 @@ local Settings = Window:CreateTab({
 	ImageSource = "Material",
 	ShowTitle = true
 })
+
+Settings:CreateToggle({
+    Name = "Anti AFK",
+    Description = nil,
+    CurrentValue = true,
+    Callback = function(Value)
+        if Value then
+            -- Anti AFK aktivieren
+            getgenv().AntiAFKEnabled = true
+
+            -- Simple Anti-AFK Logik
+            spawn(function()
+                local VirtualUser = game:GetService("VirtualUser")
+                while getgenv().AntiAFKEnabled do
+                    -- Simuliere Mausklick (kann auch Tastatur sein)
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new())
+                    task.wait(60) -- alle 60 Sekunden aktiv bleiben
+                end
+            end)
+        else
+            -- Anti AFK deaktivieren
+            getgenv().AntiAFKEnabled = false
+        end
+    end
+}, "AntiAFKToggle")
+
 
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
