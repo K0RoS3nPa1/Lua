@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "11.0.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -56,7 +56,7 @@ Window:CreateHomeTab({
 
 local main = Window:CreateTab({
 	Name = "main",
-	Icon = "home",
+	Icon = "house",
 	ImageSource = "Material",
 	ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
@@ -66,7 +66,7 @@ local main = Window:CreateTab({
 
 local Traget = Window:CreateTab({
     Name = "Traget",
-    Icon = "manage_accounts",
+    Icon = "fullscreen_exit",
     ImageSource = "Material",
     ShowTitle = true
 })
@@ -742,8 +742,8 @@ Traget:CreateToggle({
 
 
 Traget:CreateToggle({
-    Name = "Spam 20 Snowballs (schnell & gleichzeitig)",
-    Description = "Klonet bis zu 20 Snowballs schnell und wirft alle auf einmal in der Nähe",
+    Name = "server lag",
+    Description = nil,
     CurrentValue = false,
 
     Callback = function(Value)
@@ -792,7 +792,7 @@ Traget:CreateToggle({
                     end
 
                     -- Sehr schnelles Klonen bis 20 erreicht sind
-                    while countSnowballs() < 200 and getgenv().SnowballThrowingEnabled do
+                    while countSnowballs() < 1000 and getgenv().SnowballThrowingEnabled do
                         ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
                         task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
                     end
@@ -879,7 +879,7 @@ end)
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
-    Icon = "control_camera",
+    Icon = "golf_course",
     ImageSource = "Material",
     ShowTitle = true
 })
