@@ -708,7 +708,7 @@ Traget:CreateToggle({
                             pcall(function()
                                 humanoid:EquipTool(tool)
                             end)
-                            task.wait(0.15)
+                            task.wait(0.3)
 
                             pcall(function()
                                 clicked:FireServer(targetPos)
