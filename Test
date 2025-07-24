@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.01.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -232,7 +232,7 @@ selectedPlayerInput = Traget:CreateInput({
 	CurrentValue = "",
 	Numeric = false,
 	MaxCharacters = nil,
-	Enter = false,
+	Enter = true,
 	Callback = function(text)
 		local match = findMatchingPlayer(text)
 		if match then
