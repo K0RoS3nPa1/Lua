@@ -219,7 +219,7 @@ selectedPlayerInput = Traget:CreateInput({
 	CurrentValue = "",
 	Numeric = false,
 	MaxCharacters = nil,
-	Enter = false,
+	Enter = true,
 	Callback = function(text)
 		getgenv().SelectedPlayer = text
 		confirmedPlayerName = text
@@ -1270,7 +1270,6 @@ local Settings = Window:CreateTab({
 })
 
 Settings:BuildConfigSection()
-
 
 
 
