@@ -665,7 +665,7 @@ Traget:CreateToggle({
             if targetPlayer and targetPlayer.Character then
                 local torso = targetPlayer.Character:FindFirstChild("UpperTorso") or targetPlayer.Character:FindFirstChild("Torso")
                 if torso then
-                    return torso.Position + Vector3.new(0, 2, 0) -- etwas höher für bessere Treffgenauigkeit
+                    return torso.Position + Vector3.new(0, 2, 0)
                 end
             end
             return nil
@@ -683,50 +683,61 @@ Traget:CreateToggle({
                         continue
                     end
 
-                    -- Versuche 3 Snowballs zu bekommen
+                    -- Fordere ein paar Snowballs an
                     for i = 1, 3 do
                         ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
                         task.wait(0.05)
                     end
 
-                    task.wait(0.3) -- kurz warten, bis Items angekommen sind
+                    task.wait(0.3)
 
+                    local tools = {}
                     for _, tool in ipairs(backpack:GetChildren()) do
-                        if not getgenv().SnowballThrowingEnabled then break end
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            local clicked = tool:FindFirstChild("Clicked")
-                            if not clicked then continue end
+                            table.insert(tools, tool)
+                        end
+                    end
 
-                            -- Ausrüsten
-                            local equipped = pcall(function()
-                                humanoid:EquipTool(tool)
-                            end)
+                    if #tools == 0 then
+                        task.wait(0.3)
+                        continue
+                    end
 
-                            if equipped then
-                                task.wait(0.25) -- kleine Verzögerung für Stabilität
+                    for _, tool in ipairs(tools) do
+                        if not getgenv().SnowballThrowingEnabled then break end
 
-                                local targetPos = getTargetPosition()
-                                if targetPos then
-                                    -- Wurf ausführen
-                                    pcall(function()
-                                        clicked:FireServer(targetPos)
-                                    end)
+                        local clicked = tool:FindFirstChild("Clicked")
+                        if not clicked then continue end
 
-                                    task.wait(0.3) -- Zeit lassen, bis Wurf "durchgeht"
-                                end
-                            end
+                        local equipped = pcall(function()
+                            humanoid:EquipTool(tool)
+                        end)
+                        task.wait(0.2)
 
-                            -- Tool danach entfernen
+                        local targetPos = getTargetPosition()
+                        if targetPos then
                             pcall(function()
-                                tool:Destroy()
+                                clicked:FireServer(targetPos)
                             end)
 
+                            -- Warten, bis Server den Wurf verarbeitet hat
+                            task.delay(0.35, function()
+                                if tool and tool.Parent then
+                                    pcall(function()
+                                        tool:Destroy()
+                                    end)
+                                end
+                            end)
+                        else
                             task.wait(0.2)
                         end
+
+                        task.wait(0.3)
                     end
 
                     task.wait(0.2)
                 end
+
                 print("[SnowballSpam] Beendet.")
             end)
         else
@@ -734,6 +745,7 @@ Traget:CreateToggle({
         end
     end
 })
+
 
 
 
