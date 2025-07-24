@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.10"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -653,77 +653,51 @@ Traget:CreateToggle({
 			return Vector3.new(0, 50, 0)
 		end
 
-		-- Unterdrücke "RemoveGear"-SendData vom Server
+		-- Blockiere das Entfernen von Gear durch den Server
 		local oldSendData = Utility.SendData
-		Utility.SendData = function(_, action, ...)
+		Utility.SendData = function(self, action, ...)
 			if action == "RemoveGear" then return end
-			return oldSendData(_, action, ...)
+			return oldSendData(self, action, ...)
 		end
 
 		if Value then
 			getgenv().SnowballThread = task.spawn(function()
 				while getgenv().SnowballThrowingEnabled do
-					local backpack = LocalPlayer:FindFirstChild("Backpack")
 					local character = LocalPlayer.Character
+					local backpack = LocalPlayer:FindFirstChild("Backpack")
 					local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-					if not backpack or not character or not humanoid then
+
+					if not character or not backpack or not humanoid then
 						task.wait(0.2)
 						continue
 					end
 
-					-- Entferne alte oder kaputte Snowballs
-					for _, tool in ipairs(backpack:GetChildren()) do
-						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							tool:Destroy()
-						end
-					end
-					for _, tool in ipairs(character:GetChildren()) do
-						if tool:IsA("Tool") and tool.Name == "Snowball" then
-							tool:Destroy()
-						end
-					end
-
-					-- Frische Snowballs anfordern
-					for i = 1, 7 do
+					-- Fordere konstant neue Snowballs an
+					for i = 1, 3 do
 						ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185)
 						task.wait(0.05)
 					end
 
-					-- Warten bis genug da sind
-					repeat task.wait(0.1) until #(backpack:GetChildren()) >= 7
+					task.wait(0.2)
 
-					-- Snowballs ausrüsten und werfen
+					-- Alle Snowballs verwenden
 					for _, tool in ipairs(backpack:GetChildren()) do
 						if not getgenv().SnowballThrowingEnabled then break end
 						if tool:IsA("Tool") and tool.Name == "Snowball" then
 							local clicked = tool:FindFirstChild("Clicked")
-							if not clicked then
-								tool:Destroy()
-								continue
+							if clicked then
+								pcall(function()
+									humanoid:EquipTool(tool)
+									task.wait(0.1)
+									clicked:FireServer(getTargetPosition())
+								end)
+								task.wait(0.15)
 							end
-
-							-- Richtig ausrüsten
-							pcall(function()
-								humanoid:EquipTool(tool)
-							end)
-							task.wait(0.1)
-
-							-- Werfen
-							pcall(function()
-								clicked:FireServer(getTargetPosition())
-							end)
-							task.wait(0.15)
-
-							-- Tool zerstören (nicht zurücklegen)
-							tool:Destroy()
-							task.wait(0.1)
 						end
 					end
 
-					task.wait(0.2)
+					task.wait(0.1)
 				end
-
-				print("[SnowballSpam] Snowball-Loop gestoppt.")
 			end)
 		else
 			getgenv().SnowballThrowingEnabled = false
