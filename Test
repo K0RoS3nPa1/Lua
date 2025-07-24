@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -648,8 +648,8 @@ Traget:CreateButton({
 })
 
 Traget:CreateToggle({
-    Name = "Spam Snowballs",
-    Description = "Wirft kontinuierlich Snowballs auf das gewählte Ziel",
+    Name = "Spam Snowballs (15x gleichzeitig)",
+    Description = "Klonet 15 Snowballs und wirft alle gleichzeitig auf den Zielspieler",
     CurrentValue = false,
 
     Callback = function(Value)
@@ -665,11 +665,24 @@ Traget:CreateToggle({
             if targetPlayer and targetPlayer.Character then
                 local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if root then
-                    -- Zielposition mit leichter Vorhersage, +2 Y für Trefferhöhe
-                    return root.Position + root.Velocity * 0.2 + Vector3.new(0, 2, 0)
+                    -- Zielposition mit leichter Vorhersage
+                    return root.Position + root.Velocity * 0.15 + Vector3.new(0, 2, 0)
                 end
             end
             return nil
+        end
+
+        local function countSnowballs()
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            local count = 0
+            if backpack then
+                for _, item in ipairs(backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name == "Snowball" then
+                        count += 1
+                    end
+                end
+            end
+            return count
         end
 
         if Value then
@@ -678,65 +691,55 @@ Traget:CreateToggle({
                     local backpack = LocalPlayer:FindFirstChild("Backpack")
                     local character = LocalPlayer.Character
                     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                    if not backpack or not character or not humanoid then
+
+                    if not backpack or not humanoid then
                         task.wait(0.2)
                         continue
                     end
 
-                    -- Snowballs anfordern
-                    for i = 1, 7 do
+                    -- Schnell klonen bis 15 erreicht
+                    while countSnowballs() < 15 and getgenv().SnowballThrowingEnabled do
                         ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
-                        task.wait(0.05)
+                        task.wait(0.015)
                     end
 
-                    -- Warten bis genug Snowballs im Rucksack sind
-                    repeat task.wait(0.1) until #backpack:GetChildren() >= 7
-
+                    -- Zielposition abrufen
                     local targetPos = getTargetPosition()
                     if not targetPos then
-                        task.wait(1)
+                        task.wait(0.5)
                         continue
                     end
 
-                    -- Alle Snowballs ausrüsten und werfen mit Delay zwischen den Würfen
+                    -- Alle Snowballs auf einmal ausrüsten, werfen und löschen
+                    local tools = {}
                     for _, tool in ipairs(backpack:GetChildren()) do
-                        if not getgenv().SnowballThrowingEnabled then break end
                         if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            local clicked = tool:FindFirstChild("Clicked")
-                            if not clicked then
-                                continue
-                            end
-
-                            pcall(function()
-                                humanoid:EquipTool(tool)
-                            end)
-                            task.wait(0.3) -- Kurzes Warten nach Ausrüsten
-
-                            pcall(function()
-                                clicked:FireServer(targetPos)
-                            end)
-
-                            -- WICHTIG: Hier das Delay auf 0.8 Sekunden erhöhen,
-                            -- damit der Server den Wurf verarbeiten kann
-                            task.wait(0.8)
-
-                            -- Snowball löschen, damit ein neuer geholt wird
-                            tool:Destroy()
-
-                            -- Kleines zusätzliches Warten, falls nötig
-                            task.wait(0.1)
+                            table.insert(tools, tool)
                         end
                     end
 
-                    task.wait(0.2)
+                    for _, tool in ipairs(tools) do
+                        if not getgenv().SnowballThrowingEnabled then break end
+                        local clicked = tool:FindFirstChild("Clicked")
+                        if clicked then
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                                clicked:FireServer(targetPos)
+                            end)
+                        end
+                        tool:Destroy()
+                    end
+
+                    -- Kurze Pause vor nächstem Zyklus
+                    task.wait(0.3)
                 end
-                print("[SnowballSpam] Snowball-Loop gestoppt.")
             end)
         else
             getgenv().SnowballThrowingEnabled = false
         end
     end
 })
+
 
 Traget:CreateToggle({
     Name = "Spam 20 Snowballs (schnell & gleichzeitig)",
@@ -789,7 +792,7 @@ Traget:CreateToggle({
                     end
 
                     -- Sehr schnelles Klonen bis 20 erreicht sind
-                    while countSnowballs() < 100 and getgenv().SnowballThrowingEnabled do
+                    while countSnowballs() < 200 and getgenv().SnowballThrowingEnabled do
                         ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
                         task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
                     end
