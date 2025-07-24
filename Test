@@ -1,9 +1,4 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.10.0"
-
-local Window = PizzaHub:CreateWindow({
-	Name = "Pizza Hub", -- This Is Title Of Your Window
-	Subtitle = version, -- A Gray Subtitle next To the main title.local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
 local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
@@ -191,50 +186,7 @@ Traget:CreateButton({
 		end)
 	end
 })
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local camera = workspace.CurrentCamera
 
-Players.PlayerRemoving:Connect(function(leavingPlayer)
-	-- Prüfe, ob der Spieler der aktuell ausgewählte ist
-	if getgenv().SelectedPlayer == leavingPlayer.Name then
-		-- Benachrichtigung anzeigen
-		PizzaHub:Notification({
-			Title = "Player Left",
-			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
-			Icon = "person_off",
-			ImageSource = "Material"
-		})
-
-		-- Kamera zurücksetzen
-		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-			camera.CameraSubject = LocalPlayer.Character.Humanoid
-		end
-
-		-- Toggle deaktivieren (intern)
-		viewPlayerEnabled = false
-
-		-- Verbindung zum alten Character entfernen
-		if viewPlayerConnection then
-			viewPlayerConnection:Disconnect()
-			viewPlayerConnection = nil
-		end
-
-		-- Toggle in UI zurücksetzen
-		if ToggleViewPlayer and ToggleViewPlayer.Set then
-			ToggleViewPlayer:Set(false)
-		end
-
-		-- Auswahl zurücksetzen
-		getgenv().SelectedPlayer = nil
-		confirmedPlayerName = nil
-
-		-- Eingabefeld leeren (wenn vorhanden)
-		if selectedPlayerInput and selectedPlayerInput.Set then
-			selectedPlayerInput:Set("")
-		end
-	end
-end)
 
 
 
@@ -377,43 +329,6 @@ Traget:CreateToggle({
 
 
 
-Traget:CreateButton({
-	Name = "Goto Player",
-	Description = "Teleport to the selected player",
-	Callback = function()
-		local Players = game:GetService("Players")
-		local LocalPlayer = Players.LocalPlayer
-		local selectedName = getgenv().SelectedPlayer
-
-		if not selectedName or selectedName == "" then
-			warn("No player selected!")
-			return
-		end
-
-		local TargetPlayer = Players:FindFirstChild(selectedName)
-		if not TargetPlayer then
-			warn("Player not found!")
-			return
-		end
-
-		local TargetCharacter = TargetPlayer.Character
-		local LocalCharacter = LocalPlayer.Character
-
-		if TargetCharacter and LocalCharacter then
-			local TargetHRP = TargetCharacter:FindFirstChild("HumanoidRootPart")
-			local LocalHRP = LocalCharacter:FindFirstChild("HumanoidRootPart")
-
-			if TargetHRP and LocalHRP then
-				LocalHRP.CFrame = TargetHRP.CFrame
-				print("Teleported to player: " .. selectedName)
-			else
-				warn("HumanoidRootPart missing!")
-			end
-		else
-			warn("One of the characters is missing!")
-		end
-	end
-})
 
 
 Traget:CreateButton({
@@ -460,11 +375,13 @@ Traget:CreateButton({
 local viewPlayerEnabled = false
 local viewPlayerConnection = nil
 local currentTargetPlayer = nil
+local ToggleViewPlayer -- speichern für späteres Deaktivieren
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
+-- Kamera auf Zielspieler setzen
 local function setCameraToTargetPlayer()
 	if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Humanoid") then
 		camera.CameraSubject = currentTargetPlayer.Character.Humanoid
@@ -473,7 +390,8 @@ local function setCameraToTargetPlayer()
 	end
 end
 
-Traget:CreateToggle({
+-- Toggle zum Verfolgen eines Spielers
+ToggleViewPlayer = Traget:CreateToggle({
 	Name = "View Player",
 	Description = "Focus the camera on the selected player.",
 	CurrentValue = false,
@@ -528,14 +446,14 @@ Traget:CreateToggle({
 			})
 
 		else
-			-- Kamera zurück zum lokalen Spieler
 			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 				camera.CameraSubject = LocalPlayer.Character.Humanoid
 			end
 			currentTargetPlayer = nil
 		end
 	end,
-})
+}) -- wichtig: Flag merken für Rücksetzung
+
 
 
 Traget:CreateButton({
@@ -836,6 +754,44 @@ Traget:CreateToggle({
 	end
 })
 
+-- Wenn der ausgewählte Spieler das Spiel verlässt
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+	if getgenv().SelectedPlayer == leavingPlayer.Name then
+		PizzaHub:Notification({
+			Title = "Player Left",
+			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
+			Icon = "person_off",
+			ImageSource = "Material"
+		})
+
+		-- Kamera zurücksetzen
+		if viewPlayerEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			camera.CameraSubject = LocalPlayer.Character.Humanoid
+		end
+
+		-- Verbindung trennen
+		if viewPlayerConnection then
+			viewPlayerConnection:Disconnect()
+			viewPlayerConnection = nil
+		end
+
+		-- Toggle zurücksetzen
+		viewPlayerEnabled = false
+		if ToggleViewPlayer and ToggleViewPlayer.Set then
+			ToggleViewPlayer:Set(false)
+		end
+
+		-- Auswahl löschen
+		getgenv().SelectedPlayer = nil
+		currentTargetPlayer = nil
+		confirmedPlayerName = nil
+
+		-- Eingabefeld löschen (wenn vorhanden)
+		if selectedPlayerInput and selectedPlayerInput.Set then
+			selectedPlayerInput:Set("")
+		end
+	end
+end)
 
 local Teleports = Window:CreateTab({
     Name = "Teleports",
