@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.20.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -61,7 +61,90 @@ local main = Window:CreateTab({
 	ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
 
+main:CreateToggle({
+    Name = "server lag",
+    Description = nil,
+    CurrentValue = false,
 
+    Callback = function(Value)
+        getgenv().SnowballThrowingEnabled = Value
+
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function countSnowballs()
+            local count = 0
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            if backpack then
+                for _, item in ipairs(backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name == "Snowball" then
+                        count += 1
+                    end
+                end
+            end
+            return count
+        end
+
+        local function getRandomPosition()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                return root.Position + Vector3.new(
+                    math.random(-8, 8),
+                    math.random(4, 8),
+                    math.random(-8, 8)
+                )
+            end
+            return Vector3.new(0, 50, 0)
+        end
+
+        if Value then
+            getgenv().SnowballThread = task.spawn(function()
+                while getgenv().SnowballThrowingEnabled do
+                    local character = LocalPlayer.Character
+                    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+                    if not humanoid or not backpack then
+                        task.wait(0.2)
+                        continue
+                    end
+
+                    -- Sehr schnelles Klonen bis 20 erreicht sind
+                    while countSnowballs() < 1000 and getgenv().SnowballThrowingEnabled do
+                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                        task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
+                    end
+
+                    -- Alle Snowballs gleichzeitig werfen
+                    local snowballs = {}
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            table.insert(snowballs, tool)
+                        end
+                    end
+
+                    for _, tool in ipairs(snowballs) do
+                        if not getgenv().SnowballThrowingEnabled then break end
+                        local clicked = tool:FindFirstChild("Clicked")
+                        if clicked then
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                                clicked:FireServer(getRandomPosition())
+                            end)
+                        end
+                        tool:Destroy()
+                    end
+
+                    task.wait(0.3) -- kurze Pause vor nächster Runde
+                end
+            end)
+        else
+            getgenv().SnowballThrowingEnabled = false
+        end
+    end
+})
 
 
 local Traget = Window:CreateTab({
@@ -453,6 +536,126 @@ end)
 
 
 Traget:CreateButton({
+    Name = "Bring Player To You",
+    Description = "Brings the selected player into your vehicle.",
+
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local selectedName = getgenv().SelectedPlayer
+
+        if not selectedName or selectedName == "" then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "No player selected!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        local TargetPlayer = Players:FindFirstChild(selectedName)
+        if not TargetPlayer then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "Player '" .. selectedName .. "' not found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        local car, seat, hoodseat
+        local player = TargetPlayer
+        local character = LocalPlayer.Character
+        if not character then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "Local player character not found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if not hrp then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "Local player HumanoidRootPart not found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        -- Find a vehicle seat you are in or an empty one and move you into it
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("VehicleSeat") and v.Occupant == character.Humanoid then
+                if v.Parent:FindFirstChild("HoodSeat") then
+                    car = v.Parent
+                    seat = v
+                    hoodseat = v.Parent:FindFirstChild("HoodSeat")
+                    break
+                end
+            elseif v:IsA("VehicleSeat") and v.Occupant == nil then
+                if v.Parent:FindFirstChild("HoodSeat") then
+                    car = v.Parent
+                    seat = v
+                    hoodseat = v.Parent:FindFirstChild("HoodSeat")
+                    character.HumanoidRootPart.CFrame = v.CFrame
+                    break
+                end
+            end
+        end
+
+        if not seat or not hoodseat or not car then
+            PizzaHub:Notification({
+                Title = "Action Failed",
+                Content = "No suitable vehicle with free seat found!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        -- Wait until local player is seated
+        repeat task.wait() until seat.Occupant == character.Humanoid
+
+        -- Calculate offset between car primary part and hood seat
+        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
+
+        -- Move car to your position until the target player sits on hood seat
+        repeat
+            task.wait()
+            car:SetPrimaryPartCFrame(hrp.CFrame * offset)
+        until hoodseat.Occupant == player.Character.Humanoid
+
+        -- Optional: (kann weg, da Spieler ja jetzt im Fahrzeug sitzt)
+        --[[
+        local targetHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if targetHRP then
+            targetHRP.CFrame = hrp.CFrame
+        end
+        ]]
+
+        -- Keep vehicle synced to target player until they leave the hood seat
+        repeat
+            task.wait()
+            car:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * offset:Inverse())
+        until hoodseat.Occupant == nil
+
+        PizzaHub:Notification({
+            Title = "Success",
+            Content = "Player '" .. selectedName .. "' was brought to you!",
+            Icon = "check_circle",
+            ImageSource = "Material"
+        })
+    end,
+})
+
+
+Traget:CreateButton({
 	Name = "Throw Player Far Away",
 	Description = "Throws the selected player far away using your vehicle",
 	Callback = function()
@@ -741,90 +944,7 @@ Traget:CreateToggle({
 })
 
 
-Traget:CreateToggle({
-    Name = "server lag",
-    Description = nil,
-    CurrentValue = false,
 
-    Callback = function(Value)
-        getgenv().SnowballThrowingEnabled = Value
-
-        local Players = game:GetService("Players")
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local LocalPlayer = Players.LocalPlayer
-
-        local function countSnowballs()
-            local count = 0
-            local backpack = LocalPlayer:FindFirstChild("Backpack")
-            if backpack then
-                for _, item in ipairs(backpack:GetChildren()) do
-                    if item:IsA("Tool") and item.Name == "Snowball" then
-                        count += 1
-                    end
-                end
-            end
-            return count
-        end
-
-        local function getRandomPosition()
-            local char = LocalPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then
-                return root.Position + Vector3.new(
-                    math.random(-8, 8),
-                    math.random(4, 8),
-                    math.random(-8, 8)
-                )
-            end
-            return Vector3.new(0, 50, 0)
-        end
-
-        if Value then
-            getgenv().SnowballThread = task.spawn(function()
-                while getgenv().SnowballThrowingEnabled do
-                    local character = LocalPlayer.Character
-                    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                    local backpack = LocalPlayer:FindFirstChild("Backpack")
-
-                    if not humanoid or not backpack then
-                        task.wait(0.2)
-                        continue
-                    end
-
-                    -- Sehr schnelles Klonen bis 20 erreicht sind
-                    while countSnowballs() < 1000 and getgenv().SnowballThrowingEnabled do
-                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
-                        task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
-                    end
-
-                    -- Alle Snowballs gleichzeitig werfen
-                    local snowballs = {}
-                    for _, tool in ipairs(backpack:GetChildren()) do
-                        if tool:IsA("Tool") and tool.Name == "Snowball" then
-                            table.insert(snowballs, tool)
-                        end
-                    end
-
-                    for _, tool in ipairs(snowballs) do
-                        if not getgenv().SnowballThrowingEnabled then break end
-                        local clicked = tool:FindFirstChild("Clicked")
-                        if clicked then
-                            pcall(function()
-                                humanoid:EquipTool(tool)
-                                clicked:FireServer(getRandomPosition())
-                            end)
-                        end
-                        tool:Destroy()
-                    end
-
-                    task.wait(0.3) -- kurze Pause vor nächster Runde
-                end
-            end)
-        else
-            getgenv().SnowballThrowingEnabled = false
-        end
-    end
-})
 
 
 
