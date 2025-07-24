@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.01"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -738,6 +738,87 @@ Traget:CreateToggle({
     end
 })
 
+Traget:CreateToggle({
+    Name = "Spam 50 Snowballs Random",
+    Description = "Klonet 50 Snowballs und wirft sie zufällig in die Welt",
+    CurrentValue = false,
+
+    Callback = function(Value)
+        getgenv().SnowballThrowingEnabled = Value
+
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local LocalPlayer = Players.LocalPlayer
+
+        if Value then
+            getgenv().SnowballThread = task.spawn(function()
+                while getgenv().SnowballThrowingEnabled do
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+                    local character = LocalPlayer.Character
+                    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                    if not backpack or not character or not humanoid then
+                        task.wait(0.2)
+                        continue
+                    end
+
+                    -- 50 Snowballs anfordern (klonen)
+                    for i = 1, 50 do
+                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                        task.wait(0.03) -- schneller, aber nicht zu schnell
+                    end
+
+                    -- Warten, bis genügend Snowballs im Inventar sind
+                    repeat task.wait(0.2) until #backpack:GetChildren() >= 50
+
+                    -- Alle Snowballs zufällig werfen
+                    local function getRandomPosition()
+                        local root = character:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            -- Zufällige Position im Umkreis von ca. 20 Studs um Spieler
+                            local randomOffset = Vector3.new(
+                                math.random(-20,20),
+                                math.random(5,15),
+                                math.random(-20,20)
+                            )
+                            return root.Position + randomOffset
+                        end
+                        return Vector3.new(0, 50, 0)
+                    end
+
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if not getgenv().SnowballThrowingEnabled then break end
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            local clicked = tool:FindFirstChild("Clicked")
+                            if not clicked then
+                                continue
+                            end
+
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                            end)
+                            task.wait(0.1) -- etwas schneller ausrüsten
+
+                            local randomPos = getRandomPosition()
+                            pcall(function()
+                                clicked:FireServer(randomPos)
+                            end)
+
+                            task.wait(0.3) -- schnelles Warten für Server-Verarbeitung
+
+                            tool:Destroy()
+                            task.wait(0.05)
+                        end
+                    end
+
+                    task.wait(0.5) -- kurze Pause bevor der nächste Zyklus startet
+                end
+                print("[SnowballSpam] Random Snowball-Loop gestoppt.")
+            end)
+        else
+            getgenv().SnowballThrowingEnabled = false
+        end
+    end
+})
 
 
 
