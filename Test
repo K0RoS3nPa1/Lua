@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "11.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -537,7 +537,7 @@ end)
 
 Traget:CreateButton({
     Name = "Bring Player To You",
-    Description = "Brings the player into your vehicle and returns to original position.",
+    Description = "Brings player into your vehicle and returns to original position.",
 
     Callback = function()
         local Players = game:GetService("Players")
@@ -579,7 +579,7 @@ Traget:CreateButton({
 
         local hrp = character:FindFirstChild("HumanoidRootPart")
         local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local originalCFrame = hrp.CFrame + Vector3.new(0, 5, 0) -- leicht höher zurücksetzen
+        local originalCFrame = hrp.CFrame + Vector3.new(0, 5, 0) -- leicht höher zurück
 
         -- Suche Fahrzeug mit HoodSeat
         local car, seat, hoodseat
@@ -625,7 +625,6 @@ Traget:CreateButton({
         repeat task.wait() until seat.Occupant == humanoid
 
         local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
-
         local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
         local targetHumanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
 
@@ -639,42 +638,75 @@ Traget:CreateButton({
             return
         end
 
-        -- ✅ 1. HARTE Teleportation zum Spieler (einmal)
+        -- === 1. Einmaliger harter Teleport zum Ziel ===
         car:SetPrimaryPartCFrame(targetHRP.CFrame * offset:Inverse())
         task.wait(0.5)
 
-        -- ✅ 2. SMOOTH Verfolgung mit HoodSeat unter dem Spieler
-        while hoodseat.Occupant ~= targetHumanoid do
-            if not targetHRP.Parent then break end
+        -- === 2. Sanftes Folgen mit Timeout & Abbruch ===
+        local timeout = 15 -- Sekunden bis zum Abbruch
+        local timer = 0
+        local maxDistance = 100 -- Max. Entfernung bevor abgebrochen wird
 
+        while hoodseat.Occupant ~= targetHumanoid and timer < timeout do
+            if not targetHRP.Parent or not hoodseat.Parent or not car.Parent then
+                PizzaHub:Notification({
+                    Title = "Abgebrochen",
+                    Content = "Etwas wurde entfernt!",
+                    Icon = "warning",
+                    ImageSource = "Material"
+                })
+                return
+            end
+
+            local dist = (car:GetPrimaryPartCFrame().Position - targetHRP.Position).Magnitude
+            if dist > maxDistance then
+                PizzaHub:Notification({
+                    Title = "Abgebrochen",
+                    Content = "Ziel zu weit entfernt!",
+                    Icon = "warning",
+                    ImageSource = "Material"
+                })
+                return
+            end
+
+            -- Zielposition leicht unter dem Spieler
+            local targetPos = targetHRP.Position - Vector3.new(0, 2.5, 0)
+            local targetCF = CFrame.new(targetPos) * offset:Inverse()
             local current = car.PrimaryPart.CFrame
-            -- Positioniere das HoodSeat UNTER dem Zielspieler (z. B. 3 Studs)
-            local hoodTarget = targetHRP.Position - Vector3.new(0, 3, 0)
-            local target = CFrame.new(hoodTarget) * offset:Inverse()
-            local lerped = current:Lerp(target, 0.15)
+            local lerped = current:Lerp(targetCF, 0.075) -- Langsameres Folgen
             car:SetPrimaryPartCFrame(lerped)
 
             task.wait(0.1)
+            timer += 0.1
         end
 
-        -- ✅ 3. Rückfahrt zur alten Position (smooth)
-        while hoodseat.Occupant ~= nil do
+        if hoodseat.Occupant ~= targetHumanoid then
+            PizzaHub:Notification({
+                Title = "Abgebrochen",
+                Content = "Spieler ist nicht eingestiegen.",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        -- === 3. Rückfahrt zur Originalposition (smooth) ===
+        while (car:GetPrimaryPartCFrame().Position - originalCFrame.Position).Magnitude > 5 do
             local current = car.PrimaryPart.CFrame
             local target = originalCFrame * offset:Inverse()
-            local lerped = current:Lerp(target, 0.1)
+            local lerped = current:Lerp(target, 0.075)
             car:SetPrimaryPartCFrame(lerped)
             task.wait(0.1)
         end
 
         PizzaHub:Notification({
             Title = "Success",
-            Content = "Player '" .. selectedName .. "' was picked up and returned!",
+            Content = "Spieler '" .. selectedName .. "' wurde gebracht und du bist zurück!",
             Icon = "check_circle",
             ImageSource = "Material"
         })
     end,
 })
-
 
 
 
