@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.test.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -369,15 +369,14 @@ Traget:CreateButton({
 	end
 })
 
-
-
-
 local viewPlayerEnabled = false
 local viewPlayerConnection = nil
 local currentTargetPlayer = nil
-local ToggleViewPlayer -- speichern für späteres Deaktivieren
+local ToggleViewPlayer -- Referenz fürs UI-Toggle
+local lastSelectedName = nil
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
@@ -390,7 +389,7 @@ local function setCameraToTargetPlayer()
 	end
 end
 
--- Toggle zum Verfolgen eines Spielers
+-- Traget-UI Toggle
 ToggleViewPlayer = Traget:CreateToggle({
 	Name = "View Player",
 	Description = "Focus the camera on the selected player.",
@@ -399,61 +398,74 @@ ToggleViewPlayer = Traget:CreateToggle({
 	Callback = function(enabled)
 		viewPlayerEnabled = enabled
 
-		-- Alte Verbindung trennen
-		if viewPlayerConnection then
-			viewPlayerConnection:Disconnect()
-			viewPlayerConnection = nil
-		end
-
-		if enabled then
-			local selectedName = getgenv().SelectedPlayer
-
-			if not selectedName or selectedName == "" then
-				PizzaHub:Notification({
-					Title = "Action Failed",
-					Content = "No player selected!",
-					Icon = "error",
-					ImageSource = "Material"
-				})
-				return
-			end
-
-			currentTargetPlayer = Players:FindFirstChild(selectedName)
-
-			if not currentTargetPlayer then
-				PizzaHub:Notification({
-					Title = "Action Failed",
-					Content = "Player '" .. selectedName .. "' not found!",
-					Icon = "error",
-					ImageSource = "Material"
-				})
-				return
-			end
-
-			setCameraToTargetPlayer()
-
-			viewPlayerConnection = currentTargetPlayer.CharacterAdded:Connect(function()
-				if viewPlayerEnabled then
-					setCameraToTargetPlayer()
-				end
-			end)
-
-			PizzaHub:Notification({
-				Title = "View Player",
-				Content = "Now viewing '" .. selectedName .. "'",
-				Icon = "visibility",
-				ImageSource = "Material"
-			})
-
-		else
+		if not enabled then
+			-- Kamera zurücksetzen
 			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 				camera.CameraSubject = LocalPlayer.Character.Humanoid
 			end
+
 			currentTargetPlayer = nil
+			lastSelectedName = nil
+
+			if viewPlayerConnection then
+				viewPlayerConnection:Disconnect()
+				viewPlayerConnection = nil
+			end
 		end
 	end,
-}) -- wichtig: Flag merken für Rücksetzung
+})
 
+-- Überwache dynamische Änderung von SelectedPlayer
+RunService.RenderStepped:Connect(function()
+	if not viewPlayerEnabled then return end
+
+	local selectedName = getgenv().SelectedPlayer
+	if selectedName ~= lastSelectedName then
+		lastSelectedName = selectedName
+
+		if not selectedName or selectedName == "" then
+			PizzaHub:Notification({
+				Title = "No Player Selected",
+				Content = "You must select a player first.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+			return
+		end
+
+		local target = Players:FindFirstChild(selectedName)
+		if not target then
+			PizzaHub:Notification({
+				Title = "Player Not Found",
+				Content = "Player '" .. selectedName .. "' not found!",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+			return
+		end
+
+		currentTargetPlayer = target
+		setCameraToTargetPlayer()
+
+		-- Verbindung aktualisieren
+		if viewPlayerConnection then
+			viewPlayerConnection:Disconnect()
+		end
+
+		viewPlayerConnection = currentTargetPlayer.CharacterAdded:Connect(function()
+			if viewPlayerEnabled then
+				setCameraToTargetPlayer()
+			end
+		end)
+
+		PizzaHub:Notification({
+			Title = "Now Viewing",
+			Content = "Now viewing '" .. selectedName .. "'",
+			Icon = "visibility",
+			ImageSource = "Material"
+		})
+	end
+end)
 
 
 Traget:CreateButton({
@@ -754,9 +766,9 @@ Traget:CreateToggle({
 	end
 })
 
--- Wenn der ausgewählte Spieler das Spiel verlässt
+-- Wenn Zielspieler das Spiel verlässt
 Players.PlayerRemoving:Connect(function(leavingPlayer)
-	if getgenv().SelectedPlayer == leavingPlayer.Name then
+	if currentTargetPlayer and leavingPlayer == currentTargetPlayer then
 		PizzaHub:Notification({
 			Title = "Player Left",
 			Content = leavingPlayer.DisplayName .. " (" .. leavingPlayer.Name .. ") has left the game.",
@@ -765,9 +777,14 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 		})
 
 		-- Kamera zurücksetzen
-		if viewPlayerEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 			camera.CameraSubject = LocalPlayer.Character.Humanoid
 		end
+
+		-- Reset
+		viewPlayerEnabled = false
+		currentTargetPlayer = nil
+		lastSelectedName = nil
 
 		-- Verbindung trennen
 		if viewPlayerConnection then
@@ -775,18 +792,13 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 			viewPlayerConnection = nil
 		end
 
-		-- Toggle zurücksetzen
-		viewPlayerEnabled = false
+		-- UI-Toggle zurücksetzen
 		if ToggleViewPlayer and ToggleViewPlayer.Set then
 			ToggleViewPlayer:Set(false)
 		end
 
 		-- Auswahl löschen
 		getgenv().SelectedPlayer = nil
-		currentTargetPlayer = nil
-		confirmedPlayerName = nil
-
-		-- Eingabefeld löschen (wenn vorhanden)
 		if selectedPlayerInput and selectedPlayerInput.Set then
 			selectedPlayerInput:Set("")
 		end
