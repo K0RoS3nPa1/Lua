@@ -581,6 +581,25 @@ local function smoothTP(cf)
     end
     smoothTP2(cf)
 end
+-- ...existing code...
+
+-- Füge diese Hilfsfunktion hinzu (z.B. nach den anderen smoothTP-Funktionen):
+local function tweenToButton(btn)
+    -- Erst über dem Button schweben (Y + 3)
+    smoothTP(CFrame.new(btn.Position.X, btn.Position.Y + 3, btn.Position.Z))
+    wait(0.2)
+    -- Dann direkt auf den Button gehen
+    smoothTP(btn.CFrame)
+end
+
+-- ...existing code...
+
+-- Ersetze im Supplier-Loop:
+-- smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
+-- durch:
+tweenToButton(btn)
+
+-- ...existing code...
 for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	if ffc(o,"Bottom") then
 		o.Bottom.CanTouch = false
