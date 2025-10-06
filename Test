@@ -883,7 +883,7 @@ while gui.Parent do
 				local needtp=true
 				local realc = 0
 				
-				    local for _,btn in ipairs(supplyButtons) do = bcolorToSupply[btn.BrickColor.Name]
+				for _,btn in ipairs(supplyButtons) do local s = bcolorToSupply[btn.BrickColor.Name]
 					if supplyCounts[s] < settings.refill_end then
 						local count = 0
 						if #boxes > 30 then
