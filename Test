@@ -13,7 +13,7 @@ end
 -- Entferne diese Zeile:
 -- local Gravitysettings = 210
 
-local settings = {refill_at=50, refill_end=97, movespeed_at=100, deliver_at=5, stay_in_kitchen=true}
+local settings = {refill_at=50, refill_end=97, movespeed_at=90, deliver_at=5, stay_in_kitchen=true}
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 if readfile then
 	pcall(function()
@@ -505,7 +505,8 @@ end
 local bcolorToSupply = {["Dark orange"]="Sausage",["Bright blue"]="Pepperoni",["Bright yellow"]="Cheese",["Bright red"]="TomatoSauce",["Dark green"]="Dew",["Brick yellow"]="Dough",["Light stone grey"]="Box",["Really black"]="Dew",["Navy blue"]="Dew"}
 local supplyButtons = {}
 for i,v in ipairs(workspace.SupplyButtons:GetChildren()) do
-	supplyButtons[i] = v.Unpressed
+    supplyButtons[i] = v.Unpressed
+    v.Unpressed.Size = Vector3.new(8, v.Unpressed.Size.Y, 8) -- Hitbox der Buttons vergrößern
 end
 table.sort(supplyButtons,function(a,b) return a.Position.X < b.Position.X end)
 local delTick = 0
@@ -894,14 +895,13 @@ while gui.Parent do
 								end
 							end
 						end
-						if count < 4 then
+						if count < 7 then
 									-- Erst zu Startposition tweenen
 									smoothTP(CFrame.new(8,12.4,-1020))
 									wait(0.3)
 								
-									-- Hitbox vergrößern
-									local originalSize = root.Size
-									root.Size = Vector3.new(15, originalSize.Y, 15) -- Y bleibt wie vorher, X/Z werden größer
+									
+									
 								
 									-- WalkSpeed erhöhen
 									local oldSpeed = humanoid.WalkSpeed
@@ -922,8 +922,8 @@ while gui.Parent do
 										end
 									end
 								
-									-- Hitbox und WalkSpeed zurücksetzen
-									root.Size = originalSize
+									-- WalkSpeed zurücksetzen
+							
 									humanoid.WalkSpeed = oldSpeed
 								
 									if not doSupplier then break end
