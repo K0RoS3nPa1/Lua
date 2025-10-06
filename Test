@@ -13,7 +13,7 @@ end
 -- Entferne diese Zeile:
 -- local Gravitysettings = 210
 
-local settings = {refill_at=50, refill_end=97, movespeed_at=100, deliver_at=5, stay_in_kitchen=true}
+local settings = {refill_at=50, refill_end=97, movespeed_at=90, deliver_at=5, stay_in_kitchen=true}
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
 if readfile then
 	pcall(function()
@@ -884,52 +884,31 @@ while gui.Parent do
 				local needtp=true
 				local realc = 0
 				
-				for _,btn in ipairs(supplyButtons) do local s = bcolorToSupply[btn.BrickColor.Name]
+								for _,btn in ipairs(supplyButtons) do
+					local s = bcolorToSupply[btn.BrickColor.Name]
 					if supplyCounts[s] < settings.refill_end then
-						local count = 0
-						if #boxes > 30 then
-							for i=1,#boxes do
-								local box = boxes[i]
-								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
-									count=count+1
-								end
+						-- Button-Aktion für jeden Button, ohne count-Bedingung!
+						smoothTP(CFrame.new(8,12.4,-1020))
+						wait(0.3)
+						local oldSpeed = humanoid.WalkSpeed
+						humanoid.WalkSpeed = 40
+						local positions = {
+							Vector3.new(14, 13, -1050),
+							Vector3.new(0, 13, -1050)
+						}
+						for i = 1, 3 do
+							if not doSupplier then break end
+							for _,pos in ipairs(positions) do
+								if not doSupplier then break end
+								humanoid:MoveTo(pos)
+								humanoid.MoveToFinished:Wait()
+								wait(0.2)
 							end
 						end
-						if count < 5 then
-									-- Erst zu Startposition tweenen
-									smoothTP(CFrame.new(8,12.4,-1020))
-									wait(0.3)
-								
-									
-									
-								
-									-- WalkSpeed erhöhen
-									local oldSpeed = humanoid.WalkSpeed
-									humanoid.WalkSpeed = 30 -- anpassen nach Wunsch
-								
-									local positions = {
-										Vector3.new(12, 13, -1051),
-										Vector3.new(2, 13, -1050)
-									}
-								
-									for i = 1, 3 do
-										if not doSupplier then break end
-										for _,pos in ipairs(positions) do
-											if not doSupplier then break end
-											humanoid:MoveTo(pos)
-											humanoid.MoveToFinished:Wait()
-											wait(0.2)
-										end
-									end
-								
-									-- WalkSpeed zurücksetzen
-							
-									humanoid.WalkSpeed = oldSpeed
-								
-									if not doSupplier then break end
-									realc = realc + 1
-								end
-						fulfilled=false
+						humanoid.WalkSpeed = oldSpeed
+						if not doSupplier then break end
+						realc = realc + 1
+						fulfilled = false
 					end
 				end
 				wait(0.3)
