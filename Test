@@ -898,8 +898,8 @@ while gui.Parent do
 				for yy=1,9 do
 				local needtp=true
 				local realc = 0
-				for _,btn in ipairs(supplyButtons) do
-				    local s = bcolorToSupply[btn.BrickColor.Name]
+				
+				    local sfor _,btn in ipairs(supplyButtons) do = bcolorToSupply[btn.BrickColor.Name]
 					if supplyCounts[s] < settings.refill_end then
 						local count = 0
 						if #boxes > 30 then
@@ -913,7 +913,7 @@ while gui.Parent do
 						if count < 2 then
 							if needtp then
 							    needtp=false
-								smoothTP(btn.CFrame + Vector3.new(0,3,2.5))
+								tweenToButton(btn)
 								wait(0.5)
 							end
 							if not doSupplier then break end
