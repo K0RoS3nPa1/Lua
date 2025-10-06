@@ -898,10 +898,11 @@ while gui.Parent do
 							if needtp then
 							    needtp=false
 								-- ...existing code...
-								smoothTP(btn.CFrame + Vector3.new(0,7,0)) -- Erst über dem Button
+								local btnPos = btn.Position
+								smoothTP(CFrame.new(btnPos.X, btnPos.Y + 8, btnPos.Z)) -- wirklich über dem Button (Y + 8)
 								wait(0.2)
-								smoothTP(btn.CFrame) -- Dann direkt auf den Button
-								-- ...existing code...				smoothTP(btn.CFrame)
+								smoothTP(btn.CFrame) -- dann direkt auf den Button
+								-- ...existing code...
 								wait(0.5)
 							end
 							if not doSupplier then break end
