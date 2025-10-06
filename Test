@@ -270,19 +270,25 @@ refillEndBox.FocusLost:Connect(function()
 	end
 	refillEndBox.Text=tostring(settings.refill_end)
 end)
+-- ...existing code...
 local oldMovespeedAt=MovespeedBox.Text
 MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
-	if #MovespeedBox.Text>2 or MovespeedBox.Text:match("%D") then
-		MovespeedBox.Text = oldMovespeedAt
-	end
-	oldMovespeedAt = MovespeedBox.Text
+    -- Erlaubt nur Zahlen und Komma/Punkt
+    local cleaned = MovespeedBox.Text:gsub(",","."):gsub("[^%d%.]", "")
+    if #cleaned > 6 then cleaned = cleaned:sub(1,6) end
+    MovespeedBox.Text = cleaned
+    oldMovespeedAt = MovespeedBox.Text
 end)
 MovespeedBox.FocusLost:Connect(function()
-	if tonumber(MovespeedBox.Text) then
-		settings.movespeed_at=tonumber(MovespeedBox.Text)
-	end
-	MovespeedBox.Text=tostring(settings.movespeed_at)
+    local val = tonumber(MovespeedBox.Text:gsub(",","."))
+    if val then
+        -- Runde auf eine Nachkommastelle
+        val = math.floor(val*10)/10
+        settings.movespeed_at = val
+    end
+    MovespeedBox.Text = tostring(settings.movespeed_at)
 end)
+-- ...existing code...
 
 
 closeBtn.MouseButton1Click:Connect(function()
