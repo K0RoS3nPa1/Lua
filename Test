@@ -279,15 +279,17 @@ MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
     MovespeedBox.Text = cleaned
     oldMovespeedAt = MovespeedBox.Text
 end)
+-- ...existing code...
 MovespeedBox.FocusLost:Connect(function()
     local val = tonumber(MovespeedBox.Text:gsub(",","."))
     if val then
-        -- Runde auf eine Nachkommastelle
+        -- Immer übernehmen, egal ob höher oder niedriger
         val = math.floor(val*10)/10
         settings.movespeed_at = val
     end
     MovespeedBox.Text = tostring(settings.movespeed_at)
 end)
+-- ...existing code...
 -- ...existing code...
 
 
