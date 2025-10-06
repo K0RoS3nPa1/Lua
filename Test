@@ -650,16 +650,24 @@ local function tryCook()
 						local oven
 						for _,o in ipairs(ovens) do
 							if isFullyOpen(o) then
+																
 								local other = getDoughNear(o.Bottom.Position)
-								if other==nil or not (other.BrickColor.Name=="Bright orange" and ffc(other.SG.Frame,"TomatoSauce") and ffc(other.SG.Frame,"MeltedCheese")) then
+								if other == nil or not (
+									other.BrickColor and
+									other.BrickColor.Name == "Bright orange" and
+									other.SG and
+									other.SG.Frame and
+									ffc(other.SG.Frame, "TomatoSauce") and
+									ffc(other.SG.Frame, "MeltedCheese")
+								) then
 									if other then
-										-- Hier wird mit other gearbeitet!
 										network:FireServer("UpdateProperty", other, "CFrame", ...)
 										wait(0.2)
 									end
-									oven=o
+									oven = o
 									break
 								end
+								
 							end
 						end
 						if oven and raw.Parent==workspace.AllDough then
