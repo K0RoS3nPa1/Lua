@@ -1,4 +1,3 @@
-
 getupvalues = getupvalues or debug.getupvalues
 setupvalue = setupvalue or debug.setupvalue
 if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getregistry)) then
@@ -562,6 +561,7 @@ local function smoothTP2(cf)
 	root.RotVelocity = Vector3.new()
 	
 end
+local TweenService = game:GetService("TweenService")
 
 local function smoothTP(cf)
     if (cf.p-root.Position).Magnitude > 97 then
@@ -578,7 +578,6 @@ local function smoothTP(cf)
             end
         end
     end
-local TweenService = game:GetService("TweenService")
 
 local function smoothTP2(cf)
 	local distance = (cf.p - root.Position).Magnitude
