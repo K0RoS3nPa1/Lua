@@ -897,10 +897,11 @@ while gui.Parent do
 						if count < 2 then
 							if needtp then
 							    needtp=false
-																-- ...existing code...
+								-- ...existing code...
 								smoothTP(btn.CFrame + Vector3.new(0,3,2.5)) -- Erst über dem Button
-							.
-
+								wait(0.2)
+								smoothTP(btn.CFrame) -- Dann direkt auf den Button
+								-- ...existing code...				smoothTP(btn.CFrame)
 								wait(0.5)
 							end
 							if not doSupplier then break end
