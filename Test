@@ -650,21 +650,16 @@ local function tryCook()
 						local oven
 						for _,o in ipairs(ovens) do
 							if isFullyOpen(o) then
-																
-								local other = getDoughNear(o.Bottom.Position)
-								if other == nil or not (
-									other.BrickColor and
-									other.BrickColor.Name == "Bright orange" and
-									other.SG and
-									other.SG.Frame and
-									ffc(other.SG.Frame, "TomatoSauce") and
-									ffc(other.SG.Frame, "MeltedCheese")
-								) then
+							local other = getDoughNear(o.Bottom.Position)
+								if other==nil or not (other.BrickColor.Name=="Bright orange" and ffc(other.SG.Frame,"TomatoSauce") and ffc(other.SG.Frame,"MeltedCheese")) then
 									if other then
-										network:FireServer("UpdateProperty", other, "CFrame", ...)
+										--replace mistaken dough
+										didsomething=true
+										if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+										network:FireServer("UpdateProperty", other, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
 										wait(0.2)
 									end
-									oven = o
+									oven=o
 									break
 								end
 								
