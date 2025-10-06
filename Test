@@ -535,33 +535,140 @@ onCharacterAdded(player.Character or player.CharacterAdded:Wait())
 player.CharacterAdded:Connect(onCharacterAdded)
 
 
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
--- Sanfte Bewegung mit Tween (nicht blockierend)
-local function smoothTP2(cf)
+-- State
+local _tweenState = {
+	currentTween = nil,
+	running = false,
+	heartbeatConn = nil,
+	cancelRequested = false
+}
+
+-- Abbruch-Funktion: kann aufgerufen werden, wenn z.B. Button deaktiviert wird
+local function cancelSmoothTP2()
+	_tweenState.cancelRequested = true
+
+	-- Cancel tween
+	if _tweenState.currentTween then
+		pcall(function()
+			_tweenState.currentTween:Cancel()
+		end)
+		_tweenState.currentTween = nil
+	end
+
+	-- Disconnect heartbeat cleanup
+	if _tweenState.heartbeatConn then
+		pcall(function() _tweenState.heartbeatConn:Disconnect() end)
+		_tweenState.heartbeatConn = nil
+	end
+
+	_tweenState.running = false
+	_tweenState.cancelRequested = false
+end
+
+-- Exploit-kompatible smoothTP2
+-- Parameter: cf (CFrame Ziel), opt (optional table) {blocking = true/false} (default false)
+local function smoothTP2(cf, opt)
+	opt = opt or {}
+	local blocking = opt.blocking or false
+
+	-- Sicherheitschecks
+	if not root or not root:IsA("BasePart") then return end
+	if not humanoid or not humanoid:IsA("Humanoid") then return end
+
+	-- Wenn schon ein Tween läuft, breche (oder alternativ: return)
+	if _tweenState.running then
+		-- optional: cancel und neu starten? Wir returnieren, damit kein Overlap entsteht
+		return
+	end
+
+	_tweenState.running = true
+	_tweenState.cancelRequested = false
+
+	-- Distanz & Dauer
 	local distance = (cf.p - root.Position).Magnitude
-	local duration = distance / settings.movespeed_at
+	-- Guard gegen Division durch 0
+	local speed = (settings and settings.movespeed_at and settings.movespeed_at > 0) and settings.movespeed_at or 20
+	local duration = math.max(0.01, distance / speed)
 
 	local tweenInfo = TweenInfo.new(
 		duration,
 		Enum.EasingStyle.Sine,
 		Enum.EasingDirection.Out
 	)
-
 	local tween = TweenService:Create(root, tweenInfo, {CFrame = cf})
+	_tweenState.currentTween = tween
+
+	-- Heartbeat: während des Tweens Sit false setzen und Velocity sauber halten
+	_tweenState.heartbeatConn = RunService.Heartbeat:Connect(function()
+		if _tweenState.cancelRequested then
+			-- Falls Abbruch gewünscht, cancel hier
+			if tween then
+				pcall(function() tween:Cancel() end)
+			end
+			return
+		end
+		-- Stelle sicher, dass der Humanoid nicht sitzt und kein Nachrutschen existiert
+		if humanoid then
+			pcall(function() humanoid.Sit = false end)
+		end
+		if root then
+			pcall(function()
+				root.Velocity = Vector3.new()
+				root.RotVelocity = Vector3.new()
+			end)
+		end
+	end)
+
+	-- Play
 	humanoid.Sit = false
 	tween:Play()
 
-	-- Läuft im Hintergrund
-	task.spawn(function()
-		tween.Completed:Wait()
-		root.Velocity = Vector3.new()
-		root.RotVelocity = Vector3.new()
-	end)
+	-- Verhalten bei blockierend oder nicht
+	if blocking then
+		-- blockierend: warte, aber in protected call falls Tween/Script unterbrochen wird
+		local ok, err = pcall(function()
+			tween.Completed:Wait()
+		end)
+		-- cleanup
+		if _tweenState.heartbeatConn then
+			pcall(function() _tweenState.heartbeatConn:Disconnect() end)
+			_tweenState.heartbeatConn = nil
+		end
+		_tweenState.currentTween = nil
+		_tweenState.running = false
+
+		-- Letzte Velocity-Reset (sicher)
+		if root then pcall(function() root.Velocity = Vector3.new(); root.RotVelocity = Vector3.new() end) end
+
+		-- Wenn pcall false, err enthält Fehler (kann ignoriert oder geloggt werden)
+		return ok and err or nil
+	else
+		-- nicht-blockierend: sauber im Hintergrund aufräumen
+		task.spawn(function()
+			pcall(function() tween.Completed:Wait() end)
+
+			-- cleanup
+			if _tweenState.heartbeatConn then
+				pcall(function() _tweenState.heartbeatConn:Disconnect() end)
+				_tweenState.heartbeatConn = nil
+			end
+			_tweenState.currentTween = nil
+			_tweenState.running = false
+
+			-- Letzte Velocity-Reset
+			if root then pcall(function() root.Velocity = Vector3.new(); root.RotVelocity = Vector3.new() end) end
+		end)
+	end
 end
 
+-- smoothTP übernimmt deine Teleport-Logik (wie vorher), nutzt aber die neue smoothTP2
+local function smoothTP(cf, opt)
+	-- opt kann z.B. {blocking = true} an smoothTP2 weiterreichen, falls gewünscht
+	opt = opt or {}
 
--- Teleport mit Distanz-Check & Job-Teleport
-local function smoothTP(cf)
 	if (cf.p - root.Position).Magnitude > 97 then
 		local btns = workspace.JobButtons:GetChildren()
 		if player:FindFirstChild("House") and player.House.Value then
@@ -583,8 +690,21 @@ local function smoothTP(cf)
 		end
 	end
 
-	smoothTP2(cf) -- Tween startet, Script läuft weiter
+	-- Start Tween (standard: nicht-blockierend)
+	smoothTP2(cf, { blocking = opt.blocking })
 end
+
+-- === Nutzung / API ===
+-- smoothTP(CFrame.new(x,y,z))                   -- startet Tween asynchron
+-- smoothTP(CFrame.new(x,y,z), {blocking = true}) -- startet Tween blockierend
+-- cancelSmoothTP2()                              -- bricht laufenden Tween ab (z.B. wenn Button deaktiviert)
+
+-- Returniere Funktionen, falls du das als Modul nutzen willst:
+return {
+	smoothTP2 = smoothTP2,
+	smoothTP = smoothTP,
+	cancelSmoothTP2 = cancelSmoothTP2
+}
 
 
 for _,o in ipairs(workspace.Ovens:GetChildren()) do
