@@ -909,8 +909,8 @@ while gui.Parent do
 							if not doSupplier then break end
 							-- ...existing code...
 							local btnPos = btn.Position
-							local hoverY = math.max(btnPos.Y + 7, 15) -- mindestens Y=15
-							root.CFrame = CFrame.new(btnPos.X, hoverY, btnPos.Z)
+							local hoverY = math.max(btnPos.Y + 7, 15)
+							smoothTP(CFrame.new(btnPos.X, hoverY, btnPos.Z)) -- Tween statt direkt setzen!
 							-- ...existing code...
 							wait(0.3)
 							realc=realc+1
