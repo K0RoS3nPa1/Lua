@@ -899,7 +899,8 @@ while gui.Parent do
 							    needtp=false
 								-- ...existing code...
 								local btnPos = btn.Position
-								smoothTP(CFrame.new(btnPos.X, btnPos.Y + 8, btnPos.Z)) -- wirklich über dem Button (Y + 8)
+								local hoverY = math.max(btnPos.Y + 5, 15) -- mindestens Y=15
+								smoothTP(CFrame.new(btnPos.X, hoverY, btnPos.Z)) -- garantiert über dem Button
 								wait(0.2)
 								smoothTP(btn.CFrame) -- dann direkt auf den Button
 								-- ...existing code...
