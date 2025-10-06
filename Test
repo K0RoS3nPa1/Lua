@@ -281,7 +281,9 @@ MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
 end)
 -- ...existing code...
 -- ...existing code...
+-- ...existing code...
 MovespeedBox.FocusLost:Connect(function()
+    -- Nur das hier verwenden, KEIN zweites Argument!
     local val = tonumber(MovespeedBox.Text:gsub(",","."))
     if val then
         val = math.floor(val*10)/10
@@ -289,6 +291,7 @@ MovespeedBox.FocusLost:Connect(function()
     end
     MovespeedBox.Text = tostring(settings.movespeed_at)
 end)
+-- ...existing code...
 -- ...existing code...
 
 
