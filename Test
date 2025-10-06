@@ -894,25 +894,33 @@ while gui.Parent do
 								end
 							end
 						end
-						if count < 2 then
+								if count < 2 then
 							-- Hitbox vergrößern
 							local originalSize = root.Size
 							root.Size = Vector3.new(10, 10, 10)
+						
+							-- WalkSpeed erhöhen
+							local oldSpeed = humanoid.WalkSpeed
+							humanoid.WalkSpeed = 30 -- z.B. 30, anpassen nach Wunsch
 						
 							local positions = {
 								Vector3.new(12, 13, -1051),
 								Vector3.new(2, 13, -1050)
 							}
 						
-							for i = 1, 6 do -- Anzahl der Wechsel, anpassen nach Bedarf
+							for i = 1, 6 do
+								if not doSupplier then break end
 								for _,pos in ipairs(positions) do
-									smoothTP(CFrame.new(pos))
-									wait(0.5)
+									if not doSupplier then break end
+									humanoid:MoveTo(pos)
+									humanoid.MoveToFinished:Wait()
+									wait(0.2)
 								end
 							end
 						
-							-- Hitbox zurücksetzen
+							-- Hitbox und WalkSpeed zurücksetzen
 							root.Size = originalSize
+							humanoid.WalkSpeed = oldSpeed
 						
 							if not doSupplier then break end
 							realc = realc + 1
