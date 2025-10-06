@@ -898,7 +898,7 @@ while gui.Parent do
 							if needtp then
 							    needtp=false
 								-- ...existing code...
-								smoothTP(btn.CFrame + Vector3.new(0,3,2.5)) -- Erst über dem Button
+								smoothTP(btn.CFrame + Vector3.new(0,7,0)) -- Erst über dem Button
 								wait(0.2)
 								smoothTP(btn.CFrame) -- Dann direkt auf den Button
 								-- ...existing code...				smoothTP(btn.CFrame)
