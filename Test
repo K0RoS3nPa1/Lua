@@ -1,3 +1,5 @@
+local TweenService = game:GetService("TweenService")
+
 getupvalues = getupvalues or debug.getupvalues
 setupvalue = setupvalue or debug.setupvalue
 if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getregistry)) then
@@ -8,7 +10,8 @@ if not (getrawmetatable and getupvalues and setupvalue and (getreg or debug.getr
 	return
 end
 
-
+-- Entferne diese Zeile:
+-- local Gravitysettings = 210
 
 local settings = {refill_at=50, refill_end=97, movespeed_at=5, deliver_at=5, stay_in_kitchen=true}
 local doCashier,doBoxer,doCook,doSupplier,doDelivery = false,false,false,false,false
@@ -49,8 +52,6 @@ local ffc = game.FindFirstChild
 local RNG = Random.new()
 local network
 local character,root,humanoid
-local TweenService = game:GetService("TweenService")
-
 do
 	local reg = (getreg or debug.getregistry)()
 	for i=1,#reg do
@@ -533,187 +534,54 @@ local function onCharacterAdded(char)
 end
 onCharacterAdded(player.Character or player.CharacterAdded:Wait())
 player.CharacterAdded:Connect(onCharacterAdded)
+-- Füge am Anfang hinzu:
 
+-- Ersetze smoothTP2:
+local function smoothTP2(cf)
+    if not root or not root:IsA("BasePart") then return end
+    if not humanoid or not humanoid:IsA("Humanoid") then return end
 
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+    local distance = (cf.p - root.Position).Magnitude
+    local speed = (settings and settings.movespeed_at and settings.movespeed_at > 0) and settings.movespeed_at or 20
+    local duration = math.max(0.01, distance / speed)
 
--- State
-local _tweenState = {
-	currentTween = nil,
-	running = false,
-	heartbeatConn = nil,
-	cancelRequested = false
-}
+    local tweenInfo = TweenInfo.new(
+        duration,
+        Enum.EasingStyle.Sine,
+        Enum.EasingDirection.Out
+    )
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = cf})
 
--- Abbruch-Funktion: kann aufgerufen werden, wenn z.B. Button deaktiviert wird
-local function cancelSmoothTP2()
-	_tweenState.cancelRequested = true
-
-	-- Cancel tween
-	if _tweenState.currentTween then
-		pcall(function()
-			_tweenState.currentTween:Cancel()
-		end)
-		_tweenState.currentTween = nil
-	end
-
-	-- Disconnect heartbeat cleanup
-	if _tweenState.heartbeatConn then
-		pcall(function() _tweenState.heartbeatConn:Disconnect() end)
-		_tweenState.heartbeatConn = nil
-	end
-
-	_tweenState.running = false
-	_tweenState.cancelRequested = false
+    humanoid.Sit = false
+    tween:Play()
+    tween.Completed:Wait()
+    root.Velocity = Vector3.new()
+    root.RotVelocity = Vector3.new()
 end
 
--- Exploit-kompatible smoothTP2
--- Parameter: cf (CFrame Ziel), opt (optional table) {blocking = true/false} (default false)
-local function smoothTP2(cf, opt)
-	opt = opt or {}
-	local blocking = opt.blocking or false
-
-	-- Sicherheitschecks
-	if not root or not root:IsA("BasePart") then return end
-	if not humanoid or not humanoid:IsA("Humanoid") then return end
-
-	-- Wenn schon ein Tween läuft, breche (oder alternativ: return)
-	if _tweenState.running then
-		-- optional: cancel und neu starten? Wir returnieren, damit kein Overlap entsteht
-		return
-	end
-
-	_tweenState.running = true
-	_tweenState.cancelRequested = false
-
-	-- Distanz & Dauer
-	local distance = (cf.p - root.Position).Magnitude
-	-- Guard gegen Division durch 0
-	local speed = (settings and settings.movespeed_at and settings.movespeed_at > 0) and settings.movespeed_at or 20
-	local duration = math.max(0.01, distance / speed)
-
-	local tweenInfo = TweenInfo.new(
-		duration,
-		Enum.EasingStyle.Sine,
-		Enum.EasingDirection.Out
-	)
-	local tween = TweenService:Create(root, tweenInfo, {CFrame = cf})
-	_tweenState.currentTween = tween
-
-	-- Heartbeat: während des Tweens Sit false setzen und Velocity sauber halten
-	_tweenState.heartbeatConn = RunService.Heartbeat:Connect(function()
-		if _tweenState.cancelRequested then
-			-- Falls Abbruch gewünscht, cancel hier
-			if tween then
-				pcall(function() tween:Cancel() end)
-			end
-			return
-		end
-		-- Stelle sicher, dass der Humanoid nicht sitzt und kein Nachrutschen existiert
-		if humanoid then
-			pcall(function() humanoid.Sit = false end)
-		end
-		if root then
-			pcall(function()
-				root.Velocity = Vector3.new()
-				root.RotVelocity = Vector3.new()
-			end)
-		end
-	end)
-
-	-- Play
-	humanoid.Sit = false
-	tween:Play()
-
-	-- Verhalten bei blockierend oder nicht
-	if blocking then
-		-- blockierend: warte, aber in protected call falls Tween/Script unterbrochen wird
-		local ok, err = pcall(function()
-			tween.Completed:Wait()
-		end)
-		-- cleanup
-		if _tweenState.heartbeatConn then
-			pcall(function() _tweenState.heartbeatConn:Disconnect() end)
-			_tweenState.heartbeatConn = nil
-		end
-		_tweenState.currentTween = nil
-		_tweenState.running = false
-
-		-- Letzte Velocity-Reset (sicher)
-		if root then pcall(function() root.Velocity = Vector3.new(); root.RotVelocity = Vector3.new() end) end
-
-		-- Wenn pcall false, err enthält Fehler (kann ignoriert oder geloggt werden)
-		return ok and err or nil
-	else
-		-- nicht-blockierend: sauber im Hintergrund aufräumen
-		task.spawn(function()
-			pcall(function() tween.Completed:Wait() end)
-
-			-- cleanup
-			if _tweenState.heartbeatConn then
-				pcall(function() _tweenState.heartbeatConn:Disconnect() end)
-				_tweenState.heartbeatConn = nil
-			end
-			_tweenState.currentTween = nil
-			_tweenState.running = false
-
-			-- Letzte Velocity-Reset
-			if root then pcall(function() root.Velocity = Vector3.new(); root.RotVelocity = Vector3.new() end) end
-		end)
-	end
+-- smoothTP bleibt fast gleich, ruft aber die neue smoothTP2 auf:
+local function smoothTP(cf)
+    if (cf.p-root.Position).Magnitude > 97 then
+        local btns = workspace.JobButtons:GetChildren()
+        if player:FindFirstChild("House") and player.House.Value then
+            btns[#btns+1] = player.House.Value:FindFirstChild("Marker") 
+        end
+        table.sort(btns,function(a,b) return (a.Position-cf.p).Magnitude < (b.Position-cf.p).Magnitude end)
+        if (btns[1].Position-cf.p).Magnitude < (cf.p-root.Position).Magnitude then
+            game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportToJob", ((btns[1].Name == "Marker") and "House" or btns[1].Name))
+            wait(0.9)
+            if (cf.p-root.Position).Magnitude < 9 then
+                return
+            end
+        end
+    end
+    smoothTP2(cf)
 end
-
--- smoothTP übernimmt deine Teleport-Logik (wie vorher), nutzt aber die neue smoothTP2
-local function smoothTP(cf, opt)
-	-- opt kann z.B. {blocking = true} an smoothTP2 weiterreichen, falls gewünscht
-	opt = opt or {}
-
-	if (cf.p - root.Position).Magnitude > 97 then
-		local btns = workspace.JobButtons:GetChildren()
-		if player:FindFirstChild("House") and player.House.Value then
-			btns[#btns + 1] = player.House.Value:FindFirstChild("Marker")
-		end
-		table.sort(btns, function(a, b)
-			return (a.Position - cf.p).Magnitude < (b.Position - cf.p).Magnitude
-		end)
-
-		if (btns[1].Position - cf.p).Magnitude < (cf.p - root.Position).Magnitude then
-			game:GetService("ReplicatedStorage").PlayerChannel:FireServer(
-				"TeleportToJob",
-				((btns[1].Name == "Marker") and "House" or btns[1].Name)
-			)
-			wait(0.9)
-			if (cf.p - root.Position).Magnitude < 9 then
-				return
-			end
-		end
-	end
-
-	-- Start Tween (standard: nicht-blockierend)
-	smoothTP2(cf, { blocking = opt.blocking })
-end
-
--- === Nutzung / API ===
--- smoothTP(CFrame.new(x,y,z))                   -- startet Tween asynchron
--- smoothTP(CFrame.new(x,y,z), {blocking = true}) -- startet Tween blockierend
--- cancelSmoothTP2()                              -- bricht laufenden Tween ab (z.B. wenn Button deaktiviert)
-
--- Returniere Funktionen, falls du das als Modul nutzen willst:
-return {
-	smoothTP2 = smoothTP2,
-	smoothTP = smoothTP,
-	cancelSmoothTP2 = cancelSmoothTP2
-}
-
-
 for _,o in ipairs(workspace.Ovens:GetChildren()) do
 	if ffc(o,"Bottom") then
 		o.Bottom.CanTouch = false
 	end
 end
-
-
 local function tryCook()
 	for zz=1,38 do
 		local order = getOrders()[1]
@@ -746,7 +614,7 @@ local function tryCook()
 				if oven==nil or oven.IsOpen.Value then
 					cookPtick=tick()
 					didsomething=true
-					smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 					network:FireServer("UpdateProperty", cookP, "CFrame", CFrame.new(RNG:NextNumber(56,57),4.1,38))
 				end
 			end
@@ -755,12 +623,12 @@ local function tryCook()
 					--move dew if ordered
 					cookDtick=tick()
 					didsomething=true
-					smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 					network:FireServer("UpdateProperty", cookD, "CFrame", CFrame.new(53,4.68,36.5))
 				elseif order~="Dew" and raw and raw.Parent and supplyCounts[order]>0 and supplyCounts.TomatoSauce>0 and supplyCounts.Cheese>0 then
 					--make pizza
 					if raw.Mesh.Scale.Y>1.5 then
-						smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+						if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 						didsomething=true
 						network:FireServer("UpdateProperty", raw, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
 						wait()
@@ -770,7 +638,7 @@ local function tryCook()
 						local oven
 						for _,o in ipairs(ovens) do
 							if isFullyOpen(o) then
-							local other = getDoughNear(o.Bottom.Position)
+								local other = getDoughNear(o.Bottom.Position)
 								if other==nil or not (other.BrickColor.Name=="Bright orange" and ffc(other.SG.Frame,"TomatoSauce") and ffc(other.SG.Frame,"MeltedCheese")) then
 									if other then
 										--replace mistaken dough
@@ -782,12 +650,11 @@ local function tryCook()
 									oven=o
 									break
 								end
-								
 							end
 						end
 						if oven and raw.Parent==workspace.AllDough then
 							--make
-							smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+							if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 							didsomething=true
 							network:FireServer("AddIngredientToPizza", raw,"TomatoSauce")
 							network:FireServer("AddIngredientToPizza", raw,"Cheese")
@@ -819,7 +686,7 @@ local function tryCook()
 				local bar = o.Door.Meter.SurfaceGui.ProgressBar.Bar
 				if o.IsOpen.Value==false and (o.IsCooking.Value==false or (Vector3.new(bar.ImageColor3.r,bar.ImageColor3.g,bar.ImageColor3.b)-Vector3.new(.871,.518,.224)).magnitude>.1) then
 					didsomething=true
-					 smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+					if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 					o.Door.ClickDetector.Detector:FireServer()
 					break
 				end
@@ -827,13 +694,13 @@ local function tryCook()
 			--trash
 			if badD then
 				didsomething=true
-				smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 				network:FireServer("UpdateProperty", badD, "CFrame", CFrame.new(RNG:NextNumber(28,30), 1.7, RNG:NextNumber(55,57)))
 			end
 			if trash and (trash.IsBurned.Value==false or getOvenNear(trash.Position)==nil or getOvenNear(trash.Position).IsOpen.Value) then
 				--closed oven breaks if you take burnt out of it
 				didsomething=true
-				 smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
+				if (root.Position-Vector3.new(36.64, 3.80, 54.11)).magnitude>9 then  smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
 				network:FireServer("UpdateProperty", trash, "CFrame", CFrame.new(47.90, 7.00, 72.49, 1, 0, -0, 0, 0, 1, 0, -1, 0))
 			end
 			if didsomething then wait(0.5) else break end
@@ -861,7 +728,7 @@ while gui.Parent do
 			elseif c.Head.Position.X < 70 then
 			    reg = 1
 			end
-			 smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
+			if (root.Position-Vector3.new(50.30, 3.80, 83.24)).magnitude>9 then smoothTP(CFrame.new(50.30, 3.80, 83.24)) wait(0.2) end
 			network:FireServer("OrderComplete", c, order, workspace["Register"..reg])
 			wait(0.4)
 		else
@@ -877,32 +744,32 @@ while gui.Parent do
 			if boxD and tick()-boxDtick>0.8 then
 				boxDtick=tick()
 				didsomething=true
-				  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
 				network:FireServer("UpdateProperty", boxD, "CFrame", CFrame.new(63,4.9,-1,-1,0,0,0,1,0,0,0,-1))
 			end
 			if fullBox then
 				if fullBox.Name=="BoxOpen" then
 					didsomething=true
-					  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
 					network:FireServer("CloseBox", fullBox)
 					--will be moved next loop
 				elseif tick()-boxPtick>0.8 then
 					didsomething=true
-				 smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+					if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
 					network:FireServer("UpdateProperty", fullBox, "CFrame", CFrame.new(68.2,4.4,RNG:NextNumber(-3,-2),-1,0,0,0,1,0,0,0,-1))
 					boxPtick=tick()
 				end
 			end
 			if closedBox and not openBox then
 				didsomething=true
-				  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.2)  end
 				network:FireServer("UpdateProperty", closedBox, "CFrame", CFrame.new(RNG:NextNumber(62.5,70.5),3.5,RNG:NextNumber(11,25)))
 				wait(0.3)
 				network:FireServer("OpenBox", closedBox)
 			end
 			if openBox and boxP then
 				didsomething=true
-				  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
+				if (root.Position-Vector3.new(58.74, 3.80, 12.400)).magnitude>9 then  smoothTP(CFrame.new(58.74, 3.80, 12.40))wait(0.1)  end
 				network:FireServer("UpdateProperty", boxP, "Anchored", true)
 				network:FireServer("UpdateProperty", openBox, "Anchored", true)
 				wait(0.4)
@@ -919,7 +786,7 @@ while gui.Parent do
 		local wstools = FindAllDeliveryTools(workspace)
 		if #wstools > 1 or (wstools[1] and ffc(wstools[1].Handle,"X10")) then
 			--get tools
-			 smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
+			if (root.Position-Vector3.new(54.45, 4.02, -15)).magnitude>9 then smoothTP(CFrame.new(54.45, 4.02, -15)) wait(.1) end
 			for i=1,#wstools do
 				if wstools[i].Parent == workspace then
 					humanoid:EquipTool(wstools[i])
@@ -1064,7 +931,7 @@ while gui.Parent do
 				end
 				if not waiting then
 					--move boxes
-					 smoothTP(CFrame.new(8,12.4,-1020)) end
+					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
 					wait(0.2)
 					lastBox=nil
 					local j=0
