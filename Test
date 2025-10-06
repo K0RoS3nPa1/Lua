@@ -270,31 +270,22 @@ refillEndBox.FocusLost:Connect(function()
 	end
 	refillEndBox.Text=tostring(settings.refill_end)
 end)
--- ...existing code...
+
 local oldMovespeedAt=MovespeedBox.Text
 MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
-    -- Erlaubt nur Zahlen und Komma/Punkt
-    local cleaned = MovespeedBox.Text:gsub(",","."):gsub("[^%d%.]", "")
-    if #cleaned > 6 then cleaned = cleaned:sub(1,6) end
-    MovespeedBox.Text = cleaned
+    -- Nur maximal 3 Ziffern erlauben, keine Buchstaben
+    if #MovespeedBox.Text > 3 or MovespeedBox.Text:match("%D") then
+        MovespeedBox.Text = oldMovespeedAt
+    end
     oldMovespeedAt = MovespeedBox.Text
 end)
--- ...existing code...
 MovespeedBox.FocusLost:Connect(function()
-    local text = MovespeedBox.Text:gsub(",",".")
-    local val = tonumber(text)
-    if val and val > 0 then
-        val = math.floor(val*10)/10
+    local val = tonumber(MovespeedBox.Text)
+    if val and val >= 0 and val <= 999 then
         settings.movespeed_at = val
-    else
-        -- Fallback auf alten Wert, falls ungültig
-        MovespeedBox.Text = tostring(settings.movespeed_at)
-        return
     end
     MovespeedBox.Text = tostring(settings.movespeed_at)
 end)
--- ...existing code...
-
 
 
 
