@@ -653,10 +653,8 @@ local function tryCook()
 								local other = getDoughNear(o.Bottom.Position)
 								if other==nil or not (other.BrickColor.Name=="Bright orange" and ffc(other.SG.Frame,"TomatoSauce") and ffc(other.SG.Frame,"MeltedCheese")) then
 									if other then
-										--replace mistaken dough
-										didsomething=true
-										smoothTP(CFrame.new(36.64, 3.80, 54.11)) wait(0.2) end
-										network:FireServer("UpdateProperty", other, "CFrame", CFrame.new(RNG:NextNumber(29.6,44.6),3.7,RNG:NextNumber(42.5,48.5)))
+										-- Hier wird mit other gearbeitet!
+										network:FireServer("UpdateProperty", other, "CFrame", ...)
 										wait(0.2)
 									end
 									oven=o
