@@ -280,20 +280,20 @@ MovespeedBox:GetPropertyChangedSignal("Text"):Connect(function()
     oldMovespeedAt = MovespeedBox.Text
 end)
 -- ...existing code...
--- ...existing code...
--- ...existing code...
 MovespeedBox.FocusLost:Connect(function()
-    -- Nur das hier verwenden, KEIN zweites Argument!
-    local val = tonumber(MovespeedBox.Text:gsub(",","."))
-    if val then
+    local text = MovespeedBox.Text:gsub(",",".")
+    local val = tonumber(text)
+    if val and val > 0 then
         val = math.floor(val*10)/10
         settings.movespeed_at = val
+    else
+        -- Fallback auf alten Wert, falls ungültig
+        MovespeedBox.Text = tostring(settings.movespeed_at)
+        return
     end
     MovespeedBox.Text = tostring(settings.movespeed_at)
 end)
 -- ...existing code...
--- ...existing code...
-
 
 
 
