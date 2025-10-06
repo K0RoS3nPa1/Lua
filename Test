@@ -581,16 +581,7 @@ local function smoothTP(cf)
     end
     smoothTP2(cf)
 end
--- ...existing code...
 
--- Füge diese Hilfsfunktion hinzu (z.B. nach den anderen smoothTP-Funktionen):
-local function tweenToButton(btn)
-    -- Erst über dem Button schweben (Y + 3)
-    smoothTP(CFrame.new(btn.Position.X, btn.Position.Y + 3, btn.Position.Z))
-    wait(0.2)
-    -- Dann direkt auf den Button gehen
-    smoothTP(btn.CFrame)
-end
 
 
 for _,o in ipairs(workspace.Ovens:GetChildren()) do
@@ -906,7 +897,11 @@ while gui.Parent do
 						if count < 2 then
 							if needtp then
 							    needtp=false
-								tweenToButton(btn)
+																-- ...existing code...
+								smoothTP(btn.CFrame + Vector3.new(0,3,2.5)) -- Erst über dem Button
+								wait(0.2)
+								smoothTP(btn.CFrame) -- Dann direkt auf den Button
+								-- ...existing code...
 
 								wait(0.5)
 							end
