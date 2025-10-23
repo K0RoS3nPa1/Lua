@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -309,7 +309,7 @@ end
 -- ...existing code...
 Traget:CreateToggle({
     Name = "Fling",
-    Description = "Flings target player (and their vehicle if any)",
+    Description = "Attempt fling without vehicle (best-effort, not guaranteed)",
     CurrentValue = false,
     Callback = function(enabled)
         if flingConnection then
@@ -317,108 +317,82 @@ Traget:CreateToggle({
             flingConnection = nil
         end
 
-        local function cleanupAttachmentsAndForces(target)
-            if target and target.Character then
-                local thr = target.Character:FindFirstChild("HumanoidRootPart")
-                if thr then
-                    for _, child in ipairs(thr:GetChildren()) do
-                        if child.Name == "FlingAngular" or child.Name == "FlingBody" then
-                            pcall(function() child:Destroy() end)
-                        end
-                        if child.Name == "FlingAttachTarget" then
-                            pcall(function() child:Destroy() end)
-                        end
-                    end
-                end
-            end
-
-            local localHRP = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if localHRP then
-                if localHRP:FindFirstChild("FlingWeld") then
-                    pcall(function() localHRP.FlingWeld:Destroy() end)
-                end
-                if localHRP:FindFirstChild("FlingAttachLocal") then
-                    pcall(function() localHRP.FlingAttachLocal:Destroy() end)
+        local function clearForcesOn(part)
+            if not part then return end
+            for _, c in ipairs(part:GetChildren()) do
+                if c.Name == "PH_FlingBV" or c.Name == "PH_FlingBAV" or c.Name == "PH_FlingVF" or c.Name == "PH_FlingAtt" then
+                    pcall(function() c:Destroy() end)
                 end
             end
         end
 
-        if enabled then
-            flinging = true
+        if not enabled then
+            flinging = false
+            if flingConnection then flingConnection:Disconnect() flingConnection = nil end
+            local t = getTargetPlayer()
+            if t and t.Character then clearForcesOn(t.Character:FindFirstChild("HumanoidRootPart")) end
+            return
+        end
 
-            flingConnection = RunService.Heartbeat:Connect(function()
-                local target = getTargetPlayer()
-                local localChar = localPlayer.Character
-                local targetChar = target and target.Character
-                if not target or not targetChar or not localChar then return end
+        flinging = true
+        flingConnection = RunService.Heartbeat:Connect(function()
+            local target = getTargetPlayer()
+            if not target or not target.Character then return end
+            local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+            local localChar = localPlayer.Character
+            local localHRP = localChar and localChar:FindFirstChild("HumanoidRootPart")
+            if not targetHRP then return end
 
-                local localHRP = localChar:FindFirstChild("HumanoidRootPart")
-                local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-                if not localHRP or not targetHRP then return end
+            -- Optional: move yourself visually onto the target
+            pcall(function()
+                if localHRP then localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0.2, 0) end
+            end)
 
-                -- Stelle sicher, dass wir möglichst genau am Ziel sind: kurzer Teleport
-                pcall(function() localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0.2, 0) end)
+            -- cleanup previous
+            clearForcesOn(targetHRP)
 
-                -- Erzeuge Attachments (falls noch nicht vorhanden) und einen Weld, damit dein HRP am Ziel haftet
-                if not localHRP:FindFirstChild("FlingWeld") then
-                    pcall(function()
-                        -- Attachment auf local und target
-                        local attLocal = Instance.new("Attachment")
-                        attLocal.Name = "FlingAttachLocal"
-                        attLocal.Parent = localHRP
-
-                        local attTarget = Instance.new("Attachment")
-                        attTarget.Name = "FlingAttachTarget"
-                        attTarget.Parent = targetHRP
-
-                        -- WeldConstraint verbindet die beiden Parts
-                        local weld = Instance.new("WeldConstraint")
-                        weld.Name = "FlingWeld"
-                        weld.Part0 = localHRP
-                        weld.Part1 = targetHRP
-                        weld.Parent = localHRP
-                    end)
-                end
-
-                -- Entferne alte Kräfte
-                for _, child in ipairs(targetHRP:GetChildren()) do
-                    if child.Name == "FlingAngular" or child.Name == "FlingBody" then
-                        pcall(function() child:Destroy() end)
-                    end
-                end
-
-                -- Rotationskraft auf Ziel
+            -- 1) BodyAngularVelocity (spin)
+            pcall(function()
                 local bav = Instance.new("BodyAngularVelocity")
-                bav.Name = "FlingAngular"
-                bav.AngularVelocity = Vector3.new(0, 300, 0) -- ggf. anpassen
-                bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+                bav.Name = "PH_FlingBAV"
+                bav.MaxTorque = Vector3.new(1e9,1e9,1e9)
+                bav.AngularVelocity = Vector3.new(0, 300, 0)
                 bav.P = 1e5
                 bav.Parent = targetHRP
+            end)
 
-                -- Starke lineare Kraft auf Ziel
-                -- BodyLinearVelocity wirkt zuverlässig bei neueren R15-Parts
-                local blv = Instance.new("BodyVelocity")
-                blv.Name = "FlingBody"
-                blv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-                blv.Velocity = (targetHRP.CFrame.LookVector * 150) + Vector3.new(0, 200, 0)
-                blv.Parent = targetHRP
+            -- 2) BodyVelocity (legacy, sometimes ignored)
+            pcall(function()
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "PH_FlingBV"
+                bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+                bv.Velocity = (targetHRP.CFrame.LookVector * 200) + Vector3.new(0, 180, 0)
+                bv.Parent = targetHRP
+                task.delay(0.2, function() pcall(function() if bv and bv.Parent then bv:Destroy() end end) end)
+            end)
 
-                -- kurze Lebenszeit der linearen Kraft (verhindert permanentes Festhängen)
-                task.delay(0.25, function()
-                    pcall(function() if blv and blv.Parent then blv:Destroy() end end)
+            -- 3) VectorForce + Attachment (Robust on newer physics if allowed)
+            pcall(function()
+                local att = Instance.new("Attachment")
+                att.Name = "PH_FlingAtt"
+                att.Parent = targetHRP
+
+                local vf = Instance.new("VectorForce")
+                vf.Name = "PH_FlingVF"
+                vf.Attachment0 = att
+                vf.Force = (targetHRP.CFrame.LookVector * 5e4) + Vector3.new(0, 4e4, 0)
+                vf.RelativeTo = Enum.ActuatorRelativeTo.World
+                vf.ApplyAtCenterOfMass = true
+                vf.Parent = targetHRP
+
+                task.delay(0.18, function()
+                    pcall(function()
+                        if vf and vf.Parent then vf:Destroy() end
+                        if att and att.Parent then att:Destroy() end
+                    end)
                 end)
             end)
-        else
-            flinging = false
-            if flingConnection then
-                flingConnection:Disconnect()
-                flingConnection = nil
-            end
-
-            -- Aufräumen: entferne Kräfte und Attachments/Weld
-            local target = getTargetPlayer()
-            cleanupAttachmentsAndForces(target)
-        end
+        end)
     end,
 })
 -- ...existing code...
