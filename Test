@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.1.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -1267,6 +1267,7 @@ Settings:CreateSlider({
     end
 }, "MaxPlayersSlider")
 
+-- ...existing code...
 Settings:CreateButton({
     Name = "Server Hop",
     Description = "Hop to a server with at most " .. tostring(maxPlayersToJoin) .. " players",
@@ -1284,46 +1285,61 @@ Settings:CreateButton({
             task.wait(1)
         end
 
-        -- Kick with message
+        -- Kick with message (keeps consistent UI behaviour)
         LocalPlayer:Kick("\nPerforming server hop...")
 
-        -- Adjust GUI title
+        -- Adjust GUI title (shows when kick prompt is visible)
         local gui = game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
         gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
 
         task.wait(0.5)
 
-        -- Fetch server list and find a server with player count <= maxPlayersToJoin
+        -- Suche server, aber wähle den besten Kandidaten (höchste 'playing' <= maxPlayersToJoin)
         local cursor
+        local bestServerId
+        local bestPlaying = -1
         repeat
-            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-            if cursor then
-                url = url .. "&cursor=" .. cursor
-            end
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?limit=100"
+            if cursor then url = url .. "&cursor=" .. cursor end
 
-            local response = game:HttpGet(url)
-            local data = HttpService:JSONDecode(response)
+            local ok, response = pcall(function() return game:HttpGet(url) end)
+            if not ok or not response then break end
+
+            local success, data = pcall(function() return HttpService:JSONDecode(response) end)
+            if not success or not data or not data.data then break end
+
             cursor = data.nextPageCursor
-
             for _, server in ipairs(data.data) do
-                if server.playing <= maxPlayersToJoin and server.id ~= game.JobId then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
-                    return
+                -- ignore current server and only consider servers with up to maxPlayersToJoin players
+                if server.id ~= game.JobId and type(server.playing) == "number" and server.playing <= maxPlayersToJoin then
+                    -- prefer server with most players (but still <= maxPlayersToJoin) and avoid empty servers if possible
+                    if server.playing > bestPlaying then
+                        bestPlaying = server.playing
+                        bestServerId = server.id
+                    end
                 end
             end
 
-            task.wait(1)
+            -- if we already found a perfectly filled candidate, stop early
+            if bestPlaying == maxPlayersToJoin then break end
+            task.wait(0.2)
         until not cursor
 
-        -- No suitable server found notification
+        if bestServerId then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, bestServerId, LocalPlayer)
+            return
+        end
+
+        -- fallback: wenn kein passender Server gefunden wurde, informiere den Nutzer
         PizzaHub:Notification({
             Title = "No server found",
-            Content = "No server with max " .. tostring(maxPlayersToJoin) .. " players was found.",
+            Content = "Could not find a server with up to " .. tostring(maxPlayersToJoin) .. " players.",
             Icon = "error",
             ImageSource = "Material"
         })
     end
 })
+-- ...existing code...
 
 
 
