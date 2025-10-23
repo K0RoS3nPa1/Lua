@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.1.0"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -306,97 +306,79 @@ local function getTargetPlayer()
 	return nil
 end
 
+-- ...existing code...
 Traget:CreateToggle({
-	Name = "Fling",
-	Description = "Flings target player (and their vehicle if any)",
-	CurrentValue = false,
-	Callback = function(enabled)
-		if flingConnection then
-			flingConnection:Disconnect()
-			flingConnection = nil
-		end
+    Name = "Fling",
+    Description = "Flings target player (and their vehicle if any)",
+    CurrentValue = false,
+    Callback = function(enabled)
+        if flingConnection then
+            flingConnection:Disconnect()
+            flingConnection = nil
+        end
 
-		if enabled then
-			flinging = true
+        if enabled then
+            flinging = true
 
-			flingConnection = RunService.Heartbeat:Connect(function()
-				local target = getTargetPlayer()
-				local localChar = localPlayer.Character
-				local targetChar = target and target.Character
-				if not targetChar or not localChar then return end
+            flingConnection = RunService.Heartbeat:Connect(function()
+                local target = getTargetPlayer()
+                local localChar = localPlayer.Character
+                local targetChar = target and target.Character
+                if not targetChar or not localChar then return end
 
-				local localHRP = localChar:FindFirstChild("HumanoidRootPart")
-				local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-				if not localHRP or not targetHRP then return end
+                local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+                local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+                if not localHRP or not targetHRP then return end
 
-				-- Teleportiere dich über den Zielspieler (damit du nah dran bist)
-				localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 0)
+                -- Positioniere dich seitlich (nicht direkt über dem Kopf)
+                local sideOffset = Vector3.new(3, 0, 0)
+                local safePos = targetHRP.Position + sideOffset + Vector3.new(0, 3, 0)
+                pcall(function() localHRP.CFrame = CFrame.new(safePos) end)
 
-				-- Suche Fahrzeug (Seat), falls Ziel drin sitzt
-				local vehiclePart = nil
-				for _, part in ipairs(workspace:GetDescendants()) do
-					if (part:IsA("VehicleSeat") or part:IsA("Seat")) and part.Occupant and part.Occupant.Parent == targetChar then
-						vehiclePart = part
-						break
-					end
-				end
+                -- Entferne vorhandene Fling-Kräfte am Target
+                for _, child in ipairs(targetHRP:GetChildren()) do
+                    if child.Name == "FlingAngular" or child.Name == "FlingBody" then
+                        child:Destroy()
+                    end
+                end
 
-				-- Fling-Parts: Fahrzeug falls gefunden, sonst Zielspieler HumanoidRootPart
-				local flingParts = {}
-				if vehiclePart then
-					-- Fling alle BaseParts im Fahrzeug Model (Parent des Seats)
-					local vehicleModel = vehiclePart.Parent
-					for _, p in ipairs(vehicleModel:GetDescendants()) do
-						if p:IsA("BasePart") then
-							table.insert(flingParts, p)
-						end
-					end
-				else
-					table.insert(flingParts, targetHRP)
-				end
+                -- Starker rotierender Effekt
+                local bav = Instance.new("BodyAngularVelocity")
+                bav.Name = "FlingAngular"
+                bav.AngularVelocity = Vector3.new(0, 200, 0) -- Drehstärke (anpassen)
+                bav.MaxTorque = Vector3.new(1e8, 1e8, 1e8)
+                bav.P = 1e4
+                bav.Parent = targetHRP
 
-				-- Wende starke Dreh- und Aufwärtskraft an alle flingParts an
-				for _, part in ipairs(flingParts) do
-					-- Entferne alte Kräfte
-					local oldForce = part:FindFirstChild("FlingForce")
-					if oldForce then oldForce:Destroy() end
+                -- Kurzer linearer "Kick" nach oben/seitlich
+                pcall(function()
+                    -- AssemblyLinearVelocity wirkt zuverlässiger als .Velocity bei modernen R15/AssemblyParts
+                    targetHRP.AssemblyLinearVelocity = Vector3.new(0, 120, 0) + (targetHRP.CFrame.LookVector * 40)
+                end)
+            end)
+        else
+            flinging = false
+            if flingConnection then
+                flingConnection:Disconnect()
+                flingConnection = nil
+            end
 
-					-- Setze BodyAngularVelocity für Rotation
-					local bav = Instance.new("BodyAngularVelocity")
-					bav.Name = "FlingForce"
-					bav.AngularVelocity = Vector3.new(0, 5000, 0) -- Stark drehen
-					bav.MaxTorque = Vector3.new(0, math.huge, 0)
-					bav.P = math.huge
-					bav.Parent = part
-
-					-- Setze Aufwärts-Velocity für „hochwerfen“
-					part.Velocity = Vector3.new(0, 100, 0)
-
-					-- Optional: Kann hier noch BodyForce für Dauerauftrieb ergänzen
-				end
-			end)
-		else
-			flinging = false
-			if flingConnection then
-				flingConnection:Disconnect()
-				flingConnection = nil
-			end
-
-			-- Aufräumen: Entferne BodyAngularVelocity von allen Parts des Zielspielers
-			local target = getTargetPlayer()
-			if target and target.Character then
-				for _, part in ipairs(target.Character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						local oldForce = part:FindFirstChild("FlingForce")
-						if oldForce then oldForce:Destroy() end
-					end
-				end
-				-- Optional: Hier noch Fahrzeugteile reinigen falls nötig
-			end
-		end
-	end
+            -- Aufräumen: entferne Kräfte vom Ziel falls noch vorhanden
+            local target = getTargetPlayer()
+            if target and target.Character then
+                local thr = target.Character:FindFirstChild("HumanoidRootPart")
+                if thr then
+                    for _, child in ipairs(thr:GetChildren()) do
+                        if child.Name == "FlingAngular" or child.Name == "FlingBody" then
+                            child:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end,
 })
-
+-- ...existing code...
 
 Traget:CreateButton({
 	Name = "Goto Player",
