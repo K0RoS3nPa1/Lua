@@ -1,1 +1,1372 @@
 
+local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
+local version = "1.0.0"
+
+local Window = PizzaHub:CreateWindow({
+	Name = "Pizza Hub", -- This Is Title Of Your Window
+	Subtitle = version, -- A Gray Subtitle next To the main title.
+	LogoID = nil, -- The Asset ID of your logo. Set to nil if you do not have a logo for Luna to use.
+	LoadingEnabled = false, -- Whether to enable the loading animation. Set to false if you do not want the loading screen or have your own custom one.
+	LoadingTitle = "", -- Header for loading screen
+	LoadingSubtitle = "", -- Subtitle for loading screen
+
+	ConfigSettings = {
+		RootFolder = nil, -- The Root Folder Is Only If You Have A Hub With Multiple Game Scripts and u may remove it. DO NOT ADD A SLASH
+		ConfigFolder = "Pizza hub" -- The Name Of The Folder Where Luna Will Store Configs For This Script. DO NOT ADD A SLASH
+	},
+
+	KeySystem = false, -- As Of Beta 6, Luna Has officially Implemented A Key System!
+	KeySettings = {
+		Title = "Luna Example Key",
+		Subtitle = "Key System",
+		Note = "Best Key System Ever! Also, Please Use A HWID Keysystem like Pelican, Luarmor etc. that provide key strings based on your HWID since putting a simple string is very easy to bypass",
+		SaveInRoot = false, -- Enabling will save the key in your RootFolder (YOU MUST HAVE ONE BEFORE ENABLING THIS OPTION)
+		SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+		Key = {"Example Key"}, -- List of keys that will be accepted by the system, please use a system like Pelican or Luarmor that provide key strings based on your HWID since putting a simple string is very easy to bypass
+		SecondAction = {
+			Enabled = true, -- Set to false if you do not want a second action,
+			Type = "Link", -- Link / Discord.
+			Parameter = "" -- If Type is Discord, then put your invite link (DO NOT PUT DISCORD.GG/). Else, put the full link of your key system here.
+		}
+	}
+})
+
+
+Window:CreateHomeTab({
+	SupportedExecutors = {
+		"Krnl",
+		"ProtoSmasher",
+		"Fluxus",
+		"Script-Ware",
+		"EasyExploits",
+		"Electron",
+		"JJSploit",
+		"Calamari",
+		"SirHurt",
+		"Sentinel",
+		"WEAREDEVS",
+		"Comet",
+		"Cellery",
+		"Wave",
+		"CODex",
+		"Delta"
+	},
+	DiscordInvite = "1234", -- same thing here
+	Icon = 2
+})
+
+local main = Window:CreateTab({
+	Name = "main",
+	Icon = "house",
+	ImageSource = "Material",
+	ShowTitle = true -- This will determine whether the big header text in the tab will show
+})
+
+main:CreateToggle({
+    Name = "server lag",
+    Description = nil,
+    CurrentValue = false,
+
+    Callback = function(Value)
+        getgenv().SnowballThrowingEnabled = Value
+
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function countSnowballs()
+            local count = 0
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            if backpack then
+                for _, item in ipairs(backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name == "Snowball" then
+                        count += 1
+                    end
+                end
+            end
+            return count
+        end
+
+        local function getRandomPosition()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                return root.Position + Vector3.new(
+                    math.random(-8, 8),
+                    math.random(4, 8),
+                    math.random(-8, 8)
+                )
+            end
+            return Vector3.new(0, 50, 0)
+        end
+
+        if Value then
+            getgenv().SnowballThread = task.spawn(function()
+                while getgenv().SnowballThrowingEnabled do
+                    local character = LocalPlayer.Character
+                    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+                    if not humanoid or not backpack then
+                        task.wait(0.2)
+                        continue
+                    end
+
+                    -- Sehr schnelles Klonen bis 20 erreicht sind
+                    while countSnowballs() < 1000 and getgenv().SnowballThrowingEnabled do
+                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                        task.wait(0.015) -- sehr kurzer Delay, aber genug um Despawn zu vermeiden
+                    end
+
+                    -- Alle Snowballs gleichzeitig werfen
+                    local snowballs = {}
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            table.insert(snowballs, tool)
+                        end
+                    end
+
+                    for _, tool in ipairs(snowballs) do
+                        if not getgenv().SnowballThrowingEnabled then break end
+                        local clicked = tool:FindFirstChild("Clicked")
+                        if clicked then
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                                clicked:FireServer(getRandomPosition())
+                            end)
+                        end
+                        tool:Destroy()
+                    end
+
+                    task.wait(0.3) -- kurze Pause vor nächster Runde
+                end
+            end)
+        else
+            getgenv().SnowballThrowingEnabled = false
+        end
+    end
+})
+
+
+local Traget = Window:CreateTab({
+    Name = "Traget",
+    Icon = "fullscreen_exit",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local selectedPlayerInput -- Referenz zum Eingabefeld
+local confirmedPlayerName
+local activeTool -- Referenz zum aktuellen Tool (optional für toggling)
+
+-- Spieler anhand Eingabe suchen (Name oder DisplayName, teilweise & case-insensitive)
+local function findMatchingPlayer(query)
+	query = query:lower()
+	for _, player in ipairs(Players:GetPlayers()) do
+		local name = player.Name:lower()
+		local display = player.DisplayName:lower()
+		if name:find(query, 1, true) or display:find(query, 1, true) then
+			return player
+		end
+	end
+	return nil
+end
+
+-- Eingabefeld zur manuellen Auswahl
+selectedPlayerInput = Traget:CreateInput({
+	Name = "Enter Player Name",
+	Description = "Type a player’s username or display name, or click one",
+	PlaceholderText = "e.g. CoolPlayer123",
+	CurrentValue = "",
+	Numeric = false,
+	MaxCharacters = nil,
+	Enter = true,
+	Callback = function(text)
+		local match = findMatchingPlayer(text)
+		if match then
+			getgenv().SelectedPlayer = match.Name
+			confirmedPlayerName = match.Name
+
+			PizzaHub:Notification({
+				Title = "Player Selected",
+				Content = "You selected: " .. match.DisplayName .. " (" .. match.Name .. ")",
+				Icon = "person",
+				ImageSource = "Material"
+			})
+		else
+			PizzaHub:Notification({
+				Title = "No Match",
+				Content = "No player found for: " .. text,
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+	end
+}, "SelectedPlayerInput") -- Flag muss eindeutig sein
+
+-- Button zur Auswahl per Klick
+Traget:CreateButton({
+	Name = "Click Player to Select",
+	Description = "Click a player’s character to select them",
+	Callback = function()
+		-- Nur ein Tool gleichzeitig
+		if activeTool and activeTool.Parent then
+			activeTool:Destroy()
+		end
+
+		local tool = Instance.new("Tool")
+		tool.Name = "Player Selector"
+		tool.RequiresHandle = false
+		tool.CanBeDropped = false
+		tool.ToolTip = "Click a player"
+		activeTool = tool
+
+		local mouseConnection
+
+		-- Wenn das Tool ausgerüstet ist
+		tool.Equipped:Connect(function()
+			local mouse = LocalPlayer:GetMouse()
+
+			if mouseConnection then
+				mouseConnection:Disconnect()
+			end
+
+			mouseConnection = mouse.Button1Down:Connect(function()
+				local target = mouse.Target
+				if not target then return end
+
+				local model = target:FindFirstAncestorOfClass("Model")
+				if model then
+					local player = Players:GetPlayerFromCharacter(model)
+					if player then
+						getgenv().SelectedPlayer = player.Name
+						confirmedPlayerName = player.Name
+
+						PizzaHub:Notification({
+							Title = "Player Selected",
+							Content = "You selected: " .. player.DisplayName .. " (" .. player.Name .. ")",
+							Icon = "check_circle",
+							ImageSource = "Material"
+						})
+
+						-- Optional: Tool nach Auswahl entfernen
+						-- tool:Destroy()
+					else
+						PizzaHub:Notification({
+							Title = "No Player Found",
+							Content = "You clicked a model, but it's not a player.",
+							Icon = "person_off",
+							ImageSource = "Material"
+						})
+					end
+				end
+			end)
+		end)
+
+		-- Verbindung sauber trennen bei Unequip oder Zerstörung
+		local function cleanupConnection()
+			if mouseConnection then
+				mouseConnection:Disconnect()
+				mouseConnection = nil
+			end
+		end
+
+		tool.Unequipped:Connect(cleanupConnection)
+		tool.Destroying:Connect(cleanupConnection)
+
+		tool.Parent = LocalPlayer.Backpack
+
+		-- Tool automatisch ausrüsten
+		task.delay(0.1, function()
+			local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid:EquipTool(tool)
+			end
+		end)
+	end
+})
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local localPlayer = Players.LocalPlayer
+local flinging = false
+local flingConnection
+
+local function getTargetPlayer()
+	local name = tostring(getgenv().SelectedPlayer or ""):lower()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player.Name:lower() == name or player.DisplayName:lower() == name then
+			return player
+		end
+	end
+	return nil
+end
+
+Traget:CreateToggle({
+	Name = "Fling",
+	Description = "Flings target player (and their vehicle if any)",
+	CurrentValue = false,
+	Callback = function(enabled)
+		if flingConnection then
+			flingConnection:Disconnect()
+			flingConnection = nil
+		end
+
+		if enabled then
+			flinging = true
+
+			flingConnection = RunService.Heartbeat:Connect(function()
+				local target = getTargetPlayer()
+				local localChar = localPlayer.Character
+				local targetChar = target and target.Character
+				if not targetChar or not localChar then return end
+
+				local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+				local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+				if not localHRP or not targetHRP then return end
+
+				-- Teleportiere dich über den Zielspieler (damit du nah dran bist)
+				localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 0)
+
+				-- Suche Fahrzeug (Seat), falls Ziel drin sitzt
+				local vehiclePart = nil
+				for _, part in ipairs(workspace:GetDescendants()) do
+					if (part:IsA("VehicleSeat") or part:IsA("Seat")) and part.Occupant and part.Occupant.Parent == targetChar then
+						vehiclePart = part
+						break
+					end
+				end
+
+				-- Fling-Parts: Fahrzeug falls gefunden, sonst Zielspieler HumanoidRootPart
+				local flingParts = {}
+				if vehiclePart then
+					-- Fling alle BaseParts im Fahrzeug Model (Parent des Seats)
+					local vehicleModel = vehiclePart.Parent
+					for _, p in ipairs(vehicleModel:GetDescendants()) do
+						if p:IsA("BasePart") then
+							table.insert(flingParts, p)
+						end
+					end
+				else
+					table.insert(flingParts, targetHRP)
+				end
+
+				-- Wende starke Dreh- und Aufwärtskraft an alle flingParts an
+				for _, part in ipairs(flingParts) do
+					-- Entferne alte Kräfte
+					local oldForce = part:FindFirstChild("FlingForce")
+					if oldForce then oldForce:Destroy() end
+
+					-- Setze BodyAngularVelocity für Rotation
+					local bav = Instance.new("BodyAngularVelocity")
+					bav.Name = "FlingForce"
+					bav.AngularVelocity = Vector3.new(0, 5000, 0) -- Stark drehen
+					bav.MaxTorque = Vector3.new(0, math.huge, 0)
+					bav.P = math.huge
+					bav.Parent = part
+
+					-- Setze Aufwärts-Velocity für „hochwerfen“
+					part.Velocity = Vector3.new(0, 100, 0)
+
+					-- Optional: Kann hier noch BodyForce für Dauerauftrieb ergänzen
+				end
+			end)
+		else
+			flinging = false
+			if flingConnection then
+				flingConnection:Disconnect()
+				flingConnection = nil
+			end
+
+			-- Aufräumen: Entferne BodyAngularVelocity von allen Parts des Zielspielers
+			local target = getTargetPlayer()
+			if target and target.Character then
+				for _, part in ipairs(target.Character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						local oldForce = part:FindFirstChild("FlingForce")
+						if oldForce then oldForce:Destroy() end
+					end
+				end
+				-- Optional: Hier noch Fahrzeugteile reinigen falls nötig
+			end
+		end
+	end
+})
+
+
+Traget:CreateButton({
+	Name = "Goto Player",
+	Description = "Teleport to the selected player",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+		local selectedName = getgenv().SelectedPlayer
+
+		if not selectedName or selectedName == "" then
+			warn("No player selected!")
+			return
+		end
+
+		local TargetPlayer = Players:FindFirstChild(selectedName)
+		if not TargetPlayer then
+			warn("Player not found!")
+			return
+		end
+
+		local TargetCharacter = TargetPlayer.Character
+		local LocalCharacter = LocalPlayer.Character
+
+		if TargetCharacter and LocalCharacter then
+			local TargetHRP = TargetCharacter:FindFirstChild("HumanoidRootPart")
+			local LocalHRP = LocalCharacter:FindFirstChild("HumanoidRootPart")
+
+			if TargetHRP and LocalHRP then
+				LocalHRP.CFrame = TargetHRP.CFrame
+				print("Teleported to player: " .. selectedName)
+			else
+				warn("HumanoidRootPart missing!")
+			end
+		else
+			warn("One of the characters is missing!")
+		end
+	end
+})
+
+local viewPlayerEnabled = false
+local viewPlayerConnection = nil
+local currentTargetPlayer = nil
+local ToggleViewPlayer -- Referenz fürs UI-Toggle
+local lastSelectedName = nil
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Kamera auf Zielspieler setzen
+local function setCameraToTargetPlayer()
+	if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Humanoid") then
+		camera.CameraSubject = currentTargetPlayer.Character.Humanoid
+	else
+		warn("Target player character or humanoid not found.")
+	end
+end
+
+-- Traget-UI Toggle
+ToggleViewPlayer = Traget:CreateToggle({
+	Name = "View Player",
+	Description = "Focus the camera on the selected player.",
+	CurrentValue = false,
+
+	Callback = function(enabled)
+		viewPlayerEnabled = enabled
+
+		if not enabled then
+			-- Kamera zurücksetzen
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+				camera.CameraSubject = LocalPlayer.Character.Humanoid
+			end
+
+			currentTargetPlayer = nil
+			lastSelectedName = nil
+
+			if viewPlayerConnection then
+				viewPlayerConnection:Disconnect()
+				viewPlayerConnection = nil
+			end
+		end
+	end,
+})
+
+-- Überwache dynamische Änderung von SelectedPlayer
+RunService.RenderStepped:Connect(function()
+	if not viewPlayerEnabled then return end
+
+	local selectedName = getgenv().SelectedPlayer
+	if selectedName ~= lastSelectedName then
+		lastSelectedName = selectedName
+
+		if not selectedName or selectedName == "" then
+			PizzaHub:Notification({
+				Title = "No Player Selected",
+				Content = "You must select a player first.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+			return
+		end
+
+		local target = Players:FindFirstChild(selectedName)
+		if not target then
+			PizzaHub:Notification({
+				Title = "Player Not Found",
+				Content = "Player '" .. selectedName .. "' not found!",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+			return
+		end
+
+		currentTargetPlayer = target
+		setCameraToTargetPlayer()
+
+		-- Verbindung aktualisieren
+		if viewPlayerConnection then
+			viewPlayerConnection:Disconnect()
+		end
+
+		viewPlayerConnection = currentTargetPlayer.CharacterAdded:Connect(function()
+			if viewPlayerEnabled then
+				setCameraToTargetPlayer()
+			end
+		end)
+
+		PizzaHub:Notification({
+			Title = "Now Viewing",
+			Content = "Now viewing '" .. selectedName .. "'",
+			Icon = "visibility",
+			ImageSource = "Material"
+		})
+	end
+end)
+
+Traget:CreateButton({
+    Name = "Bring Player To You",
+    Description = "TPs to player, follows them until seated, and returns to old position.",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local selectedName = getgenv().SelectedPlayer
+
+        if not selectedName or selectedName == "" then
+            PizzaHub:Notification({
+                Title = "Fehler",
+                Content = "Kein Spieler ausgewählt!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        local TargetPlayer = Players:FindFirstChild(selectedName)
+        if not TargetPlayer or not TargetPlayer.Character or not TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            PizzaHub:Notification({
+                Title = "Fehler",
+                Content = "Zielspieler nicht gefunden oder nicht geladen!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        local character = LocalPlayer.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then
+            PizzaHub:Notification({
+                Title = "Fehler",
+                Content = "Eigener Charakter nicht gefunden!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        local hrp = character.HumanoidRootPart
+        local originalCFrame = hrp.CFrame + Vector3.new(0, 5, 0) -- leicht erhöht speichern
+
+        -- Fahrzeug + Sitze finden
+        local car, seat, hoodseat
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
+                if v.Occupant == character.Humanoid then
+                    car = v.Parent
+                    seat = v
+                    hoodseat = car:FindFirstChild("HoodSeat")
+                    break
+                elseif not v.Occupant then
+                    car = v.Parent
+                    seat = v
+                    hoodseat = car:FindFirstChild("HoodSeat")
+                    hrp.CFrame = v.CFrame + Vector3.new(0, 5, 0) -- normal TP in Sitz
+                    break
+                end
+            end
+        end
+
+        if not car or not seat or not hoodseat then
+            PizzaHub:Notification({
+                Title = "Fehler",
+                Content = "Kein Fahrzeug mit HoodSeat gefunden!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+            return
+        end
+
+        -- Warten bis du sitzt
+        repeat task.wait() until seat.Occupant == character.Humanoid
+
+        -- Offset zum HoodSeat berechnen
+        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
+
+        -- 1. TP zum Zielspieler
+        local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        car:SetPrimaryPartCFrame(targetHRP.CFrame * CFrame.new(0, -3, -5)) -- leicht unter/seitlich
+
+        -- 2. Folge-Zeitraum
+        local timeout = 20
+        local startTime = tick()
+        while hoodseat.Occupant ~= TargetPlayer.Character:FindFirstChild("Humanoid") and tick() - startTime < timeout do
+            task.wait(0.1)
+            targetHRP = TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not targetHRP then break end
+
+            -- Smoothe Verfolgung
+            local targetCFrame = targetHRP.CFrame * CFrame.new(0, -3, -5)
+            local current = car.PrimaryPart.CFrame
+            local lerped = current:Lerp(targetCFrame, 0.05)
+            car:SetPrimaryPartCFrame(lerped)
+        end
+
+        -- Check, ob Spieler drin sitzt
+        if hoodseat.Occupant == TargetPlayer.Character:FindFirstChild("Humanoid") then
+            -- 3. Rück-Teleport zur Originalposition (leicht erhöht)
+            car:SetPrimaryPartCFrame(originalCFrame * offset:Inverse())
+
+            PizzaHub:Notification({
+                Title = "Erfolg",
+                Content = "Spieler eingesammelt und zurückgekehrt!",
+                Icon = "check_circle",
+                ImageSource = "Material"
+            })
+        else
+            PizzaHub:Notification({
+                Title = "Abbruch",
+                Content = "Spieler ist nicht eingestiegen (Timeout)!",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+        end
+    end
+})
+
+
+
+
+
+
+Traget:CreateButton({
+	Name = "Throw Player Far Away",
+	Description = "Throws the selected player far away using your vehicle",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+		local selectedName = getgenv().SelectedPlayer
+
+		-- Check if player is selected
+		if not selectedName or selectedName == "" then
+			return PizzaHub:Notification({
+				Title = "Failed",
+				Content = "No player selected!",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		local TargetPlayer = Players:FindFirstChild(selectedName)
+		if not TargetPlayer or not TargetPlayer.Character or not TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			return PizzaHub:Notification({
+				Title = "Failed",
+				Content = "Player '" .. selectedName .. "' not found!",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		local character = LocalPlayer.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
+
+		local originalCFrame = hrp.CFrame
+		local car, seat, hoodseat
+
+		-- Find a vehicle: either one the player is in, or an empty one
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
+				if v.Occupant == character:FindFirstChild("Humanoid") then
+					car = v.Parent
+					seat = v
+					hoodseat = v.Parent.HoodSeat
+					break
+				elseif v.Occupant == nil then
+					car = v.Parent
+					seat = v
+					hoodseat = v.Parent.HoodSeat
+					hrp.CFrame = seat.CFrame -- teleport player into seat
+					break
+				end
+			end
+		end
+
+		if not seat or not hoodseat or not car then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "No suitable vehicle with a HoodSeat found.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		-- Wait until we are seated
+		repeat task.wait() until seat.Occupant == character:FindFirstChild("Humanoid")
+
+		-- Calculate offset between vehicle and hood seat
+		local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
+
+		-- Teleport vehicle to target player until they enter the hood seat
+		local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+		repeat
+			task.wait()
+			car:SetPrimaryPartCFrame(targetHRP.CFrame * offset:Inverse())
+		until hoodseat.Occupant == TargetPlayer.Character:FindFirstChild("Humanoid")
+
+		-- Define a far-away position
+		local farAway = Vector3.new(-4492, 534, -686)
+
+		-- Teleport vehicle to far away location until the player gets thrown off
+		repeat
+			task.wait()
+			car:SetPrimaryPartCFrame(CFrame.new(farAway) * offset:Inverse())
+		until hoodseat.Occupant == nil
+
+		-- Return local player to their original position
+		if hrp then
+			hrp.CFrame = originalCFrame
+		end
+
+		PizzaHub:Notification({
+			Title = "Success",
+			Content = "Player '" .. selectedName .. "' was thrown far away!",
+			Icon = "check_circle",
+			ImageSource = "Material"
+		})
+	end,
+})
+
+
+Traget:CreateButton({
+	Name = "Kill Player",
+	Description = "Kills the selected player by launching them to a death position",
+	Callback = function()
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+		local selectedName = getgenv().SelectedPlayer
+
+		-- Ensure a player is selected
+		if not selectedName or selectedName == "" then
+			return PizzaHub:Notification({
+				Title = "Failed",
+				Content = "No player selected!",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		local TargetPlayer = Players:FindFirstChild(selectedName)
+		if not TargetPlayer or not TargetPlayer.Character or not TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			return PizzaHub:Notification({
+				Title = "Failed",
+				Content = "Player '" .. selectedName .. "' not found!",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		local car, seat, hoodseat
+		local playerHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+		local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		local originalCFrame = localHRP and localHRP.CFrame
+
+		-- Look for a suitable vehicle (empty or already used)
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
+				local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+				if v.Occupant == humanoid then
+					car = v.Parent
+					seat = v
+					hoodseat = v.Parent.HoodSeat
+					break
+				elseif not v.Occupant then
+					car = v.Parent
+					seat = v
+					hoodseat = v.Parent.HoodSeat
+					if localHRP then localHRP.CFrame = v.CFrame end
+					break
+				end
+			end
+		end
+
+		if not car or not seat or not hoodseat then
+			return PizzaHub:Notification({
+				Title = "Error",
+				Content = "No suitable vehicle with HoodSeat found.",
+				Icon = "error",
+				ImageSource = "Material"
+			})
+		end
+
+		-- Wait until seated
+		repeat task.wait() until seat.Occupant == LocalPlayer.Character:FindFirstChild("Humanoid")
+
+		-- Calculate relative offset between hoodseat and car
+		local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodseat.CFrame)
+
+		-- Move car to player until they are seated in hoodseat
+		repeat
+			task.wait()
+			car:SetPrimaryPartCFrame(playerHRP.CFrame * offset:Inverse())
+		until hoodseat.Occupant == TargetPlayer.Character:FindFirstChild("Humanoid")
+
+		-- Define a deadly position (adjust as needed)
+		local killPosition = Vector3.new(44, 25, -13)
+
+		-- Fling player to kill position
+		repeat
+			task.wait()
+			car:SetPrimaryPartCFrame(CFrame.new(killPosition) * offset:Inverse())
+		until hoodseat.Occupant == nil
+
+		-- Restore local player's original position
+		if originalCFrame and localHRP then
+			localHRP.CFrame = originalCFrame
+		end
+
+		PizzaHub:Notification({
+			Title = "Success",
+			Content = "Player '" .. selectedName .. "' has been killed!",
+			Icon = "check_circle",
+			ImageSource = "Material"
+		})
+	end,
+})
+
+Traget:CreateToggle({
+    Name = "Spam Snowballs (15x gleichzeitig)",
+    Description = "Klonet 15 Snowballs und wirft alle gleichzeitig auf den Zielspieler",
+    CurrentValue = false,
+
+    Callback = function(Value)
+        getgenv().SnowballThrowingEnabled = Value
+
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function getTargetPosition()
+            local targetName = getgenv().SelectedPlayer
+            local targetPlayer = Players:FindFirstChild(targetName or "")
+            if targetPlayer and targetPlayer.Character then
+                local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    -- Zielposition mit leichter Vorhersage
+                    return root.Position + root.Velocity * 0.15 + Vector3.new(0, 2, 0)
+                end
+            end
+            return nil
+        end
+
+        local function countSnowballs()
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            local count = 0
+            if backpack then
+                for _, item in ipairs(backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name == "Snowball" then
+                        count += 1
+                    end
+                end
+            end
+            return count
+        end
+
+        if Value then
+            getgenv().SnowballThread = task.spawn(function()
+                while getgenv().SnowballThrowingEnabled do
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+                    local character = LocalPlayer.Character
+                    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+                    if not backpack or not humanoid then
+                        task.wait(0.2)
+                        continue
+                    end
+
+                    -- Schnell klonen bis 15 erreicht
+                    while countSnowballs() < 15 and getgenv().SnowballThrowingEnabled do
+                        ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
+                        task.wait(0.015)
+                    end
+
+                    -- Zielposition abrufen
+                    local targetPos = getTargetPosition()
+                    if not targetPos then
+                        task.wait(0.5)
+                        continue
+                    end
+
+                    -- Alle Snowballs auf einmal ausrüsten, werfen und löschen
+                    local tools = {}
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name == "Snowball" then
+                            table.insert(tools, tool)
+                        end
+                    end
+
+                    for _, tool in ipairs(tools) do
+                        if not getgenv().SnowballThrowingEnabled then break end
+                        local clicked = tool:FindFirstChild("Clicked")
+                        if clicked then
+                            pcall(function()
+                                humanoid:EquipTool(tool)
+                                clicked:FireServer(targetPos)
+                            end)
+                        end
+                        tool:Destroy()
+                    end
+
+                    -- Kurze Pause vor nächstem Zyklus
+                    task.wait(0.3)
+                end
+            end)
+        else
+            getgenv().SnowballThrowingEnabled = false
+        end
+    end
+})
+
+
+
+
+
+
+
+
+-- Wenn Zielspieler das Spiel verlässt
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+	local selectedName = getgenv().SelectedPlayer
+
+	if not selectedName then return end
+
+	-- Absicherung über string-Vergleich, nicht nur Objektvergleich
+	if leavingPlayer.Name == selectedName then
+		local displayName = leavingPlayer.DisplayName or leavingPlayer.Name -- fallback
+		local username = leavingPlayer.Name
+
+		PizzaHub:Notification({
+			Title = "Player Left",
+			Content = displayName .. " (" .. username .. ") has left the game.",
+			Icon = "person_off",
+			ImageSource = "Material"
+		})
+
+		-- Kamera zurücksetzen auf den LocalPlayer
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			camera.CameraSubject = LocalPlayer.Character.Humanoid
+		end
+
+		-- Verbindung trennen
+		if viewPlayerConnection then
+			viewPlayerConnection:Disconnect()
+			viewPlayerConnection = nil
+		end
+
+		-- Toggle deaktivieren
+		viewPlayerEnabled = false
+		if ToggleViewPlayer and ToggleViewPlayer.Set then
+			ToggleViewPlayer:Set(false)
+		end
+
+		-- Auswahl zurücksetzen
+		getgenv().SelectedPlayer = nil
+		currentTargetPlayer = nil
+		lastSelectedName = nil
+
+		if selectedPlayerInput and selectedPlayerInput.Set then
+			selectedPlayerInput:Set("")
+		end
+	end
+end)
+
+
+local Teleports = Window:CreateTab({
+    Name = "Teleports",
+    Icon = "golf_course",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+Teleports:CreateDropdown({
+    Name = "Teleport to area",
+    Description = nil,
+    Options = { "None", "Spawn", "Manager", "Cashier", "Cook", "Boxer", "Delivery", "Supplier" },
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local locations = {
+            Spawn = Vector3.new(49, 3, 198),
+            Manager = Vector3.new(37, 4, 3),
+            Cashier = Vector3.new(48, 4, 80),
+            Cook = Vector3.new(42, 4, 61),
+            Boxer = Vector3.new(55, 4, 31),
+            Delivery = Vector3.new(64, 4, -17),
+            Supplier = Vector3.new(8, 13, -1020)
+        }
+
+        if locations[option] then
+            hrp.CFrame = CFrame.new(locations[option])
+        end
+    end
+}, "TeleportArea")
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+Teleports:CreateDropdown({
+    Name = "Teleport to house",
+    Description = nil,
+    Options = { "None", "Home", "A1", "A2", "A3", "B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3" },
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local coords = {
+            A1 = Vector3.new(190, 3, -474),
+            A2 = Vector3.new(188, 3, -652),
+            A3 = Vector3.new(187, 3, -823),
+            B1 = Vector3.new(-21, 3, -432),
+            B2 = Vector3.new(24, 3, -481),
+            B3 = Vector3.new(-20, 3, -612),
+            B4 = Vector3.new(24, 3, -663),
+            B5 = Vector3.new(-20, 3, -800),
+            B6 = Vector3.new(23, 3, -836),
+            C1 = Vector3.new(-184, 3, -444),
+            C2 = Vector3.new(-186, 3, -612),
+            C3 = Vector3.new(-185, 3, -792)
+        }
+
+        if option == "Home" then
+            game:GetService("ReplicatedStorage").PlayerChannel:FireServer("TeleportHome")
+        elseif coords[option] then
+            hrp.CFrame = CFrame.new(coords[option])
+        end
+    end
+}, "TeleportHouse")
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+local islandOptions = { "None", "Pirate Island", "Stone Island", "Sand Island", "Teleport to Party Island" }
+local islandModelName = {
+    ["Pirate Island"] = "Island",
+    ["Stone Island"] = "Island1",
+    ["Sand Island"] = "Island2"
+}
+
+Teleports:CreateDropdown({
+    Name = "Teleport to island",
+    Description = nil,
+    Options = islandOptions,
+    CurrentOption = { "None" },
+    MultipleOptions = false,
+    SpecialType = nil,
+    Callback = function(option)
+        if type(option) == "table" then option = option[1] end
+
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+
+        if islandModelName[option] then
+            local model = Workspace:FindFirstChild(islandModelName[option])
+            if model and model:IsA("Model") then
+                local targetCFrame = model:GetPivot() + Vector3.new(0, 20, 0)
+                if hrp then
+                    hrp.CFrame = targetCFrame
+                end
+            end
+        elseif option == "Teleport to Party Island" then
+            if hrp then
+                hrp.CFrame = CFrame.new(88, 1, -315)
+            end
+        end
+    end
+}, "TeleportIslands")
+
+
+
+
+local Scripts = Window:CreateTab({
+    Name = "Scripts",
+    Icon = "code",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+
+Scripts:CreateLabel({
+	Text = "Warning, use this Farm whit alt account, this is ban risk on main account",
+	Style = 3
+})
+
+Scripts:CreateButton({
+	Name = "Auto Farm",
+	Description = nil,
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/K0RoS3nPa1/Lua/refs/heads/main/lua2"))()
+	end
+})
+
+Scripts:CreateButton({
+    Name = "Pizza hub 2.0",
+    Description = "by AFP",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ImARandom44/AFP/refs/heads/main/Source"))()
+    end
+})
+
+Scripts:CreateButton({
+    Name = "Hussien",
+    Description = nil,
+    Callback = function()
+        loadstring(game:HttpGet(('https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Work%20at%20a%20pizza%20place'),true))()
+    end
+})
+
+Scripts:CreateButton({
+    Name = "invinite yield",
+    Description = nil,
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+
+    end
+})
+
+
+
+local Settings = Window:CreateTab({
+	Name = "Settings",
+	Icon = "settings",
+	ImageSource = "Material",
+	ShowTitle = true
+})
+
+Settings:CreateToggle({
+    Name = "Anti AFK",
+    Description = nil,
+    CurrentValue = true,
+    Callback = function(Value)
+        if Value then
+            -- Anti AFK aktivieren
+            getgenv().AntiAFKEnabled = true
+
+            -- Simple Anti-AFK Logik
+            spawn(function()
+                local VirtualUser = game:GetService("VirtualUser")
+                while getgenv().AntiAFKEnabled do
+                    -- Simuliere Mausklick (kann auch Tastatur sein)
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new())
+                    task.wait(60) -- alle 60 Sekunden aktiv bleiben
+                end
+            end)
+        else
+            -- Anti AFK deaktivieren
+            getgenv().AntiAFKEnabled = false
+        end
+    end
+}, "AntiAFKToggle")
+
+-- ✅ REJOIN BUTTON: Rejoin in denselben Server
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Funktion, die dein GUI (PizzaHub) neu initialisiert
+local function LoadGUI()
+    -- Beispiel: Hier den Code rein, der dein GUI startet / zeigt
+    -- Falls dein GUI über PizzaHub geladen wird, mach hier den Aufruf:
+    print("GUI wird geladen...")
+    PizzaHub:Load() ---oder was bei dir der GUI Start ist
+end
+
+-- Sofort GUI laden, wenn Script startet (z.B. beim ersten Join)
+LoadGUI()
+
+-- Queue das Script für automatisches Nachladen beim Teleport (Rejoin)
+if syn and syn.queue_on_teleport then
+    syn.queue_on_teleport([[
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function LoadGUI()
+            print("GUI wird nach Rejoin geladen...")
+            -- Hier auch GUI-Initialisierung rein
+        end
+
+        LoadGUI()
+    ]])
+end
+
+-- Rejoin Button
+Settings:CreateButton({
+    Name = "Rejoin Game",
+    Description = "Rejoin the current game with countdown and notification",
+    Callback = function()
+        local countdown = 5 -- Sekunden
+
+        for i = countdown, 1, -1 do
+            PizzaHub:Notification({
+                Title = "Rejoin in " .. i .. " seconds",
+                Content = "Please wait until the rejoin starts...",
+                Icon = "notifications_active",
+                ImageSource = "Material"
+            })
+            task.wait(1)
+        end
+
+        -- Kick mit Message
+        LocalPlayer:Kick("\nYou will now be rejoined.")
+
+        task.wait(0.5)
+
+        -- Teleport zurück in denselben Server (kein Server Hop)
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    end,
+})
+
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+
+-- SETTINGS: Max Spieler für Server Hop
+local maxPlayersToJoin = 5
+
+Settings:CreateSlider({
+    Name = "Max Server Players",
+    Range = {1, 12},
+    Increment = 1,
+    CurrentValue = maxPlayersToJoin,
+    Callback = function(value)
+        maxPlayersToJoin = value
+    end
+}, "MaxPlayersSlider")
+
+
+
+
+-- ✅ SERVER HOP BUTTON: Suche neuen Server (nicht denselben)
+Settings:CreateButton({
+    Name = "Server Hop",
+    Description = "Hop to a server with at most " .. tostring(maxPlayersToJoin) .. " players.",
+    Callback = function()
+        local countdown = 5
+
+        for i = countdown, 1, -1 do
+            PizzaHub:Notification({
+                Title = "Server hop in " .. i .. " seconds",
+                Content = "Searching for a server with ≤ " .. tostring(maxPlayersToJoin) .. " players...",
+                Icon = "notifications_active",
+                ImageSource = "Material"
+            })
+            task.wait(1)
+        end
+
+        -- Kick mit Hinweis
+        LocalPlayer:Kick("Server hopping...")
+
+        local success, gui = pcall(function()
+            return game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
+        end)
+        if success and gui then
+            gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
+        end
+
+        task.wait(0.5)
+
+        -- Serverliste laden & neuen Server suchen
+        local cursor
+        local found = false
+
+        repeat
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            if cursor then
+                url = url .. "&cursor=" .. cursor
+            end
+
+            local success, response = pcall(function()
+                return game:HttpGet(url)
+            end)
+
+            if success then
+                local data = HttpService:JSONDecode(response)
+                cursor = data.nextPageCursor
+
+                for _, server in ipairs(data.data) do
+                    if server.playing <= maxPlayersToJoin and server.id ~= game.JobId then
+                        -- Join gefundenen Server
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+                        found = true
+                        break
+                    end
+                end
+            end
+
+            task.wait(1)
+        until not cursor or found
+
+        if not found then
+            PizzaHub:Notification({
+                Title = "No server found",
+                Content = "No suitable server was found.",
+                Icon = "error",
+                ImageSource = "Material"
+            })
+        end
+    end
+})
+
+
+
+Settings:BuildConfigSection()
+
+
+
+local Theme = Window:CreateTab({
+	Name = "Theme",
+	Icon = "palette",
+	ImageSource = "Material",
+	ShowTitle = true
+})
+Theme:BuildThemeSection()
