@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.10.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -309,7 +309,7 @@ end
 -- ...existing code...
 Traget:CreateToggle({
     Name = "Fling",
-    Description = "Setzt dich in das Ziel, spinnt dich stark und stösst den Zielspieler weg (best-effort).",
+    Description = "Teleport on target, weld, attach heavy collider and spin to fling (best-effort).",
     CurrentValue = false,
     Callback = function(enabled)
         if flingConnection then
@@ -317,18 +317,20 @@ Traget:CreateToggle({
             flingConnection = nil
         end
 
-        local function cleanup(hrp)
-            if not hrp then return end
-            for _, c in ipairs(hrp:GetChildren()) do
+        local function cleanupPart(p)
+            if not p then return end
+            for _, c in ipairs(p:GetChildren()) do
                 if c.Name:match("^PH_Fling") then
                     pcall(function() c:Destroy() end)
                 end
             end
         end
 
-        local SPIN_SPEED = 2200    -- Drehgeschwindigkeit (Y). Erhöhe für mehr Rotation.
-        local BV_FORWARD = 220    -- Vorwärtskomponente des Impulses
-        local BV_UP = 160         -- Aufwärtskomponente des Impulses
+        local SPIN_SPEED = 2200     -- Drehgeschwindigkeit (Y)
+        local HEAVY_SIZE = Vector3.new(6,6,6)
+        local HEAVY_DENSITY = 800   -- höher = schwerer
+        local BV_FORWARD = 220
+        local BV_UP = 160
         local BURST_INTERVAL = 0.18
         local BURST_DURATION = 0.12
 
@@ -336,15 +338,16 @@ Traget:CreateToggle({
             flinging = false
             if flingConnection then flingConnection:Disconnect() flingConnection = nil end
 
-            local target = getTargetPlayer()
-            if target and target.Character then
-                local thr = target.Character:FindFirstChild("HumanoidRootPart")
-                cleanup(thr)
-            end
-
-            -- cleanup own HRP
+            -- cleanup target + local
+            local t = getTargetPlayer()
+            if t and t.Character then cleanupPart(t.Character:FindFirstChild("HumanoidRootPart")) end
             local myHRP = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if myHRP then cleanup(myHRP) end
+            if myHRP then
+                cleanupPart(myHRP)
+                -- destroy heavy collider if left
+                local old = workspace:FindFirstChild("PH_FlingMass_"..localPlayer.Name)
+                if old then pcall(function() old:Destroy() end) end
+            end
             return
         end
 
@@ -357,26 +360,12 @@ Traget:CreateToggle({
             local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
             if not targetHRP or not myHRP then return end
 
-            -- teleportiere dich direkt auf das Ziel (visuell "in" den Spieler)
-            pcall(function()
-                myHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0.2, 0)
-            end)
+            -- teleportiere dich genau auf das Ziel (visuell "in" den Spieler)
+            pcall(function() myHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0.2, 0) end)
 
-            -- erstelle/aktualisiere WeldConstraint zwischen dir und Ziel
+            -- weld deine HRP an die Ziel-HRP (falls nicht vorhanden)
             pcall(function()
                 if not myHRP:FindFirstChild("PH_FlingWeld") then
-                    -- Attachments (optional, aber sauberer)
-                    if not myHRP:FindFirstChild("PH_FlingAttLocal") then
-                        local a = Instance.new("Attachment")
-                        a.Name = "PH_FlingAttLocal"
-                        a.Parent = myHRP
-                    end
-                    if not targetHRP:FindFirstChild("PH_FlingAttTarget") then
-                        local a2 = Instance.new("Attachment")
-                        a2.Name = "PH_FlingAttTarget"
-                        a2.Parent = targetHRP
-                    end
-
                     local weld = Instance.new("WeldConstraint")
                     weld.Name = "PH_FlingWeld"
                     weld.Part0 = myHRP
@@ -385,23 +374,65 @@ Traget:CreateToggle({
                 end
             end)
 
-            -- setze starken Spin auf deine HRP (sichtbar & kann Kollisionen erzeugen)
+            -- heavy collider: großer Part, hohe Dichte, weld an deine HRP (erhöht Krafteintrag durch Kollision)
+            local heavyName = "PH_FlingMass_"..tostring(localPlayer.Name)
+            local heavy = workspace:FindFirstChild(heavyName)
+            if not heavy then
+                pcall(function()
+                    heavy = Instance.new("Part")
+                    heavy.Name = heavyName
+                    heavy.Size = HEAVY_SIZE
+                    heavy.CanCollide = true
+                    heavy.Transparency = 1 -- sichtbar = false; transparent parts colliden trotzdem
+                    heavy.Anchored = false
+                    heavy.Massless = false
+                    heavy.Parent = workspace
+                    heavy.CFrame = myHRP.CFrame * CFrame.new(0,0,2) -- leicht vor dir
+                    -- give high density (requires PhysicalProperties)
+                    pcall(function()
+                        heavy.CustomPhysicalProperties = PhysicalProperties.new(HEAVY_DENSITY, 0.3, 0.5, 1, 1)
+                    end)
+
+                    -- weld heavy to myHRP
+                    local w = Instance.new("WeldConstraint")
+                    w.Name = "PH_FlingWeldMass"
+                    w.Part0 = heavy
+                    w.Part1 = myHRP
+                    w.Parent = heavy
+                end)
+            else
+                -- keep it near your HRP
+                pcall(function() heavy.CFrame = myHRP.CFrame * CFrame.new(0,0,2) end)
+            end
+
+            -- ensure heavy is not anchored and collidable
+            pcall(function() if heavy then heavy.Anchored = false heavy.CanCollide = true end end)
+
+            -- apply strong spin to the heavy part (this produces collisions)
             pcall(function()
-                if not myHRP:FindFirstChild("PH_FlingSpin") then
+                -- remove old spinner on heavy
+                if heavy and not heavy:FindFirstChild("PH_FlingSpinMass") then
                     local bav = Instance.new("BodyAngularVelocity")
-                    bav.Name = "PH_FlingSpin"
+                    bav.Name = "PH_FlingSpinMass"
                     bav.MaxTorque = Vector3.new(1e9,1e9,1e9)
                     bav.AngularVelocity = Vector3.new(0, SPIN_SPEED, 0)
                     bav.P = 1e5
-                    bav.Parent = myHRP
+                    bav.Parent = heavy
                 else
-                    myHRP.PH_FlingSpin.AngularVelocity = Vector3.new(0, SPIN_SPEED, 0)
+                    if heavy and heavy:FindFirstChild("PH_FlingSpinMass") then
+                        heavy.PH_FlingSpinMass.AngularVelocity = Vector3.new(0, SPIN_SPEED, 0)
+                    end
                 end
             end)
 
-            -- gelegentliche kurze Impuls-Bursts auf das Ziel (versucht es wegzustoßen)
+            -- kurze lineare Impuls-Bursts auf das Ziel als Unterstützung
             pcall(function()
-                cleanup(targetHRP) -- entferne alte PH_FlingBV/VF
+                -- clear old fling children on targetHRP
+                for _, c in ipairs(targetHRP:GetChildren()) do
+                    if c.Name:match("^PH_Fling") then
+                        pcall(function() c:Destroy() end)
+                    end
+                end
 
                 local bv = Instance.new("BodyVelocity")
                 bv.Name = "PH_FlingBV"
@@ -409,7 +440,7 @@ Traget:CreateToggle({
                 bv.Velocity = (targetHRP.CFrame.LookVector * BV_FORWARD) + Vector3.new(0, BV_UP, 0)
                 bv.Parent = targetHRP
 
-                -- versuche zusätzlich AssemblyLinearVelocity (funktioniert bei manchen Executor)
+                -- try AssemblyLinearVelocity too
                 pcall(function() targetHRP.AssemblyLinearVelocity = bv.Velocity end)
 
                 task.delay(BURST_DURATION, function()
@@ -460,8 +491,10 @@ Traget:CreateButton({
 	end
 })
 
+-- ...existing code...
 local viewPlayerEnabled = false
 local viewPlayerConnection = nil
+local viewFollowConnection = nil
 local currentTargetPlayer = nil
 local ToggleViewPlayer -- Referenz fürs UI-Toggle
 local lastSelectedName = nil
@@ -471,41 +504,86 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
--- Kamera auf Zielspieler setzen
-local function setCameraToTargetPlayer()
-	if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Humanoid") then
-		camera.CameraSubject = currentTargetPlayer.Character.Humanoid
-	else
-		warn("Target player character or humanoid not found.")
-	end
+local function stopViewing()
+    if viewFollowConnection then
+        pcall(function() viewFollowConnection:Disconnect() end)
+        viewFollowConnection = nil
+    end
+    if viewPlayerConnection then
+        pcall(function() viewPlayerConnection:Disconnect() end)
+        viewPlayerConnection = nil
+    end
+    -- restore camera to local player if possible
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            camera.CameraType = Enum.CameraType.Custom
+            camera.CameraSubject = LocalPlayer.Character.Humanoid
+        end
+    end)
+    currentTargetPlayer = nil
+    lastSelectedName = nil
 end
 
--- Traget-UI Toggle
 ToggleViewPlayer = Traget:CreateToggle({
-	Name = "View Player",
-	Description = "Focus the camera on the selected player.",
-	CurrentValue = false,
+    Name = "View Player",
+    Description = "Focus the camera on the selected player (persists when dead).",
+    CurrentValue = false,
 
-	Callback = function(enabled)
-		viewPlayerEnabled = enabled
+    Callback = function(enabled)
+        viewPlayerEnabled = enabled
 
-		if not enabled then
-			-- Kamera zurücksetzen
-			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-				camera.CameraSubject = LocalPlayer.Character.Humanoid
-			end
+        if not enabled then
+            stopViewing()
+            return
+        end
 
-			currentTargetPlayer = nil
-			lastSelectedName = nil
+        -- ensure any previous connections are cleared
+        if viewFollowConnection then viewFollowConnection:Disconnect() viewFollowConnection = nil end
+        if viewPlayerConnection then viewPlayerConnection:Disconnect() viewPlayerConnection = nil end
 
-			if viewPlayerConnection then
-				viewPlayerConnection:Disconnect()
-				viewPlayerConnection = nil
-			end
-		end
-	end,
+        -- persistent per-frame updater that forces the camera onto the target
+        viewFollowConnection = RunService.RenderStepped:Connect(function()
+            local selectedName = getgenv().SelectedPlayer
+            if not selectedName or selectedName == "" then return end
+
+            -- detect change of target player
+            if selectedName ~= lastSelectedName then
+                lastSelectedName = selectedName
+                currentTargetPlayer = Players:FindFirstChild(selectedName)
+                -- (re)connect to CharacterAdded to keep track if target respawns
+                if viewPlayerConnection then viewPlayerConnection:Disconnect() viewPlayerConnection = nil end
+                if currentTargetPlayer then
+                    viewPlayerConnection = currentTargetPlayer.CharacterAdded:Connect(function()
+                        -- small delay to let character load
+                        task.wait(0.05)
+                    end)
+                end
+            end
+
+            local target = currentTargetPlayer
+            if not target or not target.Character then return end
+
+            -- prefer Humanoid subject (normal 3rd-person view)
+            local targetHum = target.Character:FindFirstChild("Humanoid")
+            local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+
+            if targetHum and targetHum.Parent then
+                -- set CameraSubject each frame to override server/respawn overrides
+                pcall(function()
+                    camera.CameraType = Enum.CameraType.Custom
+                    camera.CameraSubject = targetHum
+                end)
+            elseif targetHRP then
+                -- fallback: use Scriptable camera following HRP when no humanoid
+                pcall(function()
+                    camera.CameraType = Enum.CameraType.Scriptable
+                    camera.CFrame = targetHRP.CFrame
+                end)
+            end
+        end)
+    end,
 })
-
+-- ...existing code...
 -- Überwache dynamische Änderung von SelectedPlayer
 RunService.RenderStepped:Connect(function()
 	if not viewPlayerEnabled then return end
