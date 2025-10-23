@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.10"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -317,6 +317,32 @@ Traget:CreateToggle({
             flingConnection = nil
         end
 
+        local function cleanupAttachmentsAndForces(target)
+            if target and target.Character then
+                local thr = target.Character:FindFirstChild("HumanoidRootPart")
+                if thr then
+                    for _, child in ipairs(thr:GetChildren()) do
+                        if child.Name == "FlingAngular" or child.Name == "FlingBody" then
+                            pcall(function() child:Destroy() end)
+                        end
+                        if child.Name == "FlingAttachTarget" then
+                            pcall(function() child:Destroy() end)
+                        end
+                    end
+                end
+            end
+
+            local localHRP = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if localHRP then
+                if localHRP:FindFirstChild("FlingWeld") then
+                    pcall(function() localHRP.FlingWeld:Destroy() end)
+                end
+                if localHRP:FindFirstChild("FlingAttachLocal") then
+                    pcall(function() localHRP.FlingAttachLocal:Destroy() end)
+                end
+            end
+        end
+
         if enabled then
             flinging = true
 
@@ -324,36 +350,62 @@ Traget:CreateToggle({
                 local target = getTargetPlayer()
                 local localChar = localPlayer.Character
                 local targetChar = target and target.Character
-                if not targetChar or not localChar then return end
+                if not target or not targetChar or not localChar then return end
 
                 local localHRP = localChar:FindFirstChild("HumanoidRootPart")
                 local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
                 if not localHRP or not targetHRP then return end
 
-                -- Positioniere dich seitlich (nicht direkt über dem Kopf)
-                local sideOffset = Vector3.new(3, 0, 0)
-                local safePos = targetHRP.Position + sideOffset + Vector3.new(0, 3, 0)
-                pcall(function() localHRP.CFrame = CFrame.new(safePos) end)
+                -- Stelle sicher, dass wir möglichst genau am Ziel sind: kurzer Teleport
+                pcall(function() localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0.2, 0) end)
 
-                -- Entferne vorhandene Fling-Kräfte am Target
+                -- Erzeuge Attachments (falls noch nicht vorhanden) und einen Weld, damit dein HRP am Ziel haftet
+                if not localHRP:FindFirstChild("FlingWeld") then
+                    pcall(function()
+                        -- Attachment auf local und target
+                        local attLocal = Instance.new("Attachment")
+                        attLocal.Name = "FlingAttachLocal"
+                        attLocal.Parent = localHRP
+
+                        local attTarget = Instance.new("Attachment")
+                        attTarget.Name = "FlingAttachTarget"
+                        attTarget.Parent = targetHRP
+
+                        -- WeldConstraint verbindet die beiden Parts
+                        local weld = Instance.new("WeldConstraint")
+                        weld.Name = "FlingWeld"
+                        weld.Part0 = localHRP
+                        weld.Part1 = targetHRP
+                        weld.Parent = localHRP
+                    end)
+                end
+
+                -- Entferne alte Kräfte
                 for _, child in ipairs(targetHRP:GetChildren()) do
                     if child.Name == "FlingAngular" or child.Name == "FlingBody" then
-                        child:Destroy()
+                        pcall(function() child:Destroy() end)
                     end
                 end
 
-                -- Starker rotierender Effekt
+                -- Rotationskraft auf Ziel
                 local bav = Instance.new("BodyAngularVelocity")
                 bav.Name = "FlingAngular"
-                bav.AngularVelocity = Vector3.new(0, 200, 0) -- Drehstärke (anpassen)
-                bav.MaxTorque = Vector3.new(1e8, 1e8, 1e8)
-                bav.P = 1e4
+                bav.AngularVelocity = Vector3.new(0, 300, 0) -- ggf. anpassen
+                bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+                bav.P = 1e5
                 bav.Parent = targetHRP
 
-                -- Kurzer linearer "Kick" nach oben/seitlich
-                pcall(function()
-                    -- AssemblyLinearVelocity wirkt zuverlässiger als .Velocity bei modernen R15/AssemblyParts
-                    targetHRP.AssemblyLinearVelocity = Vector3.new(0, 120, 0) + (targetHRP.CFrame.LookVector * 40)
+                -- Starke lineare Kraft auf Ziel
+                -- BodyLinearVelocity wirkt zuverlässig bei neueren R15-Parts
+                local blv = Instance.new("BodyVelocity")
+                blv.Name = "FlingBody"
+                blv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                blv.Velocity = (targetHRP.CFrame.LookVector * 150) + Vector3.new(0, 200, 0)
+                blv.Parent = targetHRP
+
+                -- kurze Lebenszeit der linearen Kraft (verhindert permanentes Festhängen)
+                task.delay(0.25, function()
+                    pcall(function() if blv and blv.Parent then blv:Destroy() end end)
                 end)
             end)
         else
@@ -363,18 +415,9 @@ Traget:CreateToggle({
                 flingConnection = nil
             end
 
-            -- Aufräumen: entferne Kräfte vom Ziel falls noch vorhanden
+            -- Aufräumen: entferne Kräfte und Attachments/Weld
             local target = getTargetPlayer()
-            if target and target.Character then
-                local thr = target.Character:FindFirstChild("HumanoidRootPart")
-                if thr then
-                    for _, child in ipairs(thr:GetChildren()) do
-                        if child.Name == "FlingAngular" or child.Name == "FlingBody" then
-                            child:Destroy()
-                        end
-                    end
-                end
-            end
+            cleanupAttachmentsAndForces(target)
         end
     end,
 })
@@ -1201,13 +1244,12 @@ local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local LocalPlayer = Players.LocalPlayer
 
+-- ...existing code...
 Settings:CreateButton({
     Name = "Rejoin Game",
     Description = "Rejoin the current game with countdown and notification",
     Callback = function()
-        local countdown = 5 -- seconds
-
-        -- Countdown loop with notification
+        local countdown = 5
         for i = countdown, 1, -1 do
             PizzaHub:Notification({
                 Title = "Rejoin in " .. i .. " seconds",
@@ -1218,19 +1260,27 @@ Settings:CreateButton({
             task.wait(1)
         end
 
-        -- Kick with message
-        LocalPlayer:Kick("\nYou will now be rejoined.")
+        -- Versuch, exakt dieselbe Server-Instanz zu betreten
+        local ok, err = pcall(function()
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+        end)
 
-        -- Adjust GUI title (shows when kick prompt is visible)
-        local gui = game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
-        gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
+        if not ok then
+            PizzaHub:Notification({
+                Title = "Rejoin failed",
+                Content = "TeleportToPlaceInstance failed, falling back to normal teleport. Error: " .. tostring(err),
+                Icon = "error",
+                ImageSource = "Material"
+            })
 
-        task.wait(0.5)
-
-        -- Rejoin via TeleportService
-        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+            -- Fallback: Teleport zu beliebigem Server der PlaceId
+            pcall(function()
+                TeleportService:Teleport(game.PlaceId, LocalPlayer)
+            end)
+        end
     end
 })
+-- ...existing code...
 
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
