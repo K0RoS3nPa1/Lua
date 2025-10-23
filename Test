@@ -1,4 +1,3 @@
-
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
 local version = "1.0.0"
 
@@ -1180,70 +1179,53 @@ local Settings = Window:CreateTab({
 	ShowTitle = true
 })
 
+-- ...existing code...
 Settings:CreateToggle({
     Name = "Anti AFK",
     Description = nil,
     CurrentValue = true,
     Callback = function(Value)
-        if Value then
-            -- Anti AFK aktivieren
-            getgenv().AntiAFKEnabled = true
+        local Players = game:GetService("Players")
+        local VirtualUser = game:GetService("VirtualUser")
+        local player = Players.LocalPlayer
 
-            -- Simple Anti-AFK Logik
-            spawn(function()
-                local VirtualUser = game:GetService("VirtualUser")
-                while getgenv().AntiAFKEnabled do
-                    -- Simuliere Mausklick (kann auch Tastatur sein)
+        if Value then
+            getgenv().AntiAFKEnabled = true
+            -- remove alte Verbindung falls vorhanden
+            if getgenv().AntiAFKConnection then
+                pcall(function() getgenv().AntiAFKConnection:Disconnect() end)
+                getgenv().AntiAFKConnection = nil
+            end
+            -- benutze Idled-event statt dauernd CaptureController in einer Schleife
+            getgenv().AntiAFKConnection = player.Idled:Connect(function()
+                pcall(function()
                     VirtualUser:CaptureController()
-                    VirtualUser:ClickButton2(Vector2.new())
-                    task.wait(60) -- alle 60 Sekunden aktiv bleiben
-                end
+                    VirtualUser:ClickButton2(Vector2.new(0,0))
+                end)
             end)
         else
-            -- Anti AFK deaktivieren
             getgenv().AntiAFKEnabled = false
+            if getgenv().AntiAFKConnection then
+                pcall(function() getgenv().AntiAFKConnection:Disconnect() end)
+                getgenv().AntiAFKConnection = nil
+            end
         end
     end
 }, "AntiAFKToggle")
+-- ...existing code...
 
--- ✅ REJOIN BUTTON: Rejoin in denselben Server
+
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local LocalPlayer = Players.LocalPlayer
 
--- Funktion, die dein GUI (PizzaHub) neu initialisiert
-local function LoadGUI()
-    -- Beispiel: Hier den Code rein, der dein GUI startet / zeigt
-    -- Falls dein GUI über PizzaHub geladen wird, mach hier den Aufruf:
-    print("GUI wird geladen...")
-    PizzaHub:Load() ---oder was bei dir der GUI Start ist
-end
-
--- Sofort GUI laden, wenn Script startet (z.B. beim ersten Join)
-LoadGUI()
-
--- Queue das Script für automatisches Nachladen beim Teleport (Rejoin)
-if syn and syn.queue_on_teleport then
-    syn.queue_on_teleport([[
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-
-        local function LoadGUI()
-            print("GUI wird nach Rejoin geladen...")
-            -- Hier auch GUI-Initialisierung rein
-        end
-
-        LoadGUI()
-    ]])
-end
-
--- Rejoin Button
 Settings:CreateButton({
     Name = "Rejoin Game",
     Description = "Rejoin the current game with countdown and notification",
     Callback = function()
-        local countdown = 5 -- Sekunden
+        local countdown = 5 -- seconds
 
+        -- Countdown loop with notification
         for i = countdown, 1, -1 do
             PizzaHub:Notification({
                 Title = "Rejoin in " .. i .. " seconds",
@@ -1254,24 +1236,26 @@ Settings:CreateButton({
             task.wait(1)
         end
 
-        -- Kick mit Message
+        -- Kick with message
         LocalPlayer:Kick("\nYou will now be rejoined.")
+
+        -- Adjust GUI title (shows when kick prompt is visible)
+        local gui = game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
+        gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
 
         task.wait(0.5)
 
-        -- Teleport zurück in denselben Server (kein Server Hop)
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-    end,
+        -- Rejoin via TeleportService
+        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+    end
 })
-
 
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
--- SETTINGS: Max Spieler für Server Hop
-local maxPlayersToJoin = 5
+local maxPlayersToJoin = 5 -- default max players allowed
 
 Settings:CreateSlider({
     Name = "Max Server Players",
@@ -1283,77 +1267,61 @@ Settings:CreateSlider({
     end
 }, "MaxPlayersSlider")
 
-
-
-
--- ✅ SERVER HOP BUTTON: Suche neuen Server (nicht denselben)
 Settings:CreateButton({
     Name = "Server Hop",
-    Description = "Hop to a server with at most " .. tostring(maxPlayersToJoin) .. " players.",
+    Description = "Hop to a server with at most " .. tostring(maxPlayersToJoin) .. " players",
     Callback = function()
         local countdown = 5
 
+        -- Countdown with notification
         for i = countdown, 1, -1 do
             PizzaHub:Notification({
                 Title = "Server hop in " .. i .. " seconds",
-                Content = "Searching for a server with ≤ " .. tostring(maxPlayersToJoin) .. " players...",
+                Content = "Searching for a server with max " .. tostring(maxPlayersToJoin) .. " players...",
                 Icon = "notifications_active",
                 ImageSource = "Material"
             })
             task.wait(1)
         end
 
-        -- Kick mit Hinweis
-        LocalPlayer:Kick("Server hopping...")
+        -- Kick with message
+        LocalPlayer:Kick("\nPerforming server hop...")
 
-        local success, gui = pcall(function()
-            return game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
-        end)
-        if success and gui then
-            gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
-        end
+        -- Adjust GUI title
+        local gui = game.CoreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay"):WaitForChild("ErrorPrompt")
+        gui.TitleFrame.ErrorTitle.Text = "Pizza Hub..."
 
         task.wait(0.5)
 
-        -- Serverliste laden & neuen Server suchen
+        -- Fetch server list and find a server with player count <= maxPlayersToJoin
         local cursor
-        local found = false
-
         repeat
             local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
             if cursor then
                 url = url .. "&cursor=" .. cursor
             end
 
-            local success, response = pcall(function()
-                return game:HttpGet(url)
-            end)
+            local response = game:HttpGet(url)
+            local data = HttpService:JSONDecode(response)
+            cursor = data.nextPageCursor
 
-            if success then
-                local data = HttpService:JSONDecode(response)
-                cursor = data.nextPageCursor
-
-                for _, server in ipairs(data.data) do
-                    if server.playing <= maxPlayersToJoin and server.id ~= game.JobId then
-                        -- Join gefundenen Server
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
-                        found = true
-                        break
-                    end
+            for _, server in ipairs(data.data) do
+                if server.playing <= maxPlayersToJoin and server.id ~= game.JobId then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+                    return
                 end
             end
 
             task.wait(1)
-        until not cursor or found
+        until not cursor
 
-        if not found then
-            PizzaHub:Notification({
-                Title = "No server found",
-                Content = "No suitable server was found.",
-                Icon = "error",
-                ImageSource = "Material"
-            })
-        end
+        -- No suitable server found notification
+        PizzaHub:Notification({
+            Title = "No server found",
+            Content = "No server with max " .. tostring(maxPlayersToJoin) .. " players was found.",
+            Icon = "error",
+            ImageSource = "Material"
+        })
     end
 })
 
