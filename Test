@@ -1,5 +1,5 @@
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.01.0"
 
 local Window = PizzaHub:CreateWindow({
 	Name = "Pizza Hub", -- This Is Title Of Your Window
@@ -309,7 +309,7 @@ end
 -- ...existing code...
 Traget:CreateToggle({
     Name = "Fling",
-    Description = "Attempt fling without vehicle (best-effort, not guaranteed)",
+    Description = "Spin + repeated fling impulses (best-effort)",
     CurrentValue = false,
     Callback = function(enabled)
         if flingConnection then
@@ -317,20 +317,36 @@ Traget:CreateToggle({
             flingConnection = nil
         end
 
-        local function clearForcesOn(part)
-            if not part then return end
-            for _, c in ipairs(part:GetChildren()) do
-                if c.Name == "PH_FlingBV" or c.Name == "PH_FlingBAV" or c.Name == "PH_FlingVF" or c.Name == "PH_FlingAtt" then
+        local function clearFlingParts(hrp)
+            if not hrp then return end
+            for _, c in ipairs(hrp:GetChildren()) do
+                if c.Name:match("^PH_Fling") then
                     pcall(function() c:Destroy() end)
                 end
             end
         end
 
+        local SPIN_SPEED = 900       -- rotation strength (increase for faster spin)
+        local FLING_SPEED = 240      -- forward speed component
+        local FLING_UP = 180         -- upward speed component
+        local BURST_INTERVAL = 0.18  -- time between bursts
+        local BURST_DURATION = 0.12  -- how long each BV lives
+
         if not enabled then
             flinging = false
             if flingConnection then flingConnection:Disconnect() flingConnection = nil end
             local t = getTargetPlayer()
-            if t and t.Character then clearForcesOn(t.Character:FindFirstChild("HumanoidRootPart")) end
+            if t and t.Character then
+                clearFlingParts(t.Character:FindFirstChild("HumanoidRootPart"))
+                pcall(function() 
+                    -- try to clear assembly velocities if allowed
+                    local hrp = t.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                    end
+                end)
+            end
             return
         end
 
@@ -338,60 +354,49 @@ Traget:CreateToggle({
         flingConnection = RunService.Heartbeat:Connect(function()
             local target = getTargetPlayer()
             if not target or not target.Character then return end
-            local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
-            local localChar = localPlayer.Character
-            local localHRP = localChar and localChar:FindFirstChild("HumanoidRootPart")
-            if not targetHRP then return end
+            local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
 
-            -- Optional: move yourself visually onto the target
+            -- ensure persistent spin (BodyAngularVelocity)
+            if not hrp:FindFirstChild("PH_FlingSpin") then
+                pcall(function()
+                    local bav = Instance.new("BodyAngularVelocity")
+                    bav.Name = "PH_FlingSpin"
+                    bav.MaxTorque = Vector3.new(1e9,1e9,1e9)
+                    bav.AngularVelocity = Vector3.new(0, SPIN_SPEED, 0)
+                    bav.P = 1e5
+                    bav.Parent = hrp
+                end)
+            else
+                -- refresh spin strength if needed
+                pcall(function()
+                    hrp.PH_FlingSpin.AngularVelocity = Vector3.new(0, SPIN_SPEED, 0)
+                end)
+            end
+
+            -- apply a short linear impulse burst (BodyVelocity) in target's look direction
             pcall(function()
-                if localHRP then localHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0.2, 0) end
-            end)
+                clearFlingParts(hrp) -- remove any leftover fling BVs/VFs before new burst
 
-            -- cleanup previous
-            clearForcesOn(targetHRP)
-
-            -- 1) BodyAngularVelocity (spin)
-            pcall(function()
-                local bav = Instance.new("BodyAngularVelocity")
-                bav.Name = "PH_FlingBAV"
-                bav.MaxTorque = Vector3.new(1e9,1e9,1e9)
-                bav.AngularVelocity = Vector3.new(0, 300, 0)
-                bav.P = 1e5
-                bav.Parent = targetHRP
-            end)
-
-            -- 2) BodyVelocity (legacy, sometimes ignored)
-            pcall(function()
                 local bv = Instance.new("BodyVelocity")
                 bv.Name = "PH_FlingBV"
                 bv.MaxForce = Vector3.new(1e9,1e9,1e9)
-                bv.Velocity = (targetHRP.CFrame.LookVector * 200) + Vector3.new(0, 180, 0)
-                bv.Parent = targetHRP
-                task.delay(0.2, function() pcall(function() if bv and bv.Parent then bv:Destroy() end end) end)
-            end)
+                bv.Velocity = (hrp.CFrame.LookVector * FLING_SPEED) + Vector3.new(0, FLING_UP, 0)
+                bv.Parent = hrp
 
-            -- 3) VectorForce + Attachment (Robust on newer physics if allowed)
-            pcall(function()
-                local att = Instance.new("Attachment")
-                att.Name = "PH_FlingAtt"
-                att.Parent = targetHRP
+                -- also try AssemblyLinearVelocity (some executors allow it)
+                pcall(function()
+                    hrp.AssemblyLinearVelocity = bv.Velocity
+                end)
 
-                local vf = Instance.new("VectorForce")
-                vf.Name = "PH_FlingVF"
-                vf.Attachment0 = att
-                vf.Force = (targetHRP.CFrame.LookVector * 5e4) + Vector3.new(0, 4e4, 0)
-                vf.RelativeTo = Enum.ActuatorRelativeTo.World
-                vf.ApplyAtCenterOfMass = true
-                vf.Parent = targetHRP
-
-                task.delay(0.18, function()
-                    pcall(function()
-                        if vf and vf.Parent then vf:Destroy() end
-                        if att and att.Parent then att:Destroy() end
-                    end)
+                -- short life for BV to avoid permanent stiching
+                task.delay(BURST_DURATION, function()
+                    pcall(function() if bv and bv.Parent then bv:Destroy() end end)
                 end)
             end)
+
+            -- wait a bit between bursts (non-blocking because Heartbeat runs continuously)
+            task.wait(BURST_INTERVAL)
         end)
     end,
 })
