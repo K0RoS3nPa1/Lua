@@ -1,4 +1,3 @@
-
 local TweenService = game:GetService("TweenService")
 
 getupvalues = getupvalues or debug.getupvalues
@@ -867,85 +866,127 @@ while gui.Parent do
 	end
 	tryCook()
 	if doSupplier then
-    local function isNeededBox(box)
-        local c = bcolorToSupply[box.BrickColor.Name]
-        if not c then return false end
-        return supplyCounts[c] < settings.refill_end
-    end
-
-    local function dumpBox(box)
-        -- unwichtige Box in die Ferne teleportieren
-        network:FireServer(
-            "UpdateProperty",
-            box,
-            "CFrame",
-            CFrame.new(math.random(-40,40), -300, math.random(-40,40))
-        )
-    end
-
-    local function moveGoodBox(box, index)
-        -- gut sortierte, benötigte Boxen stapeln
-        local cf = CFrame.new(38 - 4.3 * math.floor(index/2), 5, -7 - 5*(index%2))
-        network:FireServer("UpdateProperty", box, "CFrame", cf)
-    end
-
-    while doSupplier do
-        -- Prüfen, ob irgendein Material unter refill_at ist
-        local refill = false
-        for s,amount in pairs(supplyCounts) do
-            if amount <= settings.refill_at then
-                refill = true
-                break
-            end
-        end
-
-        if not refill then
-            break
-        end
-
-        -- Falls Spieler zu weit vorne steht → automatisch in den Hinterraum teleportieren
-        if root.Position.Z > -900 then
-            smoothTP(CFrame.new(8,12.4,-1020))
-            wait(0.2)
-        end
-
-        -- Buttons drücken
-        for _,btn in ipairs(supplyButtons) do
-            local supply = bcolorToSupply[btn.BrickColor.Name]
-            if supply and supplyCounts[supply] < settings.refill_end then
-                humanoid:MoveTo(btn.Position + Vector3.new(0, 0, 0))
-                humanoid.MoveToFinished:Wait()
-                wait(0.1)
-            end
-        end
-
-        wait(0.4)
-
-        -- Alle Boxen holen
-        local boxes = workspace.AllSupplyBoxes:GetChildren()
-        local j = 0
-
-        for _,box in ipairs(boxes) do
-            if not box.Anchored and box.Position.Z < -930 then
-                if isNeededBox(box) then
-                    -- benötigte Box sortieren
-                    moveGoodBox(box, j)
-                    j += 1
-                else
-                    -- unnötige Box wegwerfen
-                    dumpBox(box)
-                end
-            end
-        end
-
-        wait(0.5)
-
-        -- Nach dem Sortieren wieder in Lagerposition gehen
-        if root.Position.Z > -900 then
-            smoothTP(CFrame.new(8,12.4,-1020))
+		local refill=false
+		for s,c in pairs(supplyCounts) do
+			if c <= settings.refill_at then
+				refill=true
+				break
+			end
 		end
-	end
-end
+		if refill then
+			local oldcf = root.CFrame
+			local waiting = false
+			local waitingTick = 1.8
+			local lastBox
+			while doSupplier do
+				--check if refill is done otherwise hit buttons
+				local fulfilled=true
+				local boxes = workspace.AllSupplyBoxes:GetChildren()
+				for yy=1,9 do
+				local needtp=true
+				local realc = 0
+				
+					for _,btn in ipairs(supplyButtons) do
+					local s = bcolorToSupply[btn.BrickColor.Name]
+					if supplyCounts[s] < settings.refill_end then
+						local count = 0
+						if #boxes > 30 then
+							for i=1,#boxes do
+								local box = boxes[i]
+								if bcolorToSupply[box.BrickColor.Name]==s and box.Anchored==false and box.Position.Z < -940 then
+									count = count + 1
+								end
+							end
+						end
+						if count < 2 then
+							smoothTP(CFrame.new(8,12.4,-1020))
+							wait(0.2)
+							local oldSpeed = humanoid.WalkSpeed
+							humanoid.WalkSpeed = 40
+							local positions = {
+								Vector3.new(14, 13, -1050),
+								Vector3.new(0, 13, -1050)
+							}
+													for i = 1, 2 do
+								if not doSupplier then break end
+								for _,pos in ipairs(positions) do
+									if not doSupplier then break end
+									humanoid:MoveTo(pos)
+									humanoid.MoveToFinished:Wait()
+									wait(0.2)
+									-- Boxen nach jedem Button-Move verschieben:
+									local j=0
+									for k=1,#boxes do
+										local box = boxes[k]
+										if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
+											box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
+											network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
+											j=j+1
+											if j>13 then break end
+										end
+									end
+				
+								end
+							end
+							humanoid.WalkSpeed = oldSpeed
+							if not doSupplier then break end
+							realc = realc + 1
+							fulfilled = false
+						end
+					end
+				end
+				wait(0.3)
+				if yy == 1.2 and realc < 3 then
+				    wait(0.5)
+				end
+				end
+				if fulfilled or not (doSupplier) then
+					break
+				end
+				smoothTP(CFrame.new(8,12.4,-1020))
+				if not doSupplier then break end
+				--check if can finish waiting for boxes to move
+				if waiting and (lastBox.Position.X>42 or tick()-waitingTick>6) then
+					waiting=false
+					if lastBox.Position.X<42 then
+						--clear boxes if stuck
+						smoothTP(CFrame.new(20.5,8,-35))
+						wait(0.5)
+						local boxes = workspace.AllSupplyBoxes:GetChildren()
+						for i=1,#boxes do
+							local box = boxes[i]
+							if box.Anchored==false and box.Position.Z>-55 then
+								network:FireServer("UpdateProperty", box, "CFrame", CFrame.new(RNG:NextNumber(0,40),RNG:NextNumber(-10,-30),-70))
+								wait()
+							end
+						end
+						wait(0.2)
+					end
+				end
+				if not waiting then
+					--move boxes
+					if root.Position.Z > -900 then smoothTP(CFrame.new(8,12.4,-1020)) end
+					wait(0.2)
+					lastBox=nil
+					local j=0
+					local boxes = workspace.AllSupplyBoxes:GetChildren()
+					for i=1,#boxes do
+						local box = boxes[i]
+						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
+							box.CFrame = CFrame.new(38-4.3*math.floor(j/2),5,-7-5*(j%2))
+							network:FireServer("UpdateProperty", box, "CFrame", box.CFrame)
+							lastBox=box
+							j=j+1
+							if j>13 then break end
+						end
+					end
+			
+					if lastBox then
+						waiting=true
+						waitingTick=tick()
+					end
+				end
+			end
 			--smoothTP(oldcf)
 		end
 	end
