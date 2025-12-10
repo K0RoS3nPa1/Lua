@@ -915,6 +915,9 @@ while gui.Parent do
 									humanoid:MoveTo(pos)
 									humanoid.MoveToFinished:Wait()
 									wait(0.2)
+
+									boxes = workspace.AllSupplyBoxes:GetChildren()
+
 									-- Boxen nach jedem Button-Move verschieben:
 									local j=0
 									for k=1,#boxes do
