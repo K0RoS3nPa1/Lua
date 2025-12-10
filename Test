@@ -865,6 +865,7 @@ while gui.Parent do
 		end
 	end
 	tryCook()
+		
 	if doSupplier then
 		local refill=false
 		for s,c in pairs(supplyCounts) do
@@ -988,7 +989,7 @@ for n = 1, #boxes do
         end
     end
 end
-
+boxes = workspace.AllSupplyBoxes:GetChildren()
 
 					for i=1,#boxes do
 						local box = boxes[i]
