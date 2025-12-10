@@ -970,6 +970,26 @@ while gui.Parent do
 					lastBox=nil
 					local j=0
 					local boxes = workspace.AllSupplyBoxes:GetChildren()
+
+
+-- PATCH: Unnötige Boxen entfernen
+for n = 1, #boxes do
+    local b = boxes[n]
+    if not b.Anchored and b.Position.Z < -940 then
+        local s = bcolorToSupply[b.BrickColor.Name]
+        if s and supplyCounts[s] >= settings.refill_end then
+            -- nicht benötigte Box → entfernen
+            network:FireServer(
+                "UpdateProperty",
+                b,
+                "CFrame",
+                CFrame.new(math.random(-40,40), -200, math.random(-40,40))
+            )
+        end
+    end
+end
+
+
 					for i=1,#boxes do
 						local box = boxes[i]
 						if box.Anchored==false and box.Position.Z < -940 and bcolorToSupply[box.BrickColor.Name] and supplyCounts[bcolorToSupply[box.BrickColor.Name]]<settings.refill_end then
