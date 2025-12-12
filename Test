@@ -1,5 +1,4 @@
-
---// Services & Globals
+--// ====== SERVICES & GLOBALS ====== //
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,11 +8,10 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local VirtualUser = game:GetService("VirtualUser")
 
---// UI Library laden
+--// ====== UI LIBRARY (Luna / PizzaHub) ====== //
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.0"
+local version = "1.0.10"
 
---// Window
 local Window = PizzaHub:CreateWindow({
     Name = "Pizza Hub",
     Subtitle = version,
@@ -51,9 +49,9 @@ Window:CreateHomeTab({
     Icon = 2
 })
 
------------------------------------------------------------
--- MAIN TAB
------------------------------------------------------------
+--// =========================================================
+--// MAIN TAB
+--// =========================================================
 local main = Window:CreateTab({
     Name = "Main",
     Icon = "house",
@@ -115,11 +113,13 @@ main:CreateToggle({
                     continue
                 end
 
+                -- clone until 1000 snowballs
                 while SnowballLagEnabled and countBalls() < 1000 do
                     ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
                     task.wait(0.01)
                 end
 
+                -- throw all balls
                 for _, tool in ipairs(backpack:GetChildren()) do
                     if not SnowballLagEnabled then break end
                     if tool:IsA("Tool") and tool.Name == "Snowball" then
@@ -140,9 +140,9 @@ main:CreateToggle({
     end
 })
 
------------------------------------------------------------
--- TARGET TAB
------------------------------------------------------------
+--// =========================================================
+--// TARGET TAB
+--// =========================================================
 local Traget = Window:CreateTab({
     Name = "Target",
     Icon = "fullscreen_exit",
@@ -150,11 +150,11 @@ local Traget = Window:CreateTab({
     ShowTitle = true
 })
 
--- Shared state
-local SelectedPlayer : Player? = nil
+-- Shared selection state
+local SelectedPlayer = nil
 getgenv().SelectedPlayer = nil
 
--- Helpers
+-- ===== Helper: Player Suche =====
 local function FindPlayer(text)
     text = string.lower(text)
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -177,14 +177,12 @@ local function EnsureCarPrimaryPart(car)
             car.PrimaryPart = driverSeat
         else
             local bp = car:FindFirstChildWhichIsA("BasePart")
-            if bp then
-                car.PrimaryPart = bp
-            end
+            if bp then car.PrimaryPart = bp end
         end
     end
 end
 
--- Player selection Input
+-- ===== Player Input =====
 Traget:CreateInput({
     Name = "Select Player",
     Description = "Enter username or display name",
@@ -213,7 +211,7 @@ Traget:CreateInput({
     end
 })
 
--- Click-to-select
+-- ===== Click-to-select Tool =====
 Traget:CreateButton({
     Name = "Click Player to Select",
     Description = "Equip a selector tool and click a player",
@@ -260,14 +258,14 @@ Traget:CreateButton({
     end
 })
 
--- Fling
+-- ===== Fling =====
 local flinging = false
 local flingLoop = nil
 local heavyPart = nil
 
 local function getTarget()
     local name = getgenv().SelectedPlayer
-    if not name then return nil end
+    if not name or name == "" then return nil end
     return Players:FindFirstChild(name)
 end
 
@@ -333,6 +331,7 @@ Traget:CreateToggle({
             if not targetHRP then return end
 
             createHeavyPart(myHRP)
+
             myHRP.CFrame = targetHRP.CFrame
 
             targetHRP.AssemblyLinearVelocity = Vector3.new(
@@ -344,7 +343,7 @@ Traget:CreateToggle({
     end
 })
 
--- Goto Player
+-- ===== Goto Player =====
 Traget:CreateButton({
     Name = "Goto Player",
     Description = "Teleport to the selected player",
@@ -365,7 +364,7 @@ Traget:CreateButton({
     end
 })
 
--- View Player
+-- ===== View Player (Kamera) =====
 local camera = Workspace.CurrentCamera
 local ViewEnabled = false
 local viewLoop = nil
@@ -425,7 +424,6 @@ Traget:CreateToggle({
     end
 })
 
--- Player left
 Players.PlayerRemoving:Connect(function(plr)
     if SelectedPlayer and plr.Name == SelectedPlayer.Name then
         SelectedPlayer = nil
@@ -440,9 +438,7 @@ Players.PlayerRemoving:Connect(function(plr)
     end
 end)
 
------------------------------------------------------------
--- VEHICLE FUNCTIONS: BRING / THROW / KILL
------------------------------------------------------------
+-- ===== Vehicle Helper für Bring/Throw/Kill =====
 local function FindCarWithHoodSeat()
     local character = LocalPlayer.Character
     if not character then return end
@@ -452,6 +448,7 @@ local function FindCarWithHoodSeat()
 
     local car, seat, hoodSeat
 
+    -- prefer car you're already in
     for _, v in ipairs(Workspace:GetDescendants()) do
         if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
             if v.Occupant == humanoid then
@@ -463,6 +460,7 @@ local function FindCarWithHoodSeat()
         end
     end
 
+    -- else empty car
     if not car then
         for _, v in ipairs(Workspace:GetDescendants()) do
             if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
@@ -481,7 +479,7 @@ local function FindCarWithHoodSeat()
     return car, seat, hoodSeat, humanoid, hrp
 end
 
--- Bring Player
+-- ===== Bring Player To You =====
 Traget:CreateButton({
     Name = "Bring Player To You",
     Description = "TPs to player, seats them, returns to original position.",
@@ -527,6 +525,7 @@ Traget:CreateButton({
 
         local originalCFrame = myHRP.CFrame + Vector3.new(0, 5, 0)
 
+        -- put you in driver seat
         myHRP.CFrame = seat.CFrame + Vector3.new(0, 5, 0)
         local t0 = tick()
         repeat task.wait() until seat.Occupant == humanoid or tick() - t0 > 5
@@ -538,13 +537,11 @@ Traget:CreateButton({
             })
         end
 
-        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodSeat.CFrame)
+        local offset = car.PrimaryPart.CFrame:ToObjectSpace(hoodSeat.CFrame)
 
         local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not targetHRP then return end
-
         local targetHum = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if not targetHum then return end
+        if not targetHRP or not targetHum then return end
 
         local timeout = 20
         local start = tick()
@@ -552,15 +549,16 @@ Traget:CreateButton({
             if not TargetPlayer.Character then break end
             targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetHRP
 
-            local targetCF = targetHRP.CFrame * CFrame.new(0, -3, -5)
-            local cur = car.PrimaryPart.CFrame
-            local lerped = cur:Lerp(targetCF, 0.07)
-            car:SetPrimaryPartCFrame(lerped)
-            task.wait(0.1)
+            -- HoodSeat direkt auf Target-HRP snapen (hart, kein Smooth)
+            local hoodGoal = targetHRP.CFrame * CFrame.new(0, 2, -2)
+            local primaryGoal = hoodGoal * offset:Inverse()
+            car:SetPrimaryPartCFrame(primaryGoal)
+            RunService.Heartbeat:Wait()
         end
 
         if hoodSeat.Occupant == targetHum then
-            car:SetPrimaryPartCFrame(originalCFrame * offset:Inverse())
+            local backPrimary = originalCFrame * offset:Inverse()
+            car:SetPrimaryPartCFrame(backPrimary)
             PizzaHub:Notification({
                 Title = "Success",
                 Content = "Target brought to you!",
@@ -576,7 +574,7 @@ Traget:CreateButton({
     end
 })
 
--- Throw Player Far Away
+-- ===== Throw Player Far Away =====
 Traget:CreateButton({
     Name = "Throw Player Far Away",
     Description = "Throws the selected player far away using your vehicle.",
@@ -602,7 +600,7 @@ Traget:CreateButton({
         if IsPlayerSitting(TargetPlayer) then
             return PizzaHub:Notification({
                 Title = "Target sitting",
-                Content = "Target is already sitting – abort.",
+                Content = "Target is already sitting – throw aborted.",
                 Icon = "error"
             })
         end
@@ -612,7 +610,7 @@ Traget:CreateButton({
         if not hrp then return end
         local originalCFrame = hrp.CFrame
 
-        local car, seat, hoodSeat, humanoid = FindCarWithHoodSeat()
+        local car, seat, hoodSeat, humanoid, myHRP = FindCarWithHoodSeat()
         if not car then
             return PizzaHub:Notification({
                 Title = "Error",
@@ -621,23 +619,27 @@ Traget:CreateButton({
             })
         end
 
-        hrp.CFrame = seat.CFrame + Vector3.new(0, 5, 0)
+        myHRP.CFrame = seat.CFrame + Vector3.new(0, 5, 0)
         local t0 = tick()
         repeat task.wait() until seat.Occupant == humanoid or tick() - t0 > 5
         if seat.Occupant ~= humanoid then return end
 
-        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodSeat.CFrame)
+        local offset = car.PrimaryPart.CFrame:ToObjectSpace(hoodSeat.CFrame)
+
         local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
         local targetHum = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
         if not targetHRP or not targetHum then return end
 
         local t1 = tick()
-        repeat
+        while hoodSeat.Occupant ~= targetHum and tick() - t1 < 15 do
             if not TargetPlayer.Character then break end
             targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetHRP
-            car:SetPrimaryPartCFrame(targetHRP.CFrame * offset:Inverse())
-            task.wait()
-        until hoodSeat.Occupant == targetHum or tick() - t1 > 15
+
+            local hoodGoal = targetHRP.CFrame * CFrame.new(0, 2, -2)
+            local primaryGoal = hoodGoal * offset:Inverse()
+            car:SetPrimaryPartCFrame(primaryGoal)
+            RunService.Heartbeat:Wait()
+        end
 
         if hoodSeat.Occupant ~= targetHum then
             return PizzaHub:Notification({
@@ -648,11 +650,13 @@ Traget:CreateButton({
         end
 
         local farAway = CFrame.new(-4492, 534, -686)
+
         local t2 = tick()
-        repeat
-            car:SetPrimaryPartCFrame(farAway * offset:Inverse())
-            task.wait()
-        until hoodSeat.Occupant == nil or tick() - t2 > 10
+        while hoodSeat.Occupant == targetHum and tick() - t2 < 10 do
+            local primaryGoal = farAway * offset:Inverse()
+            car:SetPrimaryPartCFrame(primaryGoal)
+            RunService.Heartbeat:Wait()
+        end
 
         hrp.CFrame = originalCFrame
 
@@ -664,10 +668,10 @@ Traget:CreateButton({
     end
 })
 
--- Kill Player
+-- ===== Kill Player =====
 Traget:CreateButton({
     Name = "Kill Player",
-    Description = "Kills the selected player by teleporting them to a kill zone.",
+    Description = "Kills the selected player via kill position.",
     Callback = function()
         local selectedName = getgenv().SelectedPlayer
         if not selectedName or selectedName == "" then
@@ -700,7 +704,7 @@ Traget:CreateButton({
         if not hrp then return end
         local originalCFrame = hrp.CFrame
 
-        local car, seat, hoodSeat, humanoid = FindCarWithHoodSeat()
+        local car, seat, hoodSeat, humanoid, myHRP = FindCarWithHoodSeat()
         if not car then
             return PizzaHub:Notification({
                 Title = "Error",
@@ -709,23 +713,27 @@ Traget:CreateButton({
             })
         end
 
-        hrp.CFrame = seat.CFrame + Vector3.new(0, 5, 0)
+        myHRP.CFrame = seat.CFrame + Vector3.new(0, 5, 0)
         local t0 = tick()
         repeat task.wait() until seat.Occupant == humanoid or tick() - t0 > 5
         if seat.Occupant ~= humanoid then return end
 
-        local offset = car:GetPrimaryPartCFrame():ToObjectSpace(hoodSeat.CFrame)
+        local offset = car.PrimaryPart.CFrame:ToObjectSpace(hoodSeat.CFrame)
+
         local playerHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
         local targetHum = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
         if not playerHRP or not targetHum then return end
 
         local t1 = tick()
-        repeat
+        while hoodSeat.Occupant ~= targetHum and tick() - t1 < 15 do
             if not TargetPlayer.Character then break end
             playerHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or playerHRP
-            car:SetPrimaryPartCFrame(playerHRP.CFrame * offset:Inverse())
-            task.wait()
-        until hoodSeat.Occupant == targetHum or tick() - t1 > 15
+
+            local hoodGoal = playerHRP.CFrame * CFrame.new(0, 2, -2)
+            local primaryGoal = hoodGoal * offset:Inverse()
+            car:SetPrimaryPartCFrame(primaryGoal)
+            RunService.Heartbeat:Wait()
+        end
 
         if hoodSeat.Occupant ~= targetHum then
             return PizzaHub:Notification({
@@ -737,10 +745,11 @@ Traget:CreateButton({
 
         local killPosition = CFrame.new(44, 25, -13)
         local t2 = tick()
-        repeat
-            car:SetPrimaryPartCFrame(killPosition * offset:Inverse())
-            task.wait()
-        until hoodSeat.Occupant == nil or tick() - t2 > 10
+        while hoodSeat.Occupant == targetHum and tick() - t2 < 10 do
+            local primaryGoal = killPosition * offset:Inverse()
+            car:SetPrimaryPartCFrame(primaryGoal)
+            RunService.Heartbeat:Wait()
+        end
 
         hrp.CFrame = originalCFrame
 
@@ -752,7 +761,7 @@ Traget:CreateButton({
     end
 })
 
--- Snowball Burst (15x)
+-- ===== Snowball Burst (15x) =====
 local SnowballBurstEnabled = false
 local SnowballBurstThread = nil
 
@@ -832,9 +841,9 @@ Traget:CreateToggle({
     end
 })
 
------------------------------------------------------------
--- TELEPORTS TAB
------------------------------------------------------------
+--// =========================================================
+--// TELEPORTS TAB
+--// =========================================================
 local Teleports = Window:CreateTab({
     Name = "Teleports",
     Icon = "golf_course",
@@ -932,9 +941,9 @@ Teleports:CreateDropdown({
     end
 }, "TeleportIslands")
 
------------------------------------------------------------
--- SCRIPTS TAB
------------------------------------------------------------
+--// =========================================================
+--// SCRIPTS TAB
+--// =========================================================
 local Scripts = Window:CreateTab({
     Name = "Scripts",
     Icon = "code",
@@ -976,9 +985,9 @@ Scripts:CreateButton({
     end
 })
 
------------------------------------------------------------
--- SETTINGS TAB
------------------------------------------------------------
+--// =========================================================
+--// SETTINGS TAB
+--// =========================================================
 local Settings = Window:CreateTab({
     Name = "Settings",
     Icon = "settings",
@@ -991,14 +1000,14 @@ Settings:CreateToggle({
     Name = "Anti AFK",
     CurrentValue = true,
     Callback = function(Value)
-        local player = Players.LocalPlayer
+        local playerAFK = Players.LocalPlayer
         if Value then
             getgenv().AntiAFKEnabled = true
             if getgenv().AntiAFKConnection then
                 pcall(function() getgenv().AntiAFKConnection:Disconnect() end)
                 getgenv().AntiAFKConnection = nil
             end
-            getgenv().AntiAFKConnection = player.Idled:Connect(function()
+            getgenv().AntiAFKConnection = playerAFK.Idled:Connect(function()
                 pcall(function()
                     VirtualUser:CaptureController()
                     VirtualUser:ClickButton2(Vector2.new(0,0))
@@ -1122,9 +1131,9 @@ Settings:CreateButton({
 
 Settings:BuildConfigSection()
 
------------------------------------------------------------
--- THEME TAB
------------------------------------------------------------
+--// =========================================================
+--// THEME TAB
+--// =========================================================
 local Theme = Window:CreateTab({
     Name = "Theme",
     Icon = "palette",
@@ -1132,3 +1141,4 @@ local Theme = Window:CreateTab({
     ShowTitle = true
 })
 Theme:BuildThemeSection()
+
