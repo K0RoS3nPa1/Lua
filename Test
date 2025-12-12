@@ -10,7 +10,7 @@ local VirtualUser = game:GetService("VirtualUser")
 
 --// ====== UI LIBRARY (Luna / PizzaHub) ====== //
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.10"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
     Name = "Pizza Hub",
@@ -550,7 +550,7 @@ Traget:CreateButton({
             targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetHRP
 
             -- HoodSeat direkt auf Target-HRP snapen (hart, kein Smooth)
-            local hoodGoal = targetHRP.CFrame * CFrame.new(0, 2, -2)
+            local hoodGoal = targetHRP.CFrame * CFrame.new(0, -1.5, -2)
             local primaryGoal = hoodGoal * offset:Inverse()
             car:SetPrimaryPartCFrame(primaryGoal)
             RunService.Heartbeat:Wait()
@@ -635,7 +635,7 @@ Traget:CreateButton({
             if not TargetPlayer.Character then break end
             targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetHRP
 
-            local hoodGoal = targetHRP.CFrame * CFrame.new(0, 2, -2)
+            local hoodGoal = targetHRP.CFrame * CFrame.new(0, -1.5, -2)
             local primaryGoal = hoodGoal * offset:Inverse()
             car:SetPrimaryPartCFrame(primaryGoal)
             RunService.Heartbeat:Wait()
@@ -729,7 +729,7 @@ Traget:CreateButton({
             if not TargetPlayer.Character then break end
             playerHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or playerHRP
 
-            local hoodGoal = playerHRP.CFrame * CFrame.new(0, 2, -2)
+            local hoodGoal = playerHRP.CFrame * CFrame.new(0, -1.5, -2)
             local primaryGoal = hoodGoal * offset:Inverse()
             car:SetPrimaryPartCFrame(primaryGoal)
             RunService.Heartbeat:Wait()
