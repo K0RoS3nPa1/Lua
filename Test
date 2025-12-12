@@ -1,4 +1,4 @@
---// ========= SERVICES & GLOBALS =========
+--// ====== SERVICES & GLOBALS ====== //
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -8,9 +8,9 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local VirtualUser = game:GetService("VirtualUser")
 
---// ========= UI LIB =========
+--// ====== UI LIBRARY (Luna / PizzaHub) ====== //
 local PizzaHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
-local version = "1.0.20"
+local version = "1.0.0"
 
 local Window = PizzaHub:CreateWindow({
     Name = "Pizza Hub",
@@ -27,7 +27,7 @@ local Window = PizzaHub:CreateWindow({
     KeySettings = {
         Title = "Luna Example Key",
         Subtitle = "Key System",
-        Note = "Use a real HWID key system.",
+        Note = "Use a real key system (HWID).",
         SaveInRoot = false,
         SaveKey = true,
         Key = {"Example Key"},
@@ -49,7 +49,9 @@ Window:CreateHomeTab({
     Icon = 2
 })
 
---// ========= MAIN TAB =========
+--// =========================================================
+--// MAIN TAB
+--// =========================================================
 local main = Window:CreateTab({
     Name = "Main",
     Icon = "house",
@@ -57,8 +59,9 @@ local main = Window:CreateTab({
     ShowTitle = true
 })
 
+-- Server Lag (1000 Snowballs)
 local SnowballLagEnabled = false
-local SnowballLagThread
+local SnowballLagThread = nil
 
 main:CreateToggle({
     Name = "Server Lag",
@@ -110,11 +113,13 @@ main:CreateToggle({
                     continue
                 end
 
+                -- clone until 1000 snowballs
                 while SnowballLagEnabled and countBalls() < 1000 do
                     ReplicatedStorage.PlayerChannel:FireServer("GiveItem", 19328185, false)
                     task.wait(0.01)
                 end
 
+                -- throw all balls
                 for _, tool in ipairs(backpack:GetChildren()) do
                     if not SnowballLagEnabled then break end
                     if tool:IsA("Tool") and tool.Name == "Snowball" then
@@ -135,7 +140,9 @@ main:CreateToggle({
     end
 })
 
---// ========= TARGET TAB =========
+--// =========================================================
+--// TARGET TAB
+--// =========================================================
 local Traget = Window:CreateTab({
     Name = "Target",
     Icon = "fullscreen_exit",
@@ -143,9 +150,11 @@ local Traget = Window:CreateTab({
     ShowTitle = true
 })
 
+-- Shared selection state
 local SelectedPlayer = nil
 getgenv().SelectedPlayer = nil
 
+-- ===== Helper: Player Suche =====
 local function FindPlayer(text)
     text = string.lower(text)
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -168,14 +177,12 @@ local function EnsureCarPrimaryPart(car)
             car.PrimaryPart = driverSeat
         else
             local bp = car:FindFirstChildWhichIsA("BasePart")
-            if bp then
-                car.PrimaryPart = bp
-            end
+            if bp then car.PrimaryPart = bp end
         end
     end
 end
 
--- Input
+-- ===== Player Input =====
 Traget:CreateInput({
     Name = "Select Player",
     Description = "Enter username or display name",
@@ -204,7 +211,7 @@ Traget:CreateInput({
     end
 })
 
--- Click to select
+-- ===== Click-to-select Tool =====
 Traget:CreateButton({
     Name = "Click Player to Select",
     Description = "Equip a selector tool and click a player",
@@ -251,10 +258,10 @@ Traget:CreateButton({
     end
 })
 
--- Fling
+-- ===== Fling =====
 local flinging = false
-local flingLoop
-local heavyPart
+local flingLoop = nil
+local heavyPart = nil
 
 local function getTarget()
     local name = getgenv().SelectedPlayer
@@ -336,7 +343,7 @@ Traget:CreateToggle({
     end
 })
 
--- Goto Player
+-- ===== Goto Player =====
 Traget:CreateButton({
     Name = "Goto Player",
     Description = "Teleport to the selected player",
@@ -357,10 +364,10 @@ Traget:CreateButton({
     end
 })
 
--- View Player
+-- ===== View Player (Kamera) =====
 local camera = Workspace.CurrentCamera
 local ViewEnabled = false
-local viewLoop
+local viewLoop = nil
 
 local function ResetCamera()
     pcall(function()
@@ -431,7 +438,7 @@ Players.PlayerRemoving:Connect(function(plr)
     end
 end)
 
--- ===== Car helper (Driver + HoodSeat detection) =====
+-- ===== Vehicle Helper für Bring/Throw/Kill =====
 local function FindCarWithHoodSeat()
     local character = LocalPlayer.Character
     if not character then return end
@@ -439,14 +446,14 @@ local function FindCarWithHoodSeat()
     local hrp = character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not hrp then return end
 
-    local car, driverSeat, hoodSeat
+    local car, seat, hoodSeat
 
-    -- prefer car you already sit in
+    -- prefer car you're already in
     for _, v in ipairs(Workspace:GetDescendants()) do
         if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
             if v.Occupant == humanoid then
                 car = v.Parent
-                driverSeat = v
+                seat = v
                 hoodSeat = car:FindFirstChild("HoodSeat")
                 break
             end
@@ -456,53 +463,26 @@ local function FindCarWithHoodSeat()
     -- else empty car
     if not car then
         for _, v in ipairs(Workspace:GetDescendants()) do
-            if v:IsA("VehicleSeat") then
-                local parent = v.Parent
-                if parent and parent:IsA("Model") then
-                    local hood = parent:FindFirstChild("HoodSeat")
-                    if hood then
-                        if v.Occupant == nil then
-                            car = parent
-                            driverSeat = v
-                            hoodSeat = hood
-                            break
-                        end
-                    end
+            if v:IsA("VehicleSeat") and v.Parent:FindFirstChild("HoodSeat") then
+                if v.Occupant == nil then
+                    car = v.Parent
+                    seat = v
+                    hoodSeat = car:FindFirstChild("HoodSeat")
+                    break
                 end
             end
         end
     end
 
-    if not car or not driverSeat or not hoodSeat then return end
+    if not car or not seat or not hoodSeat then return end
     EnsureCarPrimaryPart(car)
-    return car, driverSeat, hoodSeat, humanoid, hrp
+    return car, seat, hoodSeat, humanoid, hrp
 end
 
--- Helper: Seat exit -> back to old pos
-local function AttachSeatExitReturn(seat, humanoid, originalCFrame)
-    if not seat or not humanoid or not originalCFrame then return end
-    local conn
-    conn = seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-        if seat.Occupant ~= humanoid then
-            if conn then conn:Disconnect() conn = nil end
-            local char = LocalPlayer.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = originalCFrame + Vector3.new(0, 3, 0)
-            end
-            PizzaHub:Notification({
-                Title = "Return",
-                Content = "You left the car, teleported back.",
-                Icon = "check_circle"
-            })
-        end
-    end)
-end
-
--- Bring Player
+-- ===== Bring Player To You =====
 Traget:CreateButton({
     Name = "Bring Player To You",
-    Description = "TPs car to target, seat them, return to start.",
+    Description = "TPs to player, seats them, returns to original position.",
     Callback = function()
         local selectedName = getgenv().SelectedPlayer
         if not selectedName or selectedName == "" then
@@ -531,12 +511,10 @@ Traget:CreateButton({
         end
 
         local character = LocalPlayer.Character
-        local myHRP = character and character:FindFirstChild("HumanoidRootPart")
-        if not myHRP then return end
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
 
-        local startCFrame = myHRP.CFrame
-
-        local car, seat, hoodSeat, humanoid = FindCarWithHoodSeat()
+        local car, seat, hoodSeat, humanoid, myHRP = FindCarWithHoodSeat()
         if not car then
             return PizzaHub:Notification({
                 Title = "Error",
@@ -545,8 +523,9 @@ Traget:CreateButton({
             })
         end
 
-        local carOriginalPrimary = car.PrimaryPart.CFrame
+        local originalCFrame = myHRP.CFrame + Vector3.new(0, 5, 0)
 
+        -- put you in driver seat
         myHRP.CFrame = seat.CFrame + Vector3.new(0, 5, 0)
         local t0 = tick()
         repeat task.wait() until seat.Occupant == humanoid or tick() - t0 > 5
@@ -557,8 +536,6 @@ Traget:CreateButton({
                 Icon = "error"
             })
         end
-
-        AttachSeatExitReturn(seat, humanoid, startCFrame)
 
         local offset = car.PrimaryPart.CFrame:ToObjectSpace(hoodSeat.CFrame)
 
@@ -572,23 +549,44 @@ Traget:CreateButton({
             if not TargetPlayer.Character then break end
             targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetHRP
 
-            -- HoodSeat auf Beine: Offset nach unten (-2.5) und leicht vor dem Spieler
-            local hoodGoal = targetHRP.CFrame * CFrame.new(0, -2.5, -2)
+            -- HoodSeat direkt auf Target-HRP snapen (hart, kein Smooth)
+            local hoodGoal = targetHRP.CFrame * CFrame.new(0, -1.8, -2)
             local primaryGoal = hoodGoal * offset:Inverse()
             car:SetPrimaryPartCFrame(primaryGoal)
             RunService.Heartbeat:Wait()
         end
 
         if hoodSeat.Occupant == targetHum then
-            local backPrimary = startCFrame * offset:Inverse()
+            local backPrimary = originalCFrame * offset:Inverse()
             car:SetPrimaryPartCFrame(backPrimary)
             PizzaHub:Notification({
                 Title = "Success",
                 Content = "Target brought to you!",
                 Icon = "check_circle"
             })
+            -- AUTOMATISCH ABSRPINGEN + ZURÜCK TELEPORTIEREN
+task.wait(0.15)
+
+-- Spieler abspringen lassen
+local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if hum then
+    hum.Sit = false
+    hum.Jump = true
+end
+
+-- Sicherer Rück-Teleport
+local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if hrp then
+    hrp.CFrame = startCFrame + Vector3.new(0, 3, 0)
+end
+
+PizzaHub:Notification({
+    Title = "Fertig!",
+    Content = "Aktion abgeschlossen. Du wurdest zurück teleportiert.",
+    Icon = "check_circle"
+})
+
         else
-            car:SetPrimaryPartCFrame(carOriginalPrimary)
             PizzaHub:Notification({
                 Title = "Abort",
                 Content = "Target did not enter HoodSeat (timeout).",
@@ -598,7 +596,7 @@ Traget:CreateButton({
     end
 })
 
--- Throw Player Far Away
+-- ===== Throw Player Far Away =====
 Traget:CreateButton({
     Name = "Throw Player Far Away",
     Description = "Throws the selected player far away using your vehicle.",
@@ -630,11 +628,11 @@ Traget:CreateButton({
         end
 
         local character = LocalPlayer.Character
-        local myHRP = character and character:FindFirstChild("HumanoidRootPart")
-        if not myHRP then return end
-        local startCFrame = myHRP.CFrame
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local originalCFrame = hrp.CFrame
 
-        local car, seat, hoodSeat, humanoid = FindCarWithHoodSeat()
+        local car, seat, hoodSeat, humanoid, myHRP = FindCarWithHoodSeat()
         if not car then
             return PizzaHub:Notification({
                 Title = "Error",
@@ -648,8 +646,6 @@ Traget:CreateButton({
         repeat task.wait() until seat.Occupant == humanoid or tick() - t0 > 5
         if seat.Occupant ~= humanoid then return end
 
-        AttachSeatExitReturn(seat, humanoid, startCFrame)
-
         local offset = car.PrimaryPart.CFrame:ToObjectSpace(hoodSeat.CFrame)
 
         local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -661,7 +657,7 @@ Traget:CreateButton({
             if not TargetPlayer.Character then break end
             targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or targetHRP
 
-            local hoodGoal = targetHRP.CFrame * CFrame.new(0, -2.5, -2)
+            local hoodGoal = targetHRP.CFrame * CFrame.new(0, -1.8, -2)
             local primaryGoal = hoodGoal * offset:Inverse()
             car:SetPrimaryPartCFrame(primaryGoal)
             RunService.Heartbeat:Wait()
@@ -676,6 +672,7 @@ Traget:CreateButton({
         end
 
         local farAway = CFrame.new(-4492, 534, -686)
+
         local t2 = tick()
         while hoodSeat.Occupant == targetHum and tick() - t2 < 10 do
             local primaryGoal = farAway * offset:Inverse()
@@ -683,17 +680,37 @@ Traget:CreateButton({
             RunService.Heartbeat:Wait()
         end
 
-        myHRP.CFrame = startCFrame
+        hrp.CFrame = originalCFrame
 
         PizzaHub:Notification({
             Title = "Success",
             Content = "Player thrown far away!",
             Icon = "check_circle"
         })
+        -- AUTOMATISCH ABSRPINGEN + ZURÜCK TELEPORTIEREN
+task.wait(0.15)
+
+local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if hum then
+    hum.Sit = false
+    hum.Jump = true
+end
+
+local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if hrp then
+    hrp.CFrame = originalCFrame + Vector3.new(0, 3, 0)
+end
+
+PizzaHub:Notification({
+    Title = "Fertig!",
+    Content = "Throw abgeschlossen. Du wurdest zurück teleportiert.",
+    Icon = "check_circle"
+})
+
     end
 })
 
--- Kill Player
+-- ===== Kill Player =====
 Traget:CreateButton({
     Name = "Kill Player",
     Description = "Kills the selected player via kill position.",
@@ -725,11 +742,11 @@ Traget:CreateButton({
         end
 
         local character = LocalPlayer.Character
-        local myHRP = character and character:FindFirstChild("HumanoidRootPart")
-        if not myHRP then return end
-        local startCFrame = myHRP.CFrame
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local originalCFrame = hrp.CFrame
 
-        local car, seat, hoodSeat, humanoid = FindCarWithHoodSeat()
+        local car, seat, hoodSeat, humanoid, myHRP = FindCarWithHoodSeat()
         if not car then
             return PizzaHub:Notification({
                 Title = "Error",
@@ -743,8 +760,6 @@ Traget:CreateButton({
         repeat task.wait() until seat.Occupant == humanoid or tick() - t0 > 5
         if seat.Occupant ~= humanoid then return end
 
-        AttachSeatExitReturn(seat, humanoid, startCFrame)
-
         local offset = car.PrimaryPart.CFrame:ToObjectSpace(hoodSeat.CFrame)
 
         local playerHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -756,7 +771,7 @@ Traget:CreateButton({
             if not TargetPlayer.Character then break end
             playerHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart") or playerHRP
 
-            local hoodGoal = playerHRP.CFrame * CFrame.new(0, -2.5, -2)
+            local hoodGoal = playerHRP.CFrame * CFrame.new(0, -1.8, -2)
             local primaryGoal = hoodGoal * offset:Inverse()
             car:SetPrimaryPartCFrame(primaryGoal)
             RunService.Heartbeat:Wait()
@@ -778,19 +793,39 @@ Traget:CreateButton({
             RunService.Heartbeat:Wait()
         end
 
-        myHRP.CFrame = startCFrame
+        hrp.CFrame = originalCFrame
 
         PizzaHub:Notification({
             Title = "Success",
             Content = "Player has been killed!",
             Icon = "check_circle"
         })
+-- AUTOMATISCH ABSRPINGEN + ZURÜCK TELEPORTIEREN
+task.wait(0.15)
+
+local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if hum then
+    hum.Sit = false
+    hum.Jump = true
+end
+
+local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if hrp then
+    hrp.CFrame = originalCFrame + Vector3.new(0, 3, 0)
+end
+
+PizzaHub:Notification({
+    Title = "Fertig!",
+    Content = "Kill abgeschlossen. Du wurdest zurück teleportiert.",
+    Icon = "check_circle"
+})
+
     end
 })
 
--- Snowball Burst
+-- ===== Snowball Burst (15x) =====
 local SnowballBurstEnabled = false
-local SnowballBurstThread
+local SnowballBurstThread = nil
 
 Traget:CreateToggle({
     Name = "Spam Snowballs (15x gleichzeitig)",
@@ -868,7 +903,9 @@ Traget:CreateToggle({
     end
 })
 
---// ========= TELEPORTS TAB =========
+--// =========================================================
+--// TELEPORTS TAB
+--// =========================================================
 local Teleports = Window:CreateTab({
     Name = "Teleports",
     Icon = "golf_course",
@@ -966,7 +1003,9 @@ Teleports:CreateDropdown({
     end
 }, "TeleportIslands")
 
---// ========= SCRIPTS TAB =========
+--// =========================================================
+--// SCRIPTS TAB
+--// =========================================================
 local Scripts = Window:CreateTab({
     Name = "Scripts",
     Icon = "code",
@@ -1008,7 +1047,9 @@ Scripts:CreateButton({
     end
 })
 
---// ========= SETTINGS TAB =========
+--// =========================================================
+--// SETTINGS TAB
+--// =========================================================
 local Settings = Window:CreateTab({
     Name = "Settings",
     Icon = "settings",
@@ -1016,6 +1057,7 @@ local Settings = Window:CreateTab({
     ShowTitle = true
 })
 
+-- Anti AFK
 Settings:CreateToggle({
     Name = "Anti AFK",
     CurrentValue = true,
@@ -1043,6 +1085,7 @@ Settings:CreateToggle({
     end
 }, "AntiAFKToggle")
 
+-- Rejoin
 Settings:CreateButton({
     Name = "Rejoin Game",
     Description = "Rejoin the current game with countdown",
@@ -1076,6 +1119,7 @@ Settings:CreateButton({
     end
 })
 
+-- Server Hop
 local maxPlayersToJoin = 5
 
 Settings:CreateSlider({
@@ -1149,7 +1193,9 @@ Settings:CreateButton({
 
 Settings:BuildConfigSection()
 
--- THEME TAB
+--// =========================================================
+--// THEME TAB
+--// =========================================================
 local Theme = Window:CreateTab({
     Name = "Theme",
     Icon = "palette",
@@ -1157,5 +1203,3 @@ local Theme = Window:CreateTab({
     ShowTitle = true
 })
 Theme:BuildThemeSection()
-
-
